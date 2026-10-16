@@ -19,7 +19,9 @@ jobs:
           $parts = Get-ChildItem pke_native_source.zip.b64.part* | Sort-Object Name
           $b64 = ($parts | ForEach-Object { Get-Content -Raw $_.FullName }) -join ''
           [IO.File]::WriteAllBytes("source.zip", [Convert]::FromBase64String($b64))
-          Expand-Archive source.zip -DestinationPath srcpkg -Force
+          New-Item -ItemType Directory -Force srcpkg | Out-Null
+          tar -xf source.zip -C srcpkg
+          if ($LASTEXITCODE -ne 0) { throw "tar extraction failed: $LASTEXITCODE" }
 
       - name: Configure Release
         shell: pwsh
