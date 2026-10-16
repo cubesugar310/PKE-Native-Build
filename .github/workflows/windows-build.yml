@@ -27,8 +27,9 @@ jobs:
               return hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
 
           parts = [Path(f'pke_native_source.zip.b64.part{i:02d}').read_text(encoding='utf-8') for i in range(7)]
+          for i, p in enumerate(parts):
+              print(f'part{i:02d}: len={len(p)} sha={git_blob_sha(p)}', flush=True)
 
-          # part00 arrived with exactly one extra character.
           target00 = '5475c379a99e29b7763af75ed45324b6af00fe57'
           if git_blob_sha(parts[0]) != target00:
               repaired = None
@@ -36,13 +37,12 @@ jobs:
                   candidate = parts[0][:i] + parts[0][i+1:]
                   if git_blob_sha(candidate) == target00:
                       repaired = candidate
-                      print(f'repaired part00 by deleting character at offset {i}')
+                      print(f'repaired part00 by deleting character at offset {i}', flush=True)
                       break
               if repaired is None:
                   raise RuntimeError('could not repair part00')
               parts[0] = repaired
 
-          # part04 arrived with exactly one missing base64 character.
           target04 = '85f165b0cdce4eb63bd025753036737249123212'
           if git_blob_sha(parts[4]) != target04:
               repaired = None
@@ -54,7 +54,7 @@ jobs:
                       candidate = left + ch + right
                       if hashlib.sha1(prefix + candidate.encode('ascii')).hexdigest() == target04:
                           repaired = candidate
-                          print(f'repaired part04 by inserting {ch!r} at offset {i}')
+                          print(f'repaired part04 by inserting {ch!r} at offset {i}', flush=True)
                           break
                   if repaired is not None:
                       break
@@ -66,16 +66,26 @@ jobs:
           data = base64.b64decode(b64, validate=True)
           actual = hashlib.sha256(data).hexdigest()
           expected = 'eadd960b38c763bf79651cb272748f04a67c7c044f0e9a34e022eefdc80bf622'
-          print(f'source.zip SHA256={actual}')
+          print(f'source.zip SHA256={actual}', flush=True)
           if actual != expected:
               raise RuntimeError(f'source archive checksum mismatch: expected {expected}, got {actual}')
           Path('source.zip').write_bytes(data)
           '@ | Set-Content -Encoding utf8 repair_source.py
-          python repair_source.py
-          if ($LASTEXITCODE -ne 0) { throw "source repair failed: $LASTEXITCODE" }
+          python repair_source.py *> repair.log
+          $repairExit = $LASTEXITCODE
+          Get-Content repair.log
+          if ($repairExit -ne 0) { throw "source repair failed: $repairExit" }
           New-Item -ItemType Directory -Force srcpkg | Out-Null
           python -c "import zipfile; zipfile.ZipFile('source.zip').extractall('srcpkg')"
           if ($LASTEXITCODE -ne 0) { throw "Python ZIP extraction failed: $LASTEXITCODE" }
+
+      - name: Upload repair diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repair-diagnostics
+          path: repair.log
+          if-no-files-found: warn
 
       - name: Configure Release
         shell: pwsh
