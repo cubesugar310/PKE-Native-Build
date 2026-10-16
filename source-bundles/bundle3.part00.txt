@@ -1,0 +1,168 @@
+=== FILE: native/src/LegacySaveImporter.cpp ===
+#include "pke/LegacySaveImporter.hpp"
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+#include <system_error>
+
+#ifdef PKE_NATIVE_USE_NLOHMANN
+#include <nlohmann/json.hpp>
+#else
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#endif
+
+namespace pke {
+namespace {
+constexpr const char* kLegacyFormat = "pke-beat-battle-full-save";
+constexpr int kLegacyVersion = 1;
+constexpr const char* kNativeFormat = "pke-native-save";
+constexpr int kNativeVersion = 1;
+constexpr const char* kCheckpointKey = "PKE_BEAT_BATTLE_PLAYER_PROGRESS_CHECKPOINT_V1";
+constexpr const char* kRankingJournalKey = "PKE_BEAT_BATTLE_RANKING_JOURNAL_V1";
+constexpr const char* kSettingsKey = "pke-beat-battle-user-settings-v1";
+constexpr const char* kHalloweenKey = "pke-beat-battle-halloween-v1";
+constexpr const char* kPlayerNameKey = "pke-beat-battle-player-name-v1";
+constexpr const char* kPlayerTitleKey = "pke-beat-battle-player-title-v1";
+constexpr const char* kTitleSkinKey = "pke-beat-battle-title-skin-v1";
+
+std::string ReadAll(const std::filesystem::path& path) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in) throw std::runtime_error("cannot open save file");
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    return ss.str();
+}
+
+void WriteAll(const std::filesystem::path& path, const std::string& value) {
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    if (!out) throw std::runtime_error("cannot create save file");
+    out.write(value.data(), static_cast<std::streamsize>(value.size()));
+    out.flush();
+    if (!out) throw std::runtime_error("cannot finish save file write");
+}
+
+std::string JsonEscape(const std::string& s) {
+    std::ostringstream out;
+    for (unsigned char c : s) {
+        switch (c) {
+            case '"': out << "\\\""; break;
+            case '\\': out << "\\\\"; break;
+            case '\b': out << "\\b"; break;
+            case '\f': out << "\\f"; break;
+            case '\n': out << "\\n"; break;
+            case '\r': out << "\\r"; break;
+            case '\t': out << "\\t"; break;
+            default:
+                if (c < 0x20) {
+                    out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(c) << std::dec;
+                } else {
+                    out << static_cast<char>(c);
+                }
+        }
+    }
+    return out.str();
+}
+
+std::string StringArrayJson(const std::vector<std::string>& values) {
+    std::ostringstream out;
+    out << '[';
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        if (i) out << ',';
+        out << '"' << JsonEscape(values[i]) << '"';
+    }
+    out << ']';
+    return out.str();
+}
+
+std::string NowIsoUtc() {
+    const auto now = std::chrono::system_clock::now();
+    const auto tt = std::chrono::system_clock::to_time_t(now);
+    std::tm tm{};
+#ifdef _WIN32
+    gmtime_s(&tm, &tt);
+#else
+    gmtime_r(&tt, &tm);
+#endif
+    std::ostringstream out;
+    out << std::put_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+    return out.str();
+}
+
+std::uint64_t ClampUInt64(long long value) {
+    return value < 0 ? 0ULL : static_cast<std::uint64_t>(value);
+}
+
+int ClampInt(long long value) {
+    if (value < 0) return 0;
+    if (value > static_cast<long long>(std::numeric_limits<int>::max())) return std::numeric_limits<int>::max();
+    return static_cast<int>(value);
+}
+
+std::string NormalizeRange(std::string value) {
+    if (value == "all" || value == "standard") return value;
+    return "beginner";
+}
+
+#ifdef PKE_NATIVE_USE_NLOHMANN
+using Json = nlohmann::json;
+Json ParseJson(const std::string& raw) { return Json::parse(raw); }
+std::string StorageString(const Json& root, const char* key) {
+    if (!root.contains("localStorage") || !root["localStorage"].is_object()) return {};
+    const auto& ls = root["localStorage"];
+    if (!ls.contains(key) || !ls[key].is_string()) return {};
+    return ls[key].get<std::string>();
+}
+std::vector<std::string> StringVector(const Json& node, const char* key) {
+    std::vector<std::string> out;
+    if (!node.is_object() || !node.contains(key) || !node[key].is_array()) return out;
+    for (const auto& v : node[key]) if (v.is_string()) out.push_back(v.get<std::string>());
+    return out;
+}
+#else
+using Json = boost::property_tree::ptree;
+Json ParseJson(const std::string& raw) { Json j; std::istringstream in(raw); boost::property_tree::read_json(in, j); return j; }
+std::string StorageString(const Json& root, const char* key) {
+    auto ls = root.get_child_optional("localStorage");
+    if (!ls) return {};
+    return ls->get<std::string>(key, "");
+}
+std::vector<std::string> StringVector(const Json& node, const char* key) {
+    std::vector<std::string> out;
+    auto arr = node.get_child_optional(key);
+    if (!arr) return out;
+    for (const auto& item : *arr) out.push_back(item.second.get_value<std::string>());
+    return out;
+}
+#endif
+
+bool FillProgressFromCheckpoint(LegacyFullSaveData& out, const std::string& raw) {
+    if (raw.empty()) return false;
+    const auto cp = ParseJson(raw);
+#ifdef PKE_NATIVE_USE_NLOHMANN
+    const auto league = cp.value("league", Json::object());
+    const auto player = cp.value("player", Json::object());
+    const auto title = cp.value("title", Json::object());
+    out.progress.rp = ClampInt(league.value("rp", 0LL));
+    out.progress.wins = ClampInt(league.value("wins", 0LL));
+    out.progress.losses = ClampInt(league.value("losses", 0LL));
+    out.progress.draws = ClampInt(league.value("draws", 0LL));
+    const auto declaredMatches = ClampUInt64(league.value("matches", 0LL));
+    const auto resultMatches = static_cast<std::uint64_t>(out.progress.wins) + static_cast<std::uint64_t>(out.progress.losses) + static_cast<std::uint64_t>(out.progress.draws);
+    out.progress.matches = std::max(declaredMatches, resultMatches);
+    out.progress.accuracy = std::clamp(player.value("accuracy", 0.0), 0.0, 100.0);
+    out.progress.accuracySum = std::max(0.0, player.value("accuracySum", 0.0));
+    out.progress.accuracyMatches = ClampUInt64(player.value("accuracyMatches", 0LL));
+    out.progress.recentAt = ClampUInt64(cp.value("completedAt", 0LL));
+    if (player.contains("recentMatches") && player["recentMatches"].is_array()) for (const auto& m : player["recentMatches"]) if (m.is_object()) out.progress.recentAt = std::max(out.progress.recentAt, ClampUInt64(m.value("at", 0LL)));
+    out.progress.peakRp = ClampInt(title.value("peakRp", 0LL));
+    out.progress.onlineSongRangeTier = NormalizeRange(player.value("onlineSongRangeTier", league.value("onlineSongRangeTier", std::string("beginner"))));
+    out.progress.lastOpponentId = cp.value("lastOpponentId", std::string{});
+    out.earnedTitleIds = StringVector(title, "earned");
+#else
+    auto league = cp.get_child_optional("league"); auto player = cp.get_child_optional("player"); auto title = cp.get_child_optional("title
