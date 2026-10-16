@@ -1,0 +1,85 @@
+");
+    if (league) {
+        out.progress.rp=ClampInt(league->get<long long>("rp",0)); out.progress.wins=ClampInt(league->get<long long>("wins",0)); out.progress.losses=ClampInt(league->get<long long>("losses",0)); out.progress.draws=ClampInt(league->get<long long>("draws",0));
+        const auto declared=ClampUInt64(league->get<long long>("matches",0)); const auto results=static_cast<std::uint64_t>(out.progress.wins)+static_cast<std::uint64_t>(out.progress.losses)+static_cast<std::uint64_t>(out.progress.draws); out.progress.matches=std::max(declared,results);
+        out.progress.onlineSongRangeTier=NormalizeRange(league->get<std::string>("onlineSongRangeTier","beginner"));
+    }
+    if (player) {
+        out.progress.accuracy=std::clamp(player->get<double>("accuracy",0.0),0.0,100.0); out.progress.accuracySum=std::max(0.0,player->get<double>("accuracySum",0.0)); out.progress.accuracyMatches=ClampUInt64(player->get<long long>("accuracyMatches",0));
+        out.progress.onlineSongRangeTier=NormalizeRange(player->get<std::string>("onlineSongRangeTier",out.progress.onlineSongRangeTier));
+        if(auto recent=player->get_child_optional("recentMatches")) for(const auto& m:*recent) out.progress.recentAt=std::max(out.progress.recentAt,ClampUInt64(m.second.get<long long>("at",0)));
+    }
+    out.progress.recentAt=std::max(out.progress.recentAt,ClampUInt64(cp.get<long long>("completedAt",0)));
+    if(title){out.progress.peakRp=ClampInt(title->get<long long>("peakRp",0));out.earnedTitleIds=StringVector(*title,"earned");}
+    out.progress.lastOpponentId=cp.get<std::string>("lastOpponentId","");
+#endif
+    return true;
+}
+
+bool FillProgressFromRankingJournal(LegacyFullSaveData& out, const std::string& raw) {
+    if(raw.empty()) return false;
+    const auto journal=ParseJson(raw);
+#ifdef PKE_NATIVE_USE_NLOHMANN
+    if(!journal.is_object()||!journal.contains("players")||!journal["players"].is_object()||!journal["players"].contains("YOU")||!journal["players"]["YOU"].is_object()) return false;
+    const auto& you=journal["players"]["YOU"];
+    if(!you.contains("league")||!you["league"].is_object()) return false;
+    const auto& league=you["league"];
+    out.progress.rp=ClampInt(league.value("rp",0LL)); out.progress.wins=ClampInt(league.value("wins",0LL)); out.progress.losses=ClampInt(league.value("losses",0LL)); out.progress.draws=ClampInt(league.value("draws",0LL));
+    const auto declared=ClampUInt64(league.value("matches",0LL)); const auto results=static_cast<std::uint64_t>(out.progress.wins)+static_cast<std::uint64_t>(out.progress.losses)+static_cast<std::uint64_t>(out.progress.draws); out.progress.matches=std::max(declared,results);
+    out.progress.onlineSongRangeTier=NormalizeRange(league.value("onlineSongRangeTier",std::string("beginner"))); out.progress.peakRp=ClampInt(you.value("peakRp",0LL)); out.earnedTitleIds=StringVector(you,"earned"); out.progress.recentAt=ClampUInt64(journal.value("updatedAt",0LL));
+#else
+    auto players=journal.get_child_optional("players"); if(!players) return false; auto you=players->get_child_optional("YOU"); if(!you) return false; auto league=you->get_child_optional("league"); if(!league) return false;
+    out.progress.rp=ClampInt(league->get<long long>("rp",0)); out.progress.wins=ClampInt(league->get<long long>("wins",0)); out.progress.losses=ClampInt(league->get<long long>("losses",0)); out.progress.draws=ClampInt(league->get<long long>("draws",0));
+    const auto declared=ClampUInt64(league->get<long long>("matches",0)); const auto results=static_cast<std::uint64_t>(out.progress.wins)+static_cast<std::uint64_t>(out.progress.losses)+static_cast<std::uint64_t>(out.progress.draws); out.progress.matches=std::max(declared,results);
+    out.progress.onlineSongRangeTier=NormalizeRange(league->get<std::string>("onlineSongRangeTier","beginner")); out.progress.peakRp=ClampInt(you->get<long long>("peakRp",0)); out.earnedTitleIds=StringVector(*you,"earned"); out.progress.recentAt=ClampUInt64(journal.get<long long>("updatedAt",0));
+#endif
+    return true;
+}
+
+void FillSettings(LegacyFullSaveData& out, const std::string& raw) {
+    if (raw.empty()) return;
+    const auto j = ParseJson(raw);
+#ifdef PKE_NATIVE_USE_NLOHMANN
+    out.masterVolume=std::clamp(j.value("masterVolume",1.0),0.0,1.0);
+    out.scrollDirection=j.value("scrollDirection",std::string("up"))=="down"?"down":"up";
+    out.judgementPosition=j.value("judgementPosition",std::string("center"))=="corner"?"corner":"center";
+#else
+    out.masterVolume=std::clamp(j.get<double>("masterVolume",1.0),0.0,1.0);
+    out.scrollDirection=j.get<std::string>("scrollDirection","up")=="down"?"down":"up";
+    out.judgementPosition=j.get<std::string>("judgementPosition","center")=="corner"?"corner":"center";
+#endif
+}
+
+void FillHalloween(LegacyFullSaveData& out, const std::string& raw) {
+    if (raw.empty()) return;
+    const auto j = ParseJson(raw);
+#ifdef PKE_NATIVE_USE_NLOHMANN
+    out.halloweenCandy=ClampInt(j.value("candy",0LL));
+#else
+    out.halloweenCandy=ClampInt(j.get<long long>("candy",0));
+#endif
+    out.purchasedSkinIds=StringVector(j,"purchasedSkinIds");
+    out.unlockedTitleIds=StringVector(j,"unlockedTitleIds");
+}
+
+NativeSaveSummary ToNative(const LegacyFullSaveData& legacy) {
+    NativeSaveSummary out;
+    out.valid=true; out.version=kNativeVersion; out.importedAt=NowIsoUtc(); out.legacyExportedAt=legacy.exportedAt; out.legacySourcePath=legacy.sourcePath.string(); out.progress=legacy.progress;
+    out.playerName=legacy.playerName; out.equippedTitle=legacy.equippedTitle; out.selectedSkin=legacy.selectedSkin; out.masterVolume=legacy.masterVolume; out.scrollDirection=legacy.scrollDirection; out.judgementPosition=legacy.judgementPosition;
+    out.halloweenCandy=legacy.halloweenCandy; out.purchasedSkinIds=legacy.purchasedSkinIds; out.unlockedTitleIds=legacy.unlockedTitleIds; out.earnedTitleIds=legacy.earnedTitleIds;
+    return out;
+}
+
+std::string SerializeNative(const NativeSaveSummary& s) {
+    std::ostringstream out;
+    out << "{\n"
+        << "  \"format\":\"" << kNativeFormat << "\",\n"
+        << "  \"version\":" << kNativeVersion << ",\n"
+        << "  \"importedAt\":\"" << JsonEscape(s.importedAt) << "\",\n"
+        << "  \"legacyExportedAt\":\"" << JsonEscape(s.legacyExportedAt) << "\",\n"
+        << "  \"legacyBackupFile\":\"" << JsonEscape(s.legacyBackupFile) << "\",\n"
+        << "  \"legacySourcePath\":\"" << JsonEscape(s.legacySourcePath) << "\",\n"
+        << "  \"player\":{\n"
+        << "    \"rp\":" << s.progress.rp << ",\"wins\":" << s.progress.wins << ",\"losses\":" << s.progress.losses << ",\"draws\":" << s.progress.draws << ",\"matches\":" << s.progress.matches << ",\n"
+        << "    \"accuracy\":" << std::setprecision(15) << s.progress.accuracy << ",\"accuracySum\":" << s.progress.accuracySum << ",\"accuracyMatches\":" << s.progress.accuracyMatches << ",\"recentAt\":" << s.progress.recentAt << ",\n"
+        << "    \"peakRp\":" << s.progress.peakRp << ",\"onlineSongRangeTier\":"
