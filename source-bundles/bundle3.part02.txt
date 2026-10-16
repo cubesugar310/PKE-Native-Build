@@ -1,0 +1,66 @@
+\"" << JsonEscape(s.progress.onlineSongRangeTier) << "\",\"lastOpponentId\":\"" << JsonEscape(s.progress.lastOpponentId) << "\"\n"
+        << "  },\n"
+        << "  \"playerName\":\"" << JsonEscape(s.playerName) << "\",\n"
+        << "  \"equippedTitle\":\"" << JsonEscape(s.equippedTitle) << "\",\n"
+        << "  \"selectedSkin\":\"" << JsonEscape(s.selectedSkin) << "\",\n"
+        << "  \"settings\":{\"masterVolume\":" << s.masterVolume << ",\"scrollDirection\":\"" << JsonEscape(s.scrollDirection) << "\",\"judgementPosition\":\"" << JsonEscape(s.judgementPosition) << "\"},\n"
+        << "  \"halloween\":{\"candy\":" << s.halloweenCandy << ",\"purchasedSkinIds\":" << StringArrayJson(s.purchasedSkinIds) << ",\"unlockedTitleIds\":" << StringArrayJson(s.unlockedTitleIds) << "},\n"
+        << "  \"earnedTitleIds\":" << StringArrayJson(s.earnedTitleIds) << "\n"
+        << "}\n";
+    return out.str();
+}
+
+void ReplaceFileFromTemp(const std::filesystem::path& temp, const std::filesystem::path& target) {
+    std::error_code ec;
+    std::filesystem::copy_file(temp,target,std::filesystem::copy_options::overwrite_existing,ec);
+    if(ec) throw std::runtime_error("cannot replace native save file: "+ec.message());
+    std::filesystem::remove(temp,ec);
+}
+
+} // namespace
+
+PlayerProgressMarker ProgressMarkerFor(const ImportedPlayerProgress& p) { return {p.matches,p.recentAt,p.accuracyMatches}; }
+
+int CompareProgressMarkers(const PlayerProgressMarker& left, const PlayerProgressMarker& right) {
+    if(left.matches!=right.matches) return left.matches>right.matches?1:-1;
+    if(left.recentAt!=right.recentAt) return left.recentAt>right.recentAt?1:-1;
+    if(left.accuracyMatches!=right.accuracyMatches) return left.accuracyMatches>right.accuracyMatches?1:-1;
+    return 0;
+}
+
+LegacyFullSaveData ReadLegacyFullSave(const std::filesystem::path& path) {
+    LegacyFullSaveData out; out.sourcePath=path;
+    try {
+        const auto root=ParseJson(ReadAll(path));
+#ifdef PKE_NATIVE_USE_NLOHMANN
+        if(!root.is_object()||root.value("format",std::string{})!=kLegacyFormat||root.value("version",0)!=kLegacyVersion||!root.contains("localStorage")||!root["localStorage"].is_object()) return out;
+        out.exportedAt=root.value("exportedAt",std::string{});
+#else
+        if(root.get<std::string>("format","")!=kLegacyFormat||root.get<int>("version",0)!=kLegacyVersion||!root.get_child_optional("localStorage")) return out;
+        out.exportedAt=root.get<std::string>("exportedAt","");
+#endif
+        bool progressRecovered=false;
+        try { progressRecovered=FillProgressFromCheckpoint(out,StorageString(root,kCheckpointKey)); } catch(...) {}
+        if(!progressRecovered) { try { progressRecovered=FillProgressFromRankingJournal(out,StorageString(root,kRankingJournalKey)); } catch(...) {} }
+        try { FillSettings(out,StorageString(root,kSettingsKey)); } catch(...) {}
+        try { FillHalloween(out,StorageString(root,kHalloweenKey)); } catch(...) {}
+        out.playerName=StorageString(root,kPlayerNameKey); out.equippedTitle=StorageString(root,kPlayerTitleKey); out.selectedSkin=StorageString(root,kTitleSkinKey);
+        out.valid=true;
+    } catch(...) { out.valid=false; }
+    return out;
+}
+
+NativeSaveSummary ReadNativeSaveSummary(const std::filesystem::path& path) {
+    NativeSaveSummary out;
+    try {
+        const auto root=ParseJson(ReadAll(path));
+#ifdef PKE_NATIVE_USE_NLOHMANN
+        if(!root.is_object()||root.value("format",std::string{})!=kNativeFormat||root.value("version",0)!=kNativeVersion) return out;
+        out.version=root.value("version",1); out.importedAt=root.value("importedAt",std::string{}); out.legacyExportedAt=root.value("legacyExportedAt",std::string{}); out.legacyBackupFile=root.value("legacyBackupFile",std::string("legacy-full-save-v1.json")); out.legacySourcePath=root.value("legacySourcePath",std::string{});
+        const auto p=root.value("player",Json::object()); out.progress.rp=ClampInt(p.value("rp",0LL)); out.progress.wins=ClampInt(p.value("wins",0LL)); out.progress.losses=ClampInt(p.value("losses",0LL)); out.progress.draws=ClampInt(p.value("draws",0LL)); out.progress.matches=ClampUInt64(p.value("matches",0LL)); out.progress.accuracy=std::clamp(p.value("accuracy",0.0),0.0,100.0); out.progress.accuracySum=std::max(0.0,p.value("accuracySum",0.0)); out.progress.accuracyMatches=ClampUInt64(p.value("accuracyMatches",0LL)); out.progress.recentAt=ClampUInt64(p.value("recentAt",0LL)); out.progress.peakRp=ClampInt(p.value("peakRp",0LL)); out.progress.onlineSongRangeTier=NormalizeRange(p.value("onlineSongRangeTier",std::string("beginner"))); out.progress.lastOpponentId=p.value("lastOpponentId",std::string{});
+        out.playerName=root.value("playerName",std::string{}); out.equippedTitle=root.value("equippedTitle",std::string{}); out.selectedSkin=root.value("selectedSkin",std::string{}); if(root.contains("settings")){const auto& s=root["settings"];out.masterVolume=std::clamp(s.value("masterVolume",1.0),0.0,1.0);out.scrollDirection=s.value("scrollDirection",std::string("up"));out.judgementPosition=s.value("judgementPosition",std::string("center"));} if(root.contains("halloween")){const auto& h=root["halloween"];out.halloweenCandy=ClampInt(h.value("candy",0LL));out.purchasedSkinIds=StringVector(h,"purchasedSkinIds");out.unlockedTitleIds=StringVector(h,"unlockedTitleIds");} out.earnedTitleIds=StringVector(root,"earnedTitleIds");
+#else
+        if(root.get<std::string>("format","")!=kNativeFormat||root.get<int>("version",0)!=kNativeVersion) return out;
+        out.version=root.get<int>("version",1);out.importedAt=root.get<std::string>("importedAt","");out.legacyExportedAt=root.get<std::string>("legacyExportedAt","");out.legacyBackupFile=root.get<std::string>("legacyBackupFile","legacy-full-save-v1.json");out.legacySourcePath=root.get<std::string>("legacySourcePath","");
+        if(auto p=root.get_child_optional("player")){out.progress.rp=ClampInt(p->get<long long>("rp",0));out.progress.wins=ClampInt(p->get<long long>("wins",0));out.progress.losses=ClampInt(p->get<long long>("losses",0));out.progress.draws=ClampInt(p->get<long long>("draws",0));out.progress.matches=ClampUInt64(p->get<long long>("matches",0));out.progress.accuracy=std::clamp(p->get<double>("accuracy",0),0.0,100.0);out.progress.accuracySum=std::max(0.0,p->get<double>("accuracySum",0));out.progress.accuracyMatches=ClampUInt64(p->get<long long>("accuracyMatches",0));out.progress.recentAt=ClampUInt64(p->get<long long>("recentAt",0));out.progress.peakRp=ClampInt(p->get<long long>("peakRp",0));out.progress.onlineSongRangeTier=NormalizeRange(p->get<std::string>("onlineSongRangeTier","beginner"));out.progress.lastOpponentId=p->get<std::string>("lastOpponentId","");}
+        out.playerName=root.get<std::string>("playerName","");out.equippedTitle=root.get<std::string>("equippedTitle","");out.selectedSkin=root.get<std::string>("selectedSkin","");if(auto s=root.get_child_optional("settings")){out.masterVolume=std::clamp(s->get<double
