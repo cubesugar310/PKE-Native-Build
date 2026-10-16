@@ -19,9 +19,13 @@ jobs:
           $parts = Get-ChildItem pke_native_source.zip.b64.part* | Sort-Object Name
           $b64 = ($parts | ForEach-Object { Get-Content -Raw $_.FullName }) -join ''
           [IO.File]::WriteAllBytes("source.zip", [Convert]::FromBase64String($b64))
+          $actual = (Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = "eadd960b38c763bf79651cb272748f04a67c7c044f0e9a34e022eefdc80bf622"
+          Write-Host "source.zip SHA256=$actual"
+          if ($actual -ne $expected) { throw "source archive checksum mismatch: expected $expected, got $actual" }
           New-Item -ItemType Directory -Force srcpkg | Out-Null
-          tar -xf source.zip -C srcpkg
-          if ($LASTEXITCODE -ne 0) { throw "tar extraction failed: $LASTEXITCODE" }
+          python -c "import zipfile; zipfile.ZipFile('source.zip').extractall('srcpkg')"
+          if ($LASTEXITCODE -ne 0) { throw "Python ZIP extraction failed: $LASTEXITCODE" }
 
       - name: Configure Release
         shell: pwsh
