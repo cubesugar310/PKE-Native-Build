@@ -1,0 +1,14 @@
+run_id=38966461687
+repair=failure
+configure=skipped
+compile=skipped
+test=skipped
+package=skipped
+upload=skipped
+--- repair.log tail ---
+lengths [20001, 20000, 20000, 20000, 19999, 20000, 19348]
+Traceback (most recent call last):
+  File "D:\a\PKE-Native-Build\PKE-Native-Build\repair.py", line 16, in <module>
+    if found is None: raise RuntimeError('part00 repair failed')
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: part00 repair failed
