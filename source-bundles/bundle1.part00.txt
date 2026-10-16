@@ -1,0 +1,66 @@
+=== FILE: native/src/App.cpp ===
+#include "pke/App.hpp"
+#include "pke/GameSession.hpp"
+#include "pke/LegacySaveImporter.hpp"
+#include "pke/Renderer.hpp"
+#include <algorithm>
+#include <chrono>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <thread>
+#ifdef PKE_NATIVE_WITH_SDL
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#endif
+
+namespace pke {
+int App::Run(int argc,char** argv){
+    const auto exeDir=std::filesystem::absolute(argc>0?std::filesystem::path(argv[0]).parent_path():std::filesystem::current_path());
+    std::filesystem::path localAppData;
+    if(const char* value=std::getenv("LOCALAPPDATA")) localAppData=value;
+    std::optional<std::filesystem::path> explicitLegacySave;
+    if(const char* value=std::getenv("PKE_LEGACY_SAVE_PATH")){ if(*value) explicitLegacySave=std::filesystem::path(value); }
+    const auto migration=AutoImportLegacyFullSaves(exeDir,localAppData,explicitLegacySave);
+    if(migration.status==LegacyImportStatus::Imported) std::cout<<"Imported legacy PKE save: "<<migration.sourcePath.string()<<" -> "<<migration.nativeSavePath.string()<<"\n";
+    else if(explicitLegacySave && migration.status!=LegacyImportStatus::NativeIsNewerOrEqual) std::cerr<<"Legacy save import: "<<migration.message<<"\n";
+    Config cfg; try{ cfg=LoadConfig(exeDir,exeDir/"pke-native.json"); }catch(const std::exception& e){ std::cerr<<e.what()<<"\n"; return 1; }
+#ifndef PKE_NATIVE_WITH_SDL
+    std::cout<<"PKE Native Prototype core build: SDL/WASAPI disabled\n"; return 0;
+#else
+    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0){ std::cerr<<SDL_GetError()<<"\n"; return 2; }
+    IMG_Init(IMG_INIT_PNG|IMG_INIT_WEBP); TTF_Init();
+    Uint32 flags=SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE; SDL_Window* win=SDL_CreateWindow("PKE Native Prototype 0.1",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,1280,720,flags); if(!win){std::cerr<<SDL_GetError()<<"\n";return 3;}
+    Uint32 rflags=SDL_RENDERER_ACCELERATED|(cfg.vsync?SDL_RENDERER_PRESENTVSYNC:0); SDL_Renderer* sr=SDL_CreateRenderer(win,-1,rflags); if(!sr){std::cerr<<SDL_GetError()<<"\n";SDL_DestroyWindow(win);return 4;}
+    Renderer renderer; renderer.Initialize(sr);
+    if(const char* windir=std::getenv("WINDIR")){ auto font=std::filesystem::path(windir)/"Fonts"/"segoeui.ttf"; if(std::filesystem::exists(font) && !renderer.PreloadFont(font,28)) std::cerr<<"Font preload warning: "<<renderer.LastError()<<"\n"; }
+    std::vector<std::string> songs; if(std::filesystem::exists(cfg.songsRoot)) for(const auto& e:std::filesystem::directory_iterator(cfg.songsRoot)) if(e.is_directory()) songs.push_back(e.path().filename().string()); std::sort(songs.begin(),songs.end());
+    size_t selected=0; if(argc>1){ auto it=std::find(songs.begin(),songs.end(),std::string(argv[1])); if(it!=songs.end())selected=size_t(it-songs.begin()); }
+    std::unique_ptr<GameSession> session; State state=State::SongSelection; bool running=true; bool fullscreen=false; auto last=std::chrono::steady_clock::now(); auto previousFrameStart=last;
+    auto updateTitle=[&]{ std::string t="PKE Native Prototype 0.1 - "; t += songs.empty()?"No Songs found":songs[selected]+" [ENTER]"; SDL_SetWindowTitle(win,t.c_str()); }; updateTitle();
+    if(argc>1 && !songs.empty()){ session=std::make_unique<GameSession>(cfg,exeDir); session->SetRenderer(&renderer); if(session->Load({songs[selected],argc>2?argv[2]:"hard"})) state=State::Gameplay; else std::cerr<<session->FailureMessage()<<"\n"; }
+    while(running){ auto frameStart=std::chrono::steady_clock::now(); const double frameIntervalMs=std::chrono::duration<double,std::milli>(frameStart-previousFrameStart).count(); previousFrameStart=frameStart; SDL_Event e{}; while(SDL_PollEvent(&e)){ if(e.type==SDL_QUIT)running=false; if(e.type==SDL_KEYDOWN&&!e.key.repeat){ if(e.key.keysym.scancode==SDL_SCANCODE_F11){ fullscreen=!fullscreen; if(SDL_SetWindowFullscreen(win,fullscreen?SDL_WINDOW_FULLSCREEN_DESKTOP:0)!=0){ fullscreen=!fullscreen; std::cerr<<"Fullscreen toggle failed: "<<SDL_GetError()<<"\n"; } } else if(state==State::Gameplay&&e.key.keysym.scancode==SDL_SCANCODE_F3){ session->ToggleDiagnostics(); } else if(e.key.keysym.scancode==SDL_SCANCODE_ESCAPE){ if(state==State::Gameplay){session->RequestStop();session.reset();state=State::SongSelection;updateTitle();}else running=false; } else if(state==State::SongSelection&&!songs.empty()){ if(e.key.keysym.scancode==SDL_SCANCODE_UP){selected=(selected+songs.size()-1)%songs.size();updateTitle();} else if(e.key.keysym.scancode==SDL_SCANCODE_DOWN){selected=(selected+1)%songs.size();updateTitle();} else if(e.key.keysym.scancode==SDL_SCANCODE_RETURN){session=std::make_unique<GameSession>(cfg,exeDir);session->SetRenderer(&renderer);if(session->Load({songs[selected],"hard"}))state=State::Gameplay;else std::cerr<<session->FailureMessage()<<"\n";} } else if(state==State::Gameplay) session->HandleKeyDown(e.key.keysym.scancode); } if(e.type==SDL_KEYUP&&state==State::Gameplay) session->HandleKeyUp(e.key.keysym.scancode); }
+        if(state==State::Gameplay&&session){ auto u0=std::chrono::steady_clock::now(); session->Update(); auto u1=std::chrono::steady_clock::now(); session->Render(); auto r1=std::chrono::steady_clock::now(); session->RecordFrameTiming(frameIntervalMs,std::chrono::duration<double,std::milli>(u1-u0).count(),std::chrono::duration<double,std::milli>(r1-u1).count()); if(session->State()==SessionState::Completed||session->State()==SessionState::Failed||session->State()==SessionState::DeviceLost){ if(session->State()!=SessionState::Completed)std::cerr<<session->FailureMessage()<<"\n"; session.reset();state=State::SongSelection;updateTitle(); } }
+        else { SDL_SetRenderDrawColor(sr,12,12,18,255);SDL_RenderClear(sr);SDL_RenderPresent(sr); }
+        if(!cfg.vsync&&cfg.fpsCap>0){ auto now=std::chrono::steady_clock::now(); double target=1.0/double(cfg.fpsCap); double elapsed=std::chrono::duration<double>(now-last).count(); if(elapsed<target)std::this_thread::sleep_for(std::chrono::duration<double>(target-elapsed)); last=std::chrono::steady_clock::now(); }
+    }
+    session.reset(); SDL_DestroyRenderer(sr);SDL_DestroyWindow(win);TTF_Quit();IMG_Quit();SDL_Quit();return 0;
+#endif
+}
+}
+=== END FILE ===
+=== FILE: native/src/AssetLocator.cpp ===
+#include "pke/AssetLocator.hpp"
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+namespace pke {
+namespace {
+std::filesystem::path rootify(const std::filesystem::path& exe, const std::filesystem::path& p){ return (p.is_absolute()?p:exe/p).lexically_normal(); }
+std::filesystem::path requirePath(const std::filesystem::path& p,const char* what){ if(!std::filesystem::exists(p)) throw std::runtime_error(std::string("Missing ")+what+": "+p.string()); return p.lexically_normal(); }
+}
+AssetLocator::AssetLocator(const Config& c,std::filesystem::path exe):songsRoot_(rootify(exe,c.songsRoot)),charactersRoot_(rootify(exe,c.charactersRoot)){}
+std::filesystem::path AssetLocator::ResolveSongFo
