@@ -1,0 +1,219 @@
+_view>
+
+namespace pke {
+struct CharacterAssetPaths {
+    std::filesystem::path json;
+    std::filesystem::path xml;
+    std::filesystem::path image;
+};
+
+class AssetLocator {
+public:
+    AssetLocator(const Config& config, std::filesystem::path executableDir);
+    std::filesystem::path ResolveSongFolder(std::string_view songId) const;
+    std::filesystem::path ResolveChartFile(const std::filesystem::path& songFolder, std::string_view difficulty) const;
+    std::filesystem::path ResolveInst(const std::filesystem::path& songFolder) const;
+    std::optional<std::filesystem::path> ResolveVoices(const std::filesystem::path& songFolder) const;
+    CharacterAssetPaths ResolveCharacter(std::string_view id) const;
+private:
+    std::filesystem::path songsRoot_;
+    std::filesystem::path charactersRoot_;
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/AudioEngine.hpp ===
+#pragma once
+#include <atomic>
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+
+namespace pke {
+class Diagnostics;
+enum class AudioState { Stopped, Ready, Playing, Paused, DeviceLost, Finished, Error };
+class IAudioClock {
+public:
+    virtual ~IAudioClock() = default;
+    virtual bool Start() = 0;
+    virtual void Pause() = 0;
+    virtual void Resume() = 0;
+    virtual void Stop() = 0;
+    virtual double SongTimeMs() const = 0;
+    virtual AudioState State() const = 0;
+    virtual std::string LastErrorCopy() const = 0;
+};
+struct DecodedAudio {
+    uint32_t sampleRate{0};
+    uint32_t channels{0};
+    std::vector<float> pcm;
+    uint64_t frameCount{0};
+};
+class AudioEngine : public IAudioClock {
+public:
+    AudioEngine();
+    ~AudioEngine();
+    AudioEngine(const AudioEngine&)=delete;
+    AudioEngine& operator=(const AudioEngine&)=delete;
+
+    bool Load(const std::filesystem::path& instPath,const std::optional<std::filesystem::path>& voicesPath=std::nullopt);
+    void LoadDecodedForTest(DecodedAudio inst,std::optional<DecodedAudio> voices);
+    bool Start() override;
+    void Pause() override;
+    void Resume() override;
+    void Stop() override;
+    void SeekFrames(uint64_t frame);
+    uint64_t SongFrame() const { return songFrame_.load(std::memory_order_relaxed); }
+    double SongTimeMs() const override;
+    AudioState State() const override { return state_.load(std::memory_order_relaxed); }
+    const std::string& LastError() const { return lastError_; }
+    std::string LastErrorCopy() const override;
+    void SetLatencyCompensationMs(double ms){ latencyCompensationMs_=ms; }
+    uint32_t OutputSampleRate() const { return outputSampleRate_; }
+    uint32_t OutputChannels() const { return outputChannels_; }
+    uint64_t DebugInstFrame() const;
+    uint64_t DebugVoicesFrame() const;
+    void NotifyDeviceLost(std::string message);
+    void NotifyDeviceLostFromAudioThread() noexcept;
+    void SetDiagnostics(Diagnostics* diagnostics) noexcept { diagnostics_=diagnostics; }
+    void MixFrames(float* output,uint32_t frameCount) noexcept;
+private:
+    struct DeviceImpl;
+    std::unique_ptr<DeviceImpl> device_;
+    static DecodedAudio ConvertTo(const DecodedAudio& src,uint32_t sampleRate,uint32_t channels);
+    void SetError(std::string message,AudioState state=AudioState::Error);
+    bool EnsureDevice();
+
+    DecodedAudio inst_;
+    std::optional<DecodedAudio> voices_;
+    uint32_t outputSampleRate_{0};
+    uint32_t outputChannels_{0};
+    std::atomic<uint64_t> songFrame_{0};
+    std::atomic<AudioState> state_{AudioState::Stopped};
+    double latencyCompensationMs_{0.0};
+    std::string lastError_;
+    Diagnostics* diagnostics_{nullptr};
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/Character.hpp ===
+#pragma once
+#include "pke/SdlCompat.hpp"
+#include <filesystem>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+namespace pke {
+struct AtlasFrame {
+    std::string name;
+    SDL_Rect source{};
+    int frameX{0}; int frameY{0}; int frameWidth{0}; int frameHeight{0};
+    bool rotated{false};
+};
+struct AnimationDef {
+    std::string anim;
+    std::string prefix;
+    std::vector<int> indices;
+    double fps{24.0};
+    bool loop{false};
+    SDL_Point offset{};
+    std::vector<size_t> frameIndices;
+};
+struct CharacterDefinition {
+    std::filesystem::path imagePath;
+    std::unordered_map<std::string,AnimationDef> animations;
+    double scale{1.0};
+    SDL_Point position{};
+    bool flipX{false};
+    bool noAntialiasing{false};
+    double singDuration{4.0};
+    std::vector<AtlasFrame> atlas;
+    std::vector<std::string> warnings;
+};
+struct FramePlacement {
+    SDL_Rect source{};
+    double destinationX{}; double destinationY{}; double destinationW{}; double destinationH{};
+    bool rotated{false}; bool flipX{false};
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/CharacterAnimator.hpp ===
+#pragma once
+#include "pke/Character.hpp"
+#include <cstddef>
+#include <string_view>
+
+namespace pke {
+struct AnimationFrameView {
+    size_t atlasFrameIndex{0};
+    std::string_view animationName{};
+    double animationStartMs{0.0};
+};
+class CharacterAnimator {
+public:
+    void SetCharacter(const CharacterDefinition* character);
+    void TriggerSing(int lane,double songTimeMs,double holdUntilMs);
+    void ReturnToIdle(double songTimeMs);
+    void Update(double songTimeMs);
+    AnimationFrameView CurrentFrame() const;
+private:
+    const AnimationDef* FindAnimation(std::string_view name) const;
+    const CharacterDefinition* character_{nullptr};
+    const AnimationDef* current_{nullptr};
+    std::string_view currentName_{};
+    double animationStartMs_{0.0};
+    double holdUntilMs_{0.0};
+    double currentSongTimeMs_{0.0};
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/CharacterLoader.hpp ===
+#pragma once
+#include "pke/AssetLocator.hpp"
+#include "pke/Character.hpp"
+namespace pke {
+CharacterDefinition LoadCharacter(const CharacterAssetPaths& paths);
+FramePlacement ComputeFramePlacement(const AtlasFrame& frame, SDL_Point authoredOffset, double scale, bool flipX);
+}
+=== END FILE ===
+=== FILE: native/include/pke/Chart.hpp ===
+#pragma once
+#include <string>
+#include <vector>
+
+namespace pke {
+enum class Side { Player, Opponent };
+struct Note {
+    double timeMs{};
+    int lane{};
+    double sustainMs{};
+    Side side{Side::Opponent};
+    std::string noteType;
+    bool altAnim{false};
+    bool gfNote{false};
+};
+struct BpmPoint { double timeMs{}; double bpm{}; };
+struct Chart {
+    std::vector<Note> notes;
+    std::vector<BpmPoint> bpmTimeline;
+    double scrollSpeed{1.0};
+    double baseBpm{100.0};
+    std::string player1;
+    std::string player2;
+    std::string gfVersion;
+    std::vector<std::string> warnings;
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/ChartParser.hpp ===
+#pragma once
+#include "pke/Chart.hpp"
+#include <filesystem>
+
+namespace pke {
+enum class NoteMappingMode { PsychSection, AbsoluteNoteHalf };
+struct ChartParserOptions { NoteMappingMode mappingMode{NoteMappingMode::PsychSection}; };
+Chart ParseChart(const std::filesystem::path& jsonPath, C
