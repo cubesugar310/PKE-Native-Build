@@ -1,0 +1,182 @@
+llDirection{"up"};
+    std::string judgementPosition{"center"};
+    int halloweenCandy{0};
+    std::vector<std::string> purchasedSkinIds;
+    std::vector<std::string> unlockedTitleIds;
+    std::vector<std::string> earnedTitleIds;
+};
+
+enum class LegacyImportStatus {
+    Imported,
+    NativeIsNewerOrEqual,
+    NoLegacySave,
+    InvalidLegacySave,
+    WriteFailed
+};
+
+struct LegacyImportResult {
+    LegacyImportStatus status{LegacyImportStatus::NoLegacySave};
+    std::filesystem::path sourcePath;
+    std::filesystem::path nativeSavePath;
+    std::string message;
+};
+
+LegacyFullSaveData ReadLegacyFullSave(const std::filesystem::path& path);
+NativeSaveSummary ReadNativeSaveSummary(const std::filesystem::path& path);
+void WriteNativeSaveSummary(const std::filesystem::path& path, const NativeSaveSummary& summary);
+
+int CompareProgressMarkers(const PlayerProgressMarker& left, const PlayerProgressMarker& right);
+PlayerProgressMarker ProgressMarkerFor(const ImportedPlayerProgress& progress);
+
+std::vector<std::filesystem::path> DiscoverLegacyFullSaves(
+    const std::filesystem::path& executableDir,
+    const std::filesystem::path& localAppData,
+    const std::optional<std::filesystem::path>& explicitPath = std::nullopt);
+
+std::filesystem::path DefaultNativeSaveRoot(
+    const std::filesystem::path& executableDir,
+    const std::filesystem::path& localAppData);
+
+LegacyImportResult ImportLegacyFullSave(
+    const std::filesystem::path& sourcePath,
+    const std::filesystem::path& nativeSaveRoot);
+
+LegacyImportResult AutoImportLegacyFullSaves(
+    const std::filesystem::path& executableDir,
+    const std::filesystem::path& localAppData,
+    const std::optional<std::filesystem::path>& explicitPath = std::nullopt);
+
+} // namespace pke
+=== END FILE ===
+=== FILE: native/include/pke/Renderer.hpp ===
+#pragma once
+#include "pke/Character.hpp"
+#include "pke/CharacterAnimator.hpp"
+#include "pke/Diagnostics.hpp"
+#include "pke/RhythmEngine.hpp"
+#include "pke/SdlCompat.hpp"
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace pke {
+struct Viewport { SDL_Rect destination{}; double scale{1.0}; };
+Viewport ComputeLetterboxedViewport(int outputW,int outputH,int logicalW=1920,int logicalH=1080);
+double ComputeNoteY(double noteTimeMs,double songTimeMs,double scrollSpeed,double receptorY,double pixelsPerMsAtSpeed1=0.45);
+
+struct CharacterRenderView {
+    std::string textureKey;
+    const CharacterDefinition* definition{nullptr};
+    AnimationFrameView frame{};
+    SDL_Point basePosition{};
+};
+bool NeedsDiagnosticFallback(const CharacterRenderView& view,bool textureAvailable) noexcept;
+struct RenderState {
+    double songTimeMs{0.0};
+    double scrollSpeed{1.0};
+    const Chart* chart{nullptr};
+    const std::vector<RuntimeNoteState>* notes{nullptr};
+    CharacterRenderView bf;
+    CharacterRenderView dad;
+    PlayStats stats{};
+    std::string_view judgementText{};
+    std::string_view songName{};
+    bool diagnosticsVisible{false};
+    DiagnosticsSummary diagnostics{};
+};
+
+template<class Fn>
+void ForEachRenderableNote(const RenderState& state,Fn&& fn){
+    if(state.chart){
+        for(const auto& note:state.chart->notes) if(note.side==Side::Opponent) fn(note);
+    }
+    if(state.notes){
+        for(const auto& runtime:*state.notes){
+            if(runtime.note.side!=Side::Player) continue;
+            if(runtime.status==NoteStatus::Missed||runtime.status==NoteStatus::Hit||runtime.status==NoteStatus::SustainCompleted) continue;
+            fn(runtime.note);
+        }
+    }
+}
+
+class Renderer {
+public:
+    Renderer();
+    ~Renderer();
+    Renderer(const Renderer&)=delete;
+    Renderer& operator=(const Renderer&)=delete;
+    bool Initialize(SDL_Renderer* renderer);
+    bool PreloadCharacter(std::string key,const CharacterDefinition& definition);
+    bool PreloadFont(const std::filesystem::path& fontPath,int pointSize=28);
+    void Draw(const RenderState& state);
+    std::string LastError() const;
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/RhythmEngine.hpp ===
+#pragma once
+#include "pke/Chart.hpp"
+#include <array>
+#include <optional>
+#include <vector>
+
+namespace pke {
+enum class Judgement { Sick, Good, Bad, Miss };
+enum class NoteStatus { Pending, Hit, Missed, Holding, SustainCompleted, SustainBroken };
+struct JudgementConfig {
+    double sickMs{45.0}; double goodMs{90.0}; double badMs{135.0}; double missMs{180.0};
+    double holdStartGraceMs{60.0}; double holdReleaseGraceMs{90.0};
+};
+struct PlayStats {
+    int rawScore{0}; int combo{0}; int maxCombo{0}; int sick{0}; int good{0}; int bad{0}; int miss{0};
+    double health{1.0}; double accuracyPercent{100.0};
+};
+struct RuntimeNoteState {
+    Note note;
+    NoteStatus status{NoteStatus::Pending};
+    std::optional<Judgement> judgement;
+    double hitTimeMs{0.0};
+};
+class RhythmEngine {
+public:
+    explicit RhythmEngine(JudgementConfig cfg = {}):cfg_(cfg){}
+    void Reset(const Chart& chart);
+    std::optional<Judgement> KeyDown(int lane,double songTimeMs);
+    void KeyUp(int lane,double songTimeMs);
+    void Update(double songTimeMs);
+    const PlayStats& Stats() const { return stats_; }
+    const std::vector<RuntimeNoteState>& NoteStates() const { return notes_; }
+private:
+    void applyJudgement(RuntimeNoteState&, Judgement, double);
+    void recalcAccuracy();
+    JudgementConfig cfg_;
+    std::vector<RuntimeNoteState> notes_;
+    PlayStats stats_{};
+    std::array<bool,4> keyDown_{};
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/SdlCompat.hpp ===
+#pragma once
+#if __has_include(<SDL.h>)
+#  include <SDL.h>
+#elif __has_include(<SDL2/SDL.h>)
+#  include <SDL2/SDL.h>
+#else
+using SDL_Scancode = int;
+constexpr SDL_Scancode SDL_SCANCODE_UNKNOWN = 0;
+constexpr SDL_Scancode SDL_SCANCODE_RIGHT = 79;
+constexpr SDL_Scancode SDL_SCANCODE_LEFT  = 80;
+constexpr SDL_Scancode SDL_SCANCODE_DOWN  = 81;
+constexpr SDL_Scancode SDL_SCANCODE_UP    = 82;
+struct SDL_Point { int x; int y; };
+struct SDL_Rect { int x; int y; int w; int h; };
+struct SDL_Renderer;
+struct SDL_Texture;
+#endif
+=== END FILE ===
