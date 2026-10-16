@@ -1,0 +1,135 @@
+return false; }
+#endif
+    return true;
+}
+void AudioEngine::Pause(){ if(State()==AudioState::Playing) state_=AudioState::Paused; }
+void AudioEngine::Resume(){ if(State()==AudioState::Paused) state_=AudioState::Playing; }
+void AudioEngine::Stop(){ state_=AudioState::Stopped;
+#ifdef PKE_NATIVE_WITH_AUDIO_DEPS
+    if(device_&&device_->initialized) ma_device_stop(&device_->device);
+#endif
+}
+void AudioEngine::SeekFrames(uint64_t f){ songFrame_.store(std::min<uint64_t>(f,inst_.frameCount),std::memory_order_relaxed); }
+double AudioEngine::SongTimeMs() const { if(outputSampleRate_==0) return latencyCompensationMs_; return double(SongFrame())*1000.0/double(outputSampleRate_)+latencyCompensationMs_; }
+uint64_t AudioEngine::DebugInstFrame() const { return std::min<uint64_t>(SongFrame(),inst_.frameCount); }
+uint64_t AudioEngine::DebugVoicesFrame() const { return voices_?std::min<uint64_t>(SongFrame(),voices_->frameCount):DebugInstFrame(); }
+std::string AudioEngine::LastErrorCopy() const {
+    if(State()==AudioState::DeviceLost && lastError_.empty()) return "Audio device lost";
+    return lastError_;
+}
+void AudioEngine::NotifyDeviceLost(std::string m){ SetError(std::move(m),AudioState::DeviceLost); }
+void AudioEngine::NotifyDeviceLostFromAudioThread() noexcept {
+    const auto current=State();
+    if(current!=AudioState::Stopped && current!=AudioState::Finished && current!=AudioState::Error) state_.store(AudioState::DeviceLost,std::memory_order_relaxed);
+}
+void AudioEngine::MixFrames(float* out,uint32_t frames) noexcept {
+    if(!out||outputChannels_==0) return;
+    const size_t total=size_t(frames)*outputChannels_;
+    std::fill_n(out,total,0.0f);
+    if(State()!=AudioState::Playing) return;
+    uint64_t cursor=songFrame_.load(std::memory_order_relaxed);
+    for(uint32_t f=0;f<frames;++f){ if(cursor>=inst_.frameCount){ state_.store(AudioState::Finished,std::memory_order_relaxed); break; }
+        for(uint32_t c=0;c<outputChannels_;++c){ float v=inst_.pcm[cursor*outputChannels_+c]; if(voices_&&cursor<voices_->frameCount)v+=voices_->pcm[cursor*outputChannels_+c]; out[size_t(f)*outputChannels_+c]=v; }
+        ++cursor;
+    }
+    songFrame_.store(cursor,std::memory_order_relaxed);
+    if(diagnostics_) diagnostics_->RecordAudio({cursor,frames,false});
+}
+}
+=== END FILE ===
+=== FILE: native/src/CharacterAnimator.cpp ===
+#include "pke/CharacterAnimator.hpp"
+#include <algorithm>
+#include <cmath>
+
+namespace pke {
+const AnimationDef* CharacterAnimator::FindAnimation(std::string_view name) const {
+    if(!character_) return nullptr;
+    auto it=character_->animations.find(std::string(name));
+    if(it!=character_->animations.end() && !it->second.frameIndices.empty()) return &it->second;
+    auto idle=character_->animations.find("idle");
+    return idle!=character_->animations.end() && !idle->second.frameIndices.empty()?&idle->second:nullptr;
+}
+void CharacterAnimator::SetCharacter(const CharacterDefinition* c){ character_=c; currentSongTimeMs_=0; holdUntilMs_=0; ReturnToIdle(0.0); }
+void CharacterAnimator::TriggerSing(int lane,double t,double holdUntil){
+    static constexpr const char* names[4]={"singLEFT","singDOWN","singUP","singRIGHT"};
+    if(lane<0||lane>3) return;
+    current_=FindAnimation(names[lane]);
+    currentName_=current_ ? current_->anim : std::string_view{};
+    animationStartMs_=t;
+    holdUntilMs_=std::max(t,holdUntil);
+    currentSongTimeMs_=t;
+}
+void CharacterAnimator::ReturnToIdle(double t){ current_=FindAnimation("idle"); currentName_=current_?current_->anim:std::string_view{}; animationStartMs_=t; holdUntilMs_=0; if(currentSongTimeMs_<t) currentSongTimeMs_=t; }
+void CharacterAnimator::Update(double t){ currentSongTimeMs_=t; if(current_ && currentName_!="idle" && holdUntilMs_>0 && t>=holdUntilMs_) ReturnToIdle(holdUntilMs_); currentSongTimeMs_=t; }
+AnimationFrameView CharacterAnimator::CurrentFrame() const {
+    if(!current_ || current_->frameIndices.empty()) return {};
+    const double elapsed=std::max(0.0,currentSongTimeMs_-animationStartMs_);
+    const double fps=current_->fps>0?current_->fps:24.0;
+    size_t idx=static_cast<size_t>(std::floor(elapsed*fps/1000.0));
+    if(current_->loop) idx%=current_->frameIndices.size(); else idx=std::min(idx,current_->frameIndices.size()-1);
+    return {current_->frameIndices[idx],currentName_,animationStartMs_};
+}
+}
+=== END FILE ===
+=== FILE: native/src/CharacterLoader.cpp ===
+#include "pke/CharacterLoader.hpp"
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+#include <fstream>
+#include <map>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+
+#ifdef PKE_NATIVE_USE_NLOHMANN
+#include <nlohmann/json.hpp>
+#include <tinyxml2.h>
+#else
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#endif
+
+namespace pke {
+namespace {
+int suffixNumber(const std::string& name,const std::string& prefix){
+    if(name.rfind(prefix,0)!=0) return -1;
+    auto tail=name.substr(prefix.size()); size_t i=0; while(i<tail.size() && !std::isdigit(static_cast<unsigned char>(tail[i]))) ++i;
+    if(i==tail.size()) return 0;
+    int v=0;
+    for(;i<tail.size() && std::isdigit(static_cast<unsigned char>(tail[i]));++i) v=v*10+(tail[i]-'0');
+    return v;
+}
+
+struct ResolvedCharacterFiles { std::filesystem::path xml; std::filesystem::path image; };
+ResolvedCharacterFiles resolveCharacterFiles(const CharacterAssetPaths& paths,const std::string& imageField){
+    ResolvedCharacterFiles r{paths.xml,paths.image};
+    if(imageField.empty()) return r;
+    auto base=std::filesystem::path(imageField).filename();
+    if(base.has_extension()) base.replace_extension();
+    const auto parent=paths.json.parent_path();
+    if(r.xml.empty()){
+        auto candidate=parent/(base.string()+".xml");
+        if(std::filesystem::exists(candidate)) r.xml=candidate;
+    }
+    if(r.image.empty()){
+        for(const char* ext:{".png",".webp"}){
+            auto candidate=parent/(base.string()+ext);
+            if(std::filesystem::exists(candidate)){ r.image=candidate; break; }
+        }
+    }
+    return r;
+}
+void bindFrames(CharacterDefinition& out){
+    for(auto& [key,a]:out.animations){
+        std::vector<std::pair<int,size_t>> matches;
+        for(size_t i=0;i<out.atlas.size();++i){ int n=suffixNumber(out.atlas[i].name,a.prefix); if(n>=0) matches.push_back({n,i}); }
+        std::stable_sort(matches.begin(),matches.end(),[](auto x,auto y){ return x.first<y.first; });
+        if(a.indices.empty()) for(auto [n,i]:matches) a.frameIndices.push_back(i);
+        else for(int wanted:a.indices){ auto it=std::find_if(matches.begin(),matches.end(),[&](auto p){return p.first==wanted;}); if(it!=matches.end()) a.frameIndices.push_back(it->second); }
+        if(a.frameIndices.empty()) out.warnings.push_back("Animation '"+a.anim+"' matched no atlas frames for prefix '"+a.prefix+"'");
+    }
+    auto idle=out.animations.find("idle"); if(idle!=out.animations.end() && !idle->second.frameIndices.emp
