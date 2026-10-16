@@ -1,0 +1,204 @@
+hartParserOptions options = {});
+}
+=== END FILE ===
+=== FILE: native/include/pke/Config.hpp ===
+#pragma once
+#include "pke/SdlCompat.hpp"
+#include <array>
+#include <filesystem>
+
+namespace pke {
+struct Config {
+    std::filesystem::path songsRoot;
+    std::filesystem::path charactersRoot;
+    std::array<SDL_Scancode, 4> playerKeys{SDL_SCANCODE_LEFT, SDL_SCANCODE_DOWN, SDL_SCANCODE_UP, SDL_SCANCODE_RIGHT};
+    bool vsync{false};
+    int fpsCap{240};
+    double inputOffsetMs{0.0};
+    double audioLatencyCompensationMs{0.0};
+};
+
+Config LoadConfig(const std::filesystem::path& executableDir,
+                  const std::filesystem::path& configPath);
+}
+=== END FILE ===
+=== FILE: native/include/pke/Diagnostics.hpp ===
+#pragma once
+#include <atomic>
+#include <cstdint>
+#include <vector>
+
+namespace pke {
+struct FrameSample { double intervalMs{0}; double updateMs{0}; double renderMs{0}; double songTimeMs{0}; };
+struct AudioSample { uint64_t songFrame{0}; uint32_t callbackFrames{0}; bool underrun{false}; };
+struct DiagnosticsSnapshot { std::vector<FrameSample> frames; std::vector<AudioSample> audio; std::vector<double> inputOffsetsMs; };
+struct DiagnosticsSummary {
+    FrameSample latestFrame{};
+    AudioSample latestAudio{};
+    double latestInputOffsetMs{0.0};
+    size_t frameSamples{0};
+    size_t audioSamples{0};
+    size_t inputSamples{0};
+};
+
+class Diagnostics {
+public:
+    explicit Diagnostics(size_t frameCapacity=600,size_t audioCapacity=2048,size_t inputCapacity=2048);
+    void RecordFrame(const FrameSample& sample) noexcept;
+    void RecordAudio(const AudioSample& sample) noexcept;
+    void RecordInputOffset(double offsetMs) noexcept;
+    DiagnosticsSnapshot Snapshot() const;
+    DiagnosticsSummary Summary() const noexcept;
+    void Reset() noexcept;
+private:
+    template<class T>
+    struct Ring {
+        explicit Ring(size_t cap):data(cap){}
+        std::vector<T> data;
+        size_t head{0};
+        size_t count{0};
+        void push(const T& v) noexcept { if(data.empty()) return; data[head]=v; head=(head+1)%data.size(); if(count<data.size()) ++count; }
+        void clear() noexcept { head=0; count=0; }
+        T latest() const noexcept { if(count==0||data.empty()) return {}; return data[(head+data.size()-1)%data.size()]; }
+        std::vector<T> snapshot() const { std::vector<T> out; out.reserve(count); if(data.empty()) return out; const size_t start=(head+data.size()-count)%data.size(); for(size_t i=0;i<count;++i) out.push_back(data[(start+i)%data.size()]); return out; }
+    };
+    Ring<FrameSample> frames_;
+    Ring<AudioSample> audio_;
+    Ring<double> inputOffsets_;
+    std::atomic<uint64_t> latestAudioFrame_{0};
+    std::atomic<uint32_t> latestAudioCallbackFrames_{0};
+    std::atomic<bool> latestAudioUnderrun_{false};
+    std::atomic<size_t> audioSamples_{0};
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/GameSession.hpp ===
+#pragma once
+#include "pke/AssetLocator.hpp"
+#include "pke/AudioEngine.hpp"
+#include "pke/CharacterAnimator.hpp"
+#include "pke/CharacterLoader.hpp"
+#include "pke/ChartParser.hpp"
+#include "pke/Config.hpp"
+#include "pke/Diagnostics.hpp"
+#include "pke/Renderer.hpp"
+#include "pke/RhythmEngine.hpp"
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace pke {
+enum class SessionState { Loading, Ready, Countdown, Playing, Completed, Failed, DeviceLost };
+struct SongSelection { std::string songId; std::string difficulty{"hard"}; };
+
+class GameSession {
+public:
+    GameSession(Config config,std::filesystem::path executableDir,IAudioClock* injectedClock=nullptr);
+    ~GameSession();
+    bool Load(const SongSelection& selection);
+    void HandleKeyDown(SDL_Scancode key);
+    void HandleKeyUp(SDL_Scancode key);
+    void Update();
+    void Render();
+    SessionState State() const { return state_; }
+    const std::string& FailureMessage() const { return failureMessage_; }
+    const std::vector<std::string>& Warnings() const { return warnings_; }
+    const PlayStats& Stats() const { return rhythm_.Stats(); }
+    void RequestStop();
+    void SetRenderer(Renderer* renderer){ renderer_=renderer; }
+    void ToggleDiagnostics() noexcept { diagnosticsVisible_=!diagnosticsVisible_; }
+    bool DiagnosticsVisible() const noexcept { return diagnosticsVisible_; }
+    void RecordFrameTiming(double intervalMs,double updateMs,double renderMs) noexcept;
+    DiagnosticsSummary DiagnosticsSummaryCopy() const noexcept { return diagnostics_.Summary(); }
+private:
+    int LaneForKey(SDL_Scancode key) const;
+    CharacterDefinition FallbackCharacter(const std::string& label) const;
+    void Fail(std::string message);
+    void UpdateOpponentAnimations(double songTimeMs);
+
+    Config config_;
+    std::filesystem::path executableDir_;
+    AssetLocator locator_;
+    Diagnostics diagnostics_;
+    AudioEngine ownedAudio_;
+    IAudioClock* clock_{nullptr};
+    bool injectedClock_{false};
+    Renderer* renderer_{nullptr};
+    SessionState state_{SessionState::Loading};
+    std::string failureMessage_;
+    std::vector<std::string> warnings_;
+    Chart chart_;
+    RhythmEngine rhythm_;
+    CharacterDefinition bfDef_;
+    CharacterDefinition dadDef_;
+    CharacterAnimator bfAnimator_;
+    CharacterAnimator dadAnimator_;
+    size_t nextOpponentNote_{0};
+    double lastUpdateSongTimeMs_{0.0};
+    std::string songName_;
+    bool diagnosticsVisible_{false};
+};
+}
+=== END FILE ===
+=== FILE: native/include/pke/LegacySaveImporter.hpp ===
+#pragma once
+#include <cstdint>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <vector>
+
+namespace pke {
+
+struct PlayerProgressMarker {
+    std::uint64_t matches{0};
+    std::uint64_t recentAt{0};
+    std::uint64_t accuracyMatches{0};
+};
+
+struct ImportedPlayerProgress {
+    int rp{0};
+    int wins{0};
+    int losses{0};
+    int draws{0};
+    std::uint64_t matches{0};
+    double accuracy{0.0};
+    double accuracySum{0.0};
+    std::uint64_t accuracyMatches{0};
+    std::uint64_t recentAt{0};
+    int peakRp{0};
+    std::string onlineSongRangeTier{"beginner"};
+    std::string lastOpponentId;
+};
+
+struct LegacyFullSaveData {
+    bool valid{false};
+    std::filesystem::path sourcePath;
+    std::string exportedAt;
+    ImportedPlayerProgress progress;
+    std::string playerName;
+    std::string equippedTitle;
+    std::string selectedSkin;
+    double masterVolume{1.0};
+    std::string scrollDirection{"up"};
+    std::string judgementPosition{"center"};
+    int halloweenCandy{0};
+    std::vector<std::string> purchasedSkinIds;
+    std::vector<std::string> unlockedTitleIds;
+    std::vector<std::string> earnedTitleIds;
+};
+
+struct NativeSaveSummary {
+    bool valid{false};
+    int version{1};
+    std::string importedAt;
+    std::string legacyExportedAt;
+    std::string legacyBackupFile{"legacy-full-save-v1.json"};
+    std::string legacySourcePath;
+    ImportedPlayerProgress progress;
+    std::string playerName;
+    std::string equippedTitle;
+    std::string selectedSkin;
+    double masterVolume{1.0};
+    std::string scro
