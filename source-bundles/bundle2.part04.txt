@@ -1,0 +1,18 @@
+ken;
+    }
+}
+void RhythmEngine::Update(double t){
+    for(auto& st:notes_){
+        if(st.status==NoteStatus::Pending && t>=st.note.timeMs+cfg_.missMs){ st.status=NoteStatus::Missed; applyJudgement(st,Judgement::Miss,t); }
+        else if(st.status==NoteStatus::Holding){
+            const double end=st.note.timeMs+st.note.sustainMs;
+            if(t>=end) st.status=NoteStatus::SustainCompleted;
+        }
+    }
+}
+}
+=== END FILE ===
+=== FILE: native/src/main.cpp ===
+#include "pke/App.hpp"
+int main(int argc,char** argv){ pke::App app; return app.Run(argc,argv); }
+=== END FILE ===
