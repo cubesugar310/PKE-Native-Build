@@ -1,0 +1,56 @@
+>("masterVolume",1),0.0,1.0);out.scrollDirection=s->get<std::string>("scrollDirection","up");out.judgementPosition=s->get<std::string>("judgementPosition","center");}if(auto h=root.get_child_optional("halloween")){out.halloweenCandy=ClampInt(h->get<long long>("candy",0));out.purchasedSkinIds=StringVector(*h,"purchasedSkinIds");out.unlockedTitleIds=StringVector(*h,"unlockedTitleIds");}out.earnedTitleIds=StringVector(root,"earnedTitleIds");
+#endif
+        out.valid=true;
+    } catch(...) { out.valid=false; }
+    return out;
+}
+
+void WriteNativeSaveSummary(const std::filesystem::path& path, const NativeSaveSummary& summary) {
+    std::filesystem::create_directories(path.parent_path());
+    const auto temp=path.string()+".tmp"; WriteAll(temp,SerializeNative(summary)); ReplaceFileFromTemp(temp,path);
+}
+
+std::vector<std::filesystem::path> DiscoverLegacyFullSaves(const std::filesystem::path& executableDir,const std::filesystem::path& localAppData,const std::optional<std::filesystem::path>& explicitPath) {
+    std::vector<std::filesystem::path> out;
+    auto add=[&](const std::filesystem::path& p){ if(p.empty()||!std::filesystem::is_regular_file(p))return; auto n=p.lexically_normal(); if(std::find(out.begin(),out.end(),n)==out.end())out.push_back(n); };
+    if(explicitPath) add(*explicitPath);
+    std::vector<std::pair<std::filesystem::file_time_type,std::filesystem::path>> exports;
+    std::error_code ec;
+    if(std::filesystem::is_directory(executableDir,ec)) for(const auto& e:std::filesystem::directory_iterator(executableDir,ec)) if(e.is_regular_file(ec)){const auto name=e.path().filename().string();if(name.rfind("PKE_Beat_Battle_FULL_SAVE_",0)==0&&e.path().extension()==".json")exports.push_back({e.last_write_time(ec),e.path()});}
+    std::sort(exports.begin(),exports.end(),[](const auto& a,const auto& b){return a.first>b.first;}); for(const auto& e:exports)add(e.second);
+    add(executableDir/"full-save-v1.json");
+    if(!localAppData.empty()) { add(localAppData/"PKE.BeatBattle.v0.2.42"/"full-save-v1.json"); add(localAppData/"PKE Beat Battle"/"full-save-v1.json"); add(localAppData/"PKEBeatBattle"/"full-save-v1.json"); }
+    return out;
+}
+
+std::filesystem::path DefaultNativeSaveRoot(const std::filesystem::path& executableDir,const std::filesystem::path& localAppData) { return localAppData.empty()?(executableDir/"Save"):(localAppData/"PKE.Native.BeatBattle"); }
+
+LegacyImportResult ImportLegacyFullSave(const std::filesystem::path& sourcePath,const std::filesystem::path& nativeSaveRoot) {
+    LegacyImportResult result; result.sourcePath=sourcePath; result.nativeSavePath=nativeSaveRoot/"native-save-v1.json";
+    if(!std::filesystem::is_regular_file(sourcePath)){result.status=LegacyImportStatus::NoLegacySave;result.message="Legacy Full Save not found";return result;}
+    const auto legacy=ReadLegacyFullSave(sourcePath); if(!legacy.valid){result.status=LegacyImportStatus::InvalidLegacySave;result.message="Legacy Full Save is invalid or unsupported";return result;}
+    const auto existing=ReadNativeSaveSummary(result.nativeSavePath); if(existing.valid&&CompareProgressMarkers(ProgressMarkerFor(existing.progress),ProgressMarkerFor(legacy.progress))>=0){result.status=LegacyImportStatus::NativeIsNewerOrEqual;result.message="Native player progress is newer or equal; legacy save left untouched";return result;}
+    try {
+        std::filesystem::create_directories(nativeSaveRoot);
+        const auto raw=ReadAll(sourcePath); const auto backup=nativeSaveRoot/"legacy-full-save-v1.json"; const auto backupTemp=nativeSaveRoot/"legacy-full-save-v1.json.tmp"; WriteAll(backupTemp,raw); ReplaceFileFromTemp(backupTemp,backup);
+        auto summary=ToNative(legacy); WriteNativeSaveSummary(result.nativeSavePath,summary);
+        result.status=LegacyImportStatus::Imported; result.message="Legacy PKE save imported without modifying the source"; return result;
+    } catch(const std::exception& e) { result.status=LegacyImportStatus::WriteFailed; result.message=e.what(); return result; }
+}
+
+
+LegacyImportResult AutoImportLegacyFullSaves(const std::filesystem::path& executableDir,const std::filesystem::path& localAppData,const std::optional<std::filesystem::path>& explicitPath) {
+    const auto root=DefaultNativeSaveRoot(executableDir,localAppData);
+    if(explicitPath) return ImportLegacyFullSave(*explicitPath,root);
+    const auto candidates=DiscoverLegacyFullSaves(executableDir,localAppData,std::nullopt);
+    LegacyImportResult best; best.status=LegacyImportStatus::NoLegacySave; best.nativeSavePath=root/"native-save-v1.json"; best.message="No legacy PKE Full Save discovered";
+    for(const auto& candidate:candidates){
+        const auto current=ImportLegacyFullSave(candidate,root);
+        if(current.status==LegacyImportStatus::Imported) best=current;
+        else if(best.status==LegacyImportStatus::NoLegacySave && current.status==LegacyImportStatus::NativeIsNewerOrEqual) best=current;
+    }
+    return best;
+}
+
+} // namespace pke
+=== END FILE ===
