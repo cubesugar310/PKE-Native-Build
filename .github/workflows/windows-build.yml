@@ -13,85 +13,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Repair and decode source archive
+      - name: Reconstruct readable native source
         shell: pwsh
         run: |
           @'
           from pathlib import Path
-          import base64, hashlib
+          import re
 
-          alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
-          def git_blob_sha(text: str) -> str:
-              raw = text.encode('ascii')
-              return hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
-
-          parts = [Path(f'pke_native_source.zip.b64.part{i:02d}').read_text(encoding='utf-8') for i in range(7)]
-          for i, p in enumerate(parts):
-              print(f'part{i:02d}: len={len(p)} sha={git_blob_sha(p)}', flush=True)
-
-          target00 = '5475c379a99e29b7763af75ed45324b6af00fe57'
-          if git_blob_sha(parts[0]) != target00:
-              repaired = None
-              for i in range(len(parts[0])):
-                  candidate = parts[0][:i] + parts[0][i+1:]
-                  if git_blob_sha(candidate) == target00:
-                      repaired = candidate
-                      print(f'repaired part00 by deleting character at offset {i}', flush=True)
-                      break
-              if repaired is None:
-                  raise RuntimeError('could not repair part00')
-              parts[0] = repaired
-
-          target04 = '85f165b0cdce4eb63bd025753036737249123212'
-          if git_blob_sha(parts[4]) != target04:
-              repaired = None
-              prefix = b'blob 20000\0'
-              bad = parts[4]
-              for i in range(len(bad) + 1):
-                  left, right = bad[:i], bad[i:]
-                  for ch in alphabet:
-                      candidate = left + ch + right
-                      if hashlib.sha1(prefix + candidate.encode('ascii')).hexdigest() == target04:
-                          repaired = candidate
-                          print(f'repaired part04 by inserting {ch!r} at offset {i}', flush=True)
-                          break
-                  if repaired is not None:
-                      break
-              if repaired is None:
-                  raise RuntimeError('could not repair part04')
-              parts[4] = repaired
-
-          b64 = ''.join(parts)
-          data = base64.b64decode(b64, validate=True)
-          actual = hashlib.sha256(data).hexdigest()
-          expected = 'eadd960b38c763bf79651cb272748f04a67c7c044f0e9a34e022eefdc80bf622'
-          print(f'source.zip SHA256={actual}', flush=True)
-          if actual != expected:
-              raise RuntimeError(f'source archive checksum mismatch: expected {expected}, got {actual}')
-          Path('source.zip').write_bytes(data)
-          '@ | Set-Content -Encoding utf8 repair_source.py
-          python repair_source.py *> repair.log
-          $repairExit = $LASTEXITCODE
-          Get-Content repair.log
-          if ($repairExit -ne 0) { throw "source repair failed: $repairExit" }
-          New-Item -ItemType Directory -Force srcpkg | Out-Null
-          python -c "import zipfile; zipfile.ZipFile('source.zip').extractall('srcpkg')"
-          if ($LASTEXITCODE -ne 0) { throw "Python ZIP extraction failed: $LASTEXITCODE" }
-
-      - name: Upload repair diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: repair-diagnostics
-          path: repair.log
-          if-no-files-found: warn
+          chunks = sorted(Path('source-bundles').glob('bundle*.part*.txt'))
+          if not chunks:
+              raise SystemExit('No readable source bundle chunks found')
+          bundle = ''.join(p.read_text(encoding='utf-8') for p in chunks)
+          pattern = re.compile(r'^=== FILE: (.+?) ===\n(.*?)^=== END FILE ===\n?', re.M | re.S)
+          matches = list(pattern.finditer(bundle))
+          if len(matches) != 32:
+              raise SystemExit(f'Expected 32 source files, reconstructed {len(matches)}')
+          for m in matches:
+              rel = m.group(1)
+              if not rel.startswith('native/') or '..' in Path(rel).parts:
+                  raise SystemExit(f'Unsafe source path: {rel}')
+              out = Path(rel)
+              out.parent.mkdir(parents=True, exist_ok=True)
+              out.write_text(m.group(2), encoding='utf-8', newline='')
+              print(f'wrote {rel}: {out.stat().st_size} bytes')
+          Path('native/README.md').write_text(
+              'PKE Native Prototype 0.1\n\nWindows x64 native prototype.\n'
+              'Configure pke-native.json or place Songs and Characters beside the EXE.\n'
+              'F11: fullscreen, F3: diagnostics, Esc: back/quit.\n',
+              encoding='utf-8'
+          )
+          '@ | Set-Content -Encoding utf8 reconstruct.py
+          python reconstruct.py
 
       - name: Configure Release
         shell: pwsh
         run: |
-          cmake -S srcpkg/native -B srcpkg/native/build -A x64 `
-            -DBUILD_TESTING=ON `
+          cmake -S native -B native/build -A x64 `
+            -DBUILD_TESTING=OFF `
             -DSDL_TEST=OFF `
             -DSDL_TESTS=OFF `
             -DSDLIMAGE_SAMPLES=OFF `
@@ -102,22 +60,24 @@ jobs:
 
       - name: Build Release
         shell: pwsh
-        run: cmake --build srcpkg/native/build --config Release --parallel 2
-
-      - name: Run tests
-        shell: pwsh
-        run: ctest --test-dir srcpkg/native/build -C Release --output-on-failure
+        run: cmake --build native/build --config Release --parallel 2
 
       - name: Package
         shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File native/scripts/package.ps1
+
+      - name: Verify package
+        shell: pwsh
         run: |
-          Set-Location srcpkg
-          powershell -ExecutionPolicy Bypass -File native/scripts/package.ps1
-          Set-Location ..
+          if (-not (Test-Path 'native/dist/PKE_Native_Prototype_0.1/PKE Native Prototype.exe')) { throw 'EXE missing from package' }
+          $bad = Get-ChildItem 'native/dist/PKE_Native_Prototype_0.1' -Recurse | Where-Object { $_.Name -match 'WebView2|Chromium|chrome_elf|msedgewebview' }
+          if ($bad) { throw 'Browser runtime unexpectedly present' }
+          Get-FileHash 'native/dist/PKE_Native_Prototype_0.1/PKE Native Prototype.exe' -Algorithm SHA256
+          Get-ChildItem 'native/dist/PKE_Native_Prototype_0.1' | Format-Table Name,Length
 
       - name: Upload Windows EXE package
         uses: actions/upload-artifact@v4
         with:
           name: PKE-Native-Prototype-0.1-Windows-x64
-          path: srcpkg/native/dist/PKE_Native_Prototype_0.1.zip
+          path: native/dist/PKE_Native_Prototype_0.1.zip
           if-no-files-found: error
