@@ -36,6 +36,21 @@ jobs:
               out.parent.mkdir(parents=True, exist_ok=True)
               out.write_text(m.group(2), encoding='utf-8', newline='')
               print(f'wrote {rel}: {out.stat().st_size} bytes')
+
+          # One source-bundle boundary added one stray character to this line.
+          # Restore it from the already-tested source tree before compiling.
+          legacy = Path('native/src/LegacySaveImporter.cpp')
+          lines = legacy.read_text(encoding='utf-8').splitlines(keepends=True)
+          fixed = False
+          for i, line in enumerate(lines):
+              if '"peakRp"' in line and '"onlineSongRangeTier"' in line:
+                  lines[i] = '        << "    \\"peakRp\\":" << s.progress.peakRp << ",\\"onlineSongRangeTier\\":\\"" << JsonEscape(s.progress.onlineSongRangeTier) << "\\",\\"lastOpponentId\\":\\"" << JsonEscape(s.progress.lastOpponentId) << "\\"\\n"\n'
+                  fixed = True
+                  break
+          if not fixed:
+              raise SystemExit('Could not locate LegacySaveImporter serialization line to restore')
+          legacy.write_text(''.join(lines), encoding='utf-8', newline='')
+
           Path('native/README.md').write_text(
               'PKE Native Prototype 0.1\n\nWindows x64 native prototype.\n'
               'Configure pke-native.json or place Songs and Characters beside the EXE.\n'
@@ -50,6 +65,7 @@ jobs:
         run: |
           cmake -S native -B native/build -A x64 `
             -DBUILD_TESTING=OFF `
+            -DCMAKE_CXX_FLAGS=/DNOMINMAX `
             -DSDL_TEST=OFF `
             -DSDL_TESTS=OFF `
             -DSDLIMAGE_SAMPLES=OFF `
