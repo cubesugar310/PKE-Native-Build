@@ -1,0 +1,124 @@
+ring& s, const char* key) {
+    std::regex r(std::string("\\\"") + key + "\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
+    std::smatch m; if (std::regex_search(s,m,r)) return m[1].str(); return std::nullopt;
+}
+std::optional<double> NumberField(const std::string& s, const char* key) {
+    std::regex r(std::string("\\\"") + key + "\\\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?)");
+    std::smatch m; if (std::regex_search(s,m,r)) return std::stod(m[1].str()); return std::nullopt;
+}
+std::optional<bool> BoolField(const std::string& s, const char* key) {
+    std::regex r(std::string("\\\"") + key + "\\\"\\s*:\\s*(true|false)");
+    std::smatch m; if (std::regex_search(s,m,r)) return m[1].str()=="true"; return std::nullopt;
+}
+#endif
+}
+
+Config LoadConfig(const std::filesystem::path& executableDir,
+                  const std::filesystem::path& configPath) {
+    Config cfg;
+    cfg.songsRoot = ResolveRoot(executableDir, "Songs");
+    cfg.charactersRoot = ResolveRoot(executableDir, "Characters");
+    if (!std::filesystem::exists(configPath)) return cfg;
+
+#ifdef PKE_NATIVE_USE_NLOHMANN
+    std::ifstream in(configPath);
+    if (!in) throw std::runtime_error("Failed to open config: " + configPath.string());
+    nlohmann::json j;
+    try { in >> j; } catch (const std::exception& e) {
+        throw std::runtime_error("Malformed config " + configPath.string() + ": " + e.what());
+    }
+    if (j.contains("songsRoot")) cfg.songsRoot = ResolveRoot(executableDir, j.at("songsRoot").get<std::string>());
+    if (j.contains("charactersRoot")) cfg.charactersRoot = ResolveRoot(executableDir, j.at("charactersRoot").get<std::string>());
+    if (j.contains("vsync")) cfg.vsync = j.at("vsync").get<bool>();
+    if (j.contains("fpsCap")) cfg.fpsCap = j.at("fpsCap").get<int>();
+    if (j.contains("inputOffsetMs")) cfg.inputOffsetMs = j.at("inputOffsetMs").get<double>();
+    if (j.contains("audioLatencyCompensationMs")) cfg.audioLatencyCompensationMs = j.at("audioLatencyCompensationMs").get<double>();
+    if (j.contains("playerKeys")) {
+        auto keys = j.at("playerKeys").get<std::vector<std::string>>();
+        if (keys.size() != 4) throw std::runtime_error("playerKeys must contain exactly 4 entries in " + configPath.string());
+        for (size_t i=0;i<4;++i) {
+            auto sc = KeyFromName(keys[i]);
+            if (sc == SDL_SCANCODE_UNKNOWN) throw std::runtime_error("Unsupported key '" + keys[i] + "' in " + configPath.string());
+            cfg.playerKeys[i] = sc;
+        }
+    }
+#else
+    const auto s = ReadFile(configPath);
+    if (auto v=StringField(s,"songsRoot")) cfg.songsRoot=ResolveRoot(executableDir,*v);
+    if (auto v=StringField(s,"charactersRoot")) cfg.charactersRoot=ResolveRoot(executableDir,*v);
+    if (auto v=BoolField(s,"vsync")) cfg.vsync=*v;
+    if (auto v=NumberField(s,"fpsCap")) cfg.fpsCap=static_cast<int>(*v);
+    if (auto v=NumberField(s,"inputOffsetMs")) cfg.inputOffsetMs=*v;
+    if (auto v=NumberField(s,"audioLatencyCompensationMs")) cfg.audioLatencyCompensationMs=*v;
+#endif
+    if (cfg.fpsCap < 30 || cfg.fpsCap > 1000) throw std::runtime_error("fpsCap out of range in " + configPath.string());
+    return cfg;
+}
+}
+=== END FILE ===
+=== FILE: native/src/Diagnostics.cpp ===
+#include "pke/Diagnostics.hpp"
+namespace pke {
+Diagnostics::Diagnostics(size_t f,size_t a,size_t i):frames_(f),audio_(a),inputOffsets_(i){}
+void Diagnostics::RecordFrame(const FrameSample& s) noexcept { frames_.push(s); }
+void Diagnostics::RecordAudio(const AudioSample& s) noexcept {
+    audio_.push(s);
+    latestAudioFrame_.store(s.songFrame,std::memory_order_relaxed);
+    latestAudioCallbackFrames_.store(s.callbackFrames,std::memory_order_relaxed);
+    latestAudioUnderrun_.store(s.underrun,std::memory_order_relaxed);
+    audioSamples_.fetch_add(1,std::memory_order_relaxed);
+}
+void Diagnostics::RecordInputOffset(double v) noexcept { inputOffsets_.push(v); }
+DiagnosticsSnapshot Diagnostics::Snapshot() const { return {frames_.snapshot(),audio_.snapshot(),inputOffsets_.snapshot()}; }
+DiagnosticsSummary Diagnostics::Summary() const noexcept {
+    DiagnosticsSummary s;
+    s.latestFrame=frames_.latest();
+    s.latestAudio={latestAudioFrame_.load(std::memory_order_relaxed),latestAudioCallbackFrames_.load(std::memory_order_relaxed),latestAudioUnderrun_.load(std::memory_order_relaxed)};
+    s.latestInputOffsetMs=inputOffsets_.latest();
+    s.frameSamples=frames_.count;
+    s.audioSamples=audioSamples_.load(std::memory_order_relaxed);
+    s.inputSamples=inputOffsets_.count;
+    return s;
+}
+void Diagnostics::Reset() noexcept {
+    frames_.clear(); audio_.clear(); inputOffsets_.clear();
+    latestAudioFrame_.store(0,std::memory_order_relaxed);
+    latestAudioCallbackFrames_.store(0,std::memory_order_relaxed);
+    latestAudioUnderrun_.store(false,std::memory_order_relaxed);
+    audioSamples_.store(0,std::memory_order_relaxed);
+}
+}
+=== END FILE ===
+=== FILE: native/src/GameSession.cpp ===
+#include "pke/GameSession.hpp"
+#include <algorithm>
+#include <cmath>
+#include <exception>
+
+namespace pke {
+GameSession::GameSession(Config cfg,std::filesystem::path exe,IAudioClock* injected)
+    :config_(std::move(cfg)),executableDir_(std::move(exe)),locator_(config_,executableDir_),clock_(injected?injected:&ownedAudio_),injectedClock_(injected!=nullptr){ ownedAudio_.SetDiagnostics(&diagnostics_); }
+GameSession::~GameSession(){
+    if(clock_) clock_->Stop();
+    ownedAudio_.SetDiagnostics(nullptr);
+}
+
+void GameSession::Fail(std::string m){ failureMessage_=std::move(m); state_=SessionState::Failed; if(clock_) clock_->Stop(); }
+CharacterDefinition GameSession::FallbackCharacter(const std::string& label) const {
+    CharacterDefinition c; c.warnings.push_back("Using diagnostic fallback character for "+label);
+    c.atlas.push_back({"fallback",{0,0,64,64},0,0,64,64,false});
+    for(auto name:{"idle","singLEFT","singDOWN","singUP","singRIGHT"}){ AnimationDef a; a.anim=name;a.prefix="fallback";a.fps=1;a.loop=true;a.frameIndices={0};c.animations[name]=a; }
+    return c;
+}
+int GameSession::LaneForKey(SDL_Scancode key) const { for(int i=0;i<4;++i) if(config_.playerKeys[i]==key) return i; return -1; }
+
+bool GameSession::Load(const SongSelection& selection){
+    state_=SessionState::Loading; failureMessage_.clear(); warnings_.clear(); nextOpponentNote_=0; lastUpdateSongTimeMs_=0; songName_=selection.songId;
+    try {
+        auto folder=locator_.ResolveSongFolder(selection.songId);
+        auto inst=locator_.ResolveInst(folder);
+        auto voices=locator_.ResolveVoices(folder);
+        auto chartFile=locator_.ResolveChartFile(folder,selection.difficulty);
+        chart_=ParseChart(chartFile); warnings_.insert(warnings_.end(),chart_.warnings.begin(),chart_.warnings.end()); if(!chart_.player1.empty()) songName_=selection.songId;
+        rhythm_.Reset(chart_);
+        try { bfDef_=LoadCharacter(locator_.ResolveCharacter(chart_.player1)); } catch(const std::exception& e){ warnings_.push_back(std::string("BF asset fallback: ")+e.what()); bfDef_=FallbackCharacter(
