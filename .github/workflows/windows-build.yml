@@ -1,0 +1,57 @@
+name: Build PKE Native Windows
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decode source archive
+        shell: pwsh
+        run: |
+          $parts = Get-ChildItem pke_native_source.zip.b64.part* | Sort-Object Name
+          $b64 = ($parts | ForEach-Object { Get-Content -Raw $_.FullName }) -join ''
+          [IO.File]::WriteAllBytes("source.zip", [Convert]::FromBase64String($b64))
+          Expand-Archive source.zip -DestinationPath srcpkg -Force
+
+      - name: Configure Release
+        shell: pwsh
+        run: |
+          cmake -S srcpkg/native -B srcpkg/native/build -A x64 `
+            -DBUILD_TESTING=ON `
+            -DSDL_TEST=OFF `
+            -DSDL_TESTS=OFF `
+            -DSDLIMAGE_SAMPLES=OFF `
+            -DSDLIMAGE_TESTS=OFF `
+            -DSDL2IMAGE_SAMPLES=OFF `
+            -DSDL2IMAGE_TESTS=OFF `
+            -DSDLTTF_SAMPLES=OFF
+
+      - name: Build Release
+        shell: pwsh
+        run: cmake --build srcpkg/native/build --config Release --parallel 2
+
+      - name: Run tests
+        shell: pwsh
+        run: ctest --test-dir srcpkg/native/build -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Set-Location srcpkg
+          powershell -ExecutionPolicy Bypass -File native/scripts/package.ps1
+          Set-Location ..
+
+      - name: Upload Windows EXE package
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKE-Native-Prototype-0.1-Windows-x64
+          path: srcpkg/native/dist/PKE_Native_Prototype_0.1.zip
+          if-no-files-found: error
