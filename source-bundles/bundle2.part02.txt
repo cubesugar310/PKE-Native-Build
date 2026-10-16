@@ -1,0 +1,126 @@
+"BF"); }
+        try { dadDef_=LoadCharacter(locator_.ResolveCharacter(chart_.player2)); } catch(const std::exception& e){ warnings_.push_back(std::string("DAD asset fallback: ")+e.what()); dadDef_=FallbackCharacter("DAD"); }
+        bfAnimator_.SetCharacter(&bfDef_); dadAnimator_.SetCharacter(&dadDef_);
+        if(!injectedClock_){ ownedAudio_.SetLatencyCompensationMs(config_.audioLatencyCompensationMs); if(!ownedAudio_.Load(inst,voices)){ Fail(ownedAudio_.LastError()); return false; } }
+        if(renderer_){ if(!bfDef_.imagePath.empty()) if(!renderer_->PreloadCharacter("bf",bfDef_)) warnings_.push_back("BF texture preload failed: "+renderer_->LastError()); if(!dadDef_.imagePath.empty()) if(!renderer_->PreloadCharacter("dad",dadDef_)) warnings_.push_back("DAD texture preload failed: "+renderer_->LastError()); }
+        state_=SessionState::Ready; return true;
+    } catch(const std::exception& e){ Fail(e.what()); return false; }
+}
+void GameSession::HandleKeyDown(SDL_Scancode key){
+    if(state_!=SessionState::Playing) return;
+    const int lane=LaneForKey(key);
+    if(lane<0) return;
+    const double t=clock_->SongTimeMs()+config_.inputOffsetMs;
+    const auto judgement=rhythm_.KeyDown(lane,t);
+    if(!judgement) return;
+    const RuntimeNoteState* hit=nullptr;
+    for(const auto& n:rhythm_.NoteStates()) {
+        if(n.note.lane==lane && n.judgement && std::fabs(n.hitTimeMs-t)<1e-6) hit=&n;
+    }
+    if(hit){
+        diagnostics_.RecordInputOffset(t-hit->note.timeMs);
+        const double hold=hit->note.sustainMs>0?hit->note.timeMs+hit->note.sustainMs:t+150.0;
+        bfAnimator_.TriggerSing(lane,t,hold);
+    }
+}
+void GameSession::HandleKeyUp(SDL_Scancode key){ if(state_!=SessionState::Playing)return; int lane=LaneForKey(key); if(lane>=0) rhythm_.KeyUp(lane,clock_->SongTimeMs()+config_.inputOffsetMs); }
+void GameSession::UpdateOpponentAnimations(double t){
+    while(nextOpponentNote_<chart_.notes.size()){
+        const auto& n=chart_.notes[nextOpponentNote_]; if(n.timeMs>t) break; if(n.side==Side::Opponent){ double hold=n.sustainMs>0?n.timeMs+n.sustainMs:n.timeMs+150.0; dadAnimator_.TriggerSing(n.lane,n.timeMs,hold); } ++nextOpponentNote_;
+    }
+}
+void GameSession::Update(){
+    if(state_==SessionState::Ready){ state_=SessionState::Countdown; return; }
+    if(state_==SessionState::Countdown){ if(!clock_->Start()){ Fail(clock_->LastErrorCopy().empty()?"Audio start failed":clock_->LastErrorCopy()); return; } state_=SessionState::Playing; return; }
+    if(state_!=SessionState::Playing) return;
+    if(clock_->State()==AudioState::DeviceLost){ failureMessage_=clock_->LastErrorCopy(); state_=SessionState::DeviceLost; return; }
+    if(clock_->State()==AudioState::Error){ Fail(clock_->LastErrorCopy()); return; }
+    const double t=clock_->SongTimeMs(); rhythm_.Update(t); UpdateOpponentAnimations(t); bfAnimator_.Update(t); dadAnimator_.Update(t); lastUpdateSongTimeMs_=t;
+    if(clock_->State()==AudioState::Finished){ state_=SessionState::Completed; clock_->Stop(); }
+}
+void GameSession::RecordFrameTiming(double intervalMs,double updateMs,double renderMs) noexcept {
+    diagnostics_.RecordFrame({intervalMs,updateMs,renderMs,clock_?clock_->SongTimeMs():0.0});
+}
+void GameSession::Render(){
+    if(!renderer_) return;
+    RenderState rs;
+    rs.songTimeMs=clock_?clock_->SongTimeMs():0;
+    rs.scrollSpeed=chart_.scrollSpeed;
+    rs.chart=&chart_;
+    rs.notes=&rhythm_.NoteStates();
+    rs.bf={"bf",&bfDef_,bfAnimator_.CurrentFrame(),{1200,480}};
+    rs.dad={"dad",&dadDef_,dadAnimator_.CurrentFrame(),{420,480}};
+    rs.stats=rhythm_.Stats();
+    rs.songName=songName_;
+    rs.diagnosticsVisible=diagnosticsVisible_;
+    if(diagnosticsVisible_) rs.diagnostics=diagnostics_.Summary();
+    renderer_->Draw(rs);
+}
+void GameSession::RequestStop(){ if(clock_)clock_->Stop(); state_=SessionState::Completed; }
+}
+=== END FILE ===
+=== FILE: native/src/Renderer.cpp ===
+#include "pke/Renderer.hpp"
+#include "pke/CharacterLoader.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <unordered_map>
+#ifdef PKE_NATIVE_WITH_SDL
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#endif
+
+namespace pke {
+Viewport ComputeLetterboxedViewport(int ow,int oh,int lw,int lh){
+    if(ow<=0||oh<=0||lw<=0||lh<=0) return {};
+    const double scale=std::min(double(ow)/double(lw),double(oh)/double(lh));
+    const int w=int(std::lround(lw*scale)),h=int(std::lround(lh*scale));
+    return {{(ow-w)/2,(oh-h)/2,w,h},scale};
+}
+double ComputeNoteY(double note,double song,double speed,double receptorY,double px){ return receptorY+(note-song)*speed*px; }
+bool NeedsDiagnosticFallback(const CharacterRenderView& view,bool textureAvailable) noexcept { return view.definition!=nullptr && !textureAvailable; }
+
+struct Renderer::Impl {
+    SDL_Renderer* renderer{nullptr};
+    std::string error;
+#ifdef PKE_NATIVE_WITH_SDL
+    std::unordered_map<std::string,SDL_Texture*> textures;
+    TTF_Font* font{nullptr};
+    struct TextSlot { std::string text; SDL_Texture* texture{nullptr}; int w{0}; int h{0}; } songText, statsText, judgementText, diagText;
+    ~Impl(){ for(auto& [k,t]:textures) if(t) SDL_DestroyTexture(t); for(auto* slot:{&songText,&statsText,&judgementText,&diagText}) if(slot->texture) SDL_DestroyTexture(slot->texture); if(font) TTF_CloseFont(font); }
+#else
+    ~Impl()=default;
+#endif
+};
+Renderer::Renderer():impl_(std::make_unique<Impl>()){}
+Renderer::~Renderer()=default;
+bool Renderer::Initialize(SDL_Renderer* r){ impl_->renderer=r;
+#ifdef PKE_NATIVE_WITH_SDL
+    if(!r){ impl_->error="SDL renderer is null"; return false; }
+#endif
+    return true;
+}
+bool Renderer::PreloadCharacter(std::string key,const CharacterDefinition& d){
+#ifdef PKE_NATIVE_WITH_SDL
+    if(!impl_->renderer){ impl_->error="Renderer not initialized"; return false; }
+    auto* t=IMG_LoadTexture(impl_->renderer,d.imagePath.string().c_str()); if(!t){ impl_->error=IMG_GetError(); return false; } auto it=impl_->textures.find(key); if(it!=impl_->textures.end()&&it->second)SDL_DestroyTexture(it->second); impl_->textures[std::move(key)]=t; return true;
+#else
+    (void)key;(void)d; return true;
+#endif
+}
+bool Renderer::PreloadFont(const std::filesystem::path& p,int size){
+#ifdef PKE_NATIVE_WITH_SDL
+    if(TTF_WasInit()==0 && TTF_Init()!=0){ impl_->error=TTF_GetError(); return false; } if(impl_->font)TTF_CloseFont(impl_->font); impl_->font=TTF_OpenFont(p.string().c_str(),size); if(!impl_->font){impl_->error=TTF_GetError();return false;} return true;
+#else
+    (void)p;(void)size;return true;
+#endif
+}
+std::string Renderer::LastError() const { return impl_->error; }
+#ifdef PKE_NATIVE_WITH_SDL
+static void updateTextTexture(SDL_Renderer* renderer, TTF_Font* font, std::string_view text, std::string& cachedText, SDL_Texture*& texture, int& w, int& h){
+    if(!font || text==cachedText) return;
+    cachedText.assign(text); if(texture){ SDL_DestroyTexture(texture); texture=nullptr; }
+    if(text.empty()){ w=h=0; return; }
+    SDL_Color c{255,255,255,255}; SDL_Sur
