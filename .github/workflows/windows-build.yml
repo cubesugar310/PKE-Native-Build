@@ -13,16 +13,66 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Decode source archive
+      - name: Repair and decode source archive
         shell: pwsh
         run: |
-          $parts = Get-ChildItem pke_native_source.zip.b64.part* | Sort-Object Name
-          $b64 = ($parts | ForEach-Object { Get-Content -Raw $_.FullName }) -join ''
-          [IO.File]::WriteAllBytes("source.zip", [Convert]::FromBase64String($b64))
-          $actual = (Get-FileHash source.zip -Algorithm SHA256).Hash.ToLowerInvariant()
-          $expected = "eadd960b38c763bf79651cb272748f04a67c7c044f0e9a34e022eefdc80bf622"
-          Write-Host "source.zip SHA256=$actual"
-          if ($actual -ne $expected) { throw "source archive checksum mismatch: expected $expected, got $actual" }
+          @'
+          from pathlib import Path
+          import base64, hashlib
+
+          alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+          def git_blob_sha(text: str) -> str:
+              raw = text.encode('ascii')
+              return hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+
+          parts = [Path(f'pke_native_source.zip.b64.part{i:02d}').read_text(encoding='utf-8') for i in range(7)]
+
+          # part00 arrived with exactly one extra character.
+          target00 = '5475c379a99e29b7763af75ed45324b6af00fe57'
+          if git_blob_sha(parts[0]) != target00:
+              repaired = None
+              for i in range(len(parts[0])):
+                  candidate = parts[0][:i] + parts[0][i+1:]
+                  if git_blob_sha(candidate) == target00:
+                      repaired = candidate
+                      print(f'repaired part00 by deleting character at offset {i}')
+                      break
+              if repaired is None:
+                  raise RuntimeError('could not repair part00')
+              parts[0] = repaired
+
+          # part04 arrived with exactly one missing base64 character.
+          target04 = '85f165b0cdce4eb63bd025753036737249123212'
+          if git_blob_sha(parts[4]) != target04:
+              repaired = None
+              prefix = b'blob 20000\0'
+              bad = parts[4]
+              for i in range(len(bad) + 1):
+                  left, right = bad[:i], bad[i:]
+                  for ch in alphabet:
+                      candidate = left + ch + right
+                      if hashlib.sha1(prefix + candidate.encode('ascii')).hexdigest() == target04:
+                          repaired = candidate
+                          print(f'repaired part04 by inserting {ch!r} at offset {i}')
+                          break
+                  if repaired is not None:
+                      break
+              if repaired is None:
+                  raise RuntimeError('could not repair part04')
+              parts[4] = repaired
+
+          b64 = ''.join(parts)
+          data = base64.b64decode(b64, validate=True)
+          actual = hashlib.sha256(data).hexdigest()
+          expected = 'eadd960b38c763bf79651cb272748f04a67c7c044f0e9a34e022eefdc80bf622'
+          print(f'source.zip SHA256={actual}')
+          if actual != expected:
+              raise RuntimeError(f'source archive checksum mismatch: expected {expected}, got {actual}')
+          Path('source.zip').write_bytes(data)
+          '@ | Set-Content -Encoding utf8 repair_source.py
+          python repair_source.py
+          if ($LASTEXITCODE -ne 0) { throw "source repair failed: $LASTEXITCODE" }
           New-Item -ItemType Directory -Force srcpkg | Out-Null
           python -c "import zipfile; zipfile.ZipFile('source.zip').extractall('srcpkg')"
           if ($LASTEXITCODE -ne 0) { throw "Python ZIP extraction failed: $LASTEXITCODE" }
