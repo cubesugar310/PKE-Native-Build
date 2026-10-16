@@ -37,13 +37,13 @@ jobs:
               out.write_text(m.group(2), encoding='utf-8', newline='')
               print(f'wrote {rel}: {out.stat().st_size} bytes')
 
-          # One source-bundle boundary added one stray character to this line.
-          # Restore it from the already-tested source tree before compiling.
+          # One source-bundle boundary added one stray character to the save
+          # serializer. Match the unique serializer expression, not parser code.
           legacy = Path('native/src/LegacySaveImporter.cpp')
           lines = legacy.read_text(encoding='utf-8').splitlines(keepends=True)
           fixed = False
           for i, line in enumerate(lines):
-              if '"peakRp"' in line and '"onlineSongRangeTier"' in line:
+              if 's.progress.peakRp' in line and 'JsonEscape(s.progress.onlineSongRangeTier)' in line:
                   lines[i] = '        << "    \\"peakRp\\":" << s.progress.peakRp << ",\\"onlineSongRangeTier\\":\\"" << JsonEscape(s.progress.onlineSongRangeTier) << "\\",\\"lastOpponentId\\":\\"" << JsonEscape(s.progress.lastOpponentId) << "\\"\\n"\n'
                   fixed = True
                   break
@@ -65,7 +65,7 @@ jobs:
         run: |
           cmake -S native -B native/build -A x64 `
             -DBUILD_TESTING=OFF `
-            -DCMAKE_CXX_FLAGS=/DNOMINMAX `
+            '-DCMAKE_CXX_FLAGS=/EHsc /DNOMINMAX' `
             -DSDL_TEST=OFF `
             -DSDL_TESTS=OFF `
             -DSDLIMAGE_SAMPLES=OFF `
