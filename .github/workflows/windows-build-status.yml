@@ -1,0 +1,158 @@
+name: Build PKE Native Windows Status
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Repair source
+        id: repair
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          import base64, hashlib
+          alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+          def blob_sha(s):
+              b=s.encode('ascii')
+              return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          parts=[Path(f'pke_native_source.zip.b64.part{i:02d}').read_text(encoding='utf-8') for i in range(7)]
+          print('lengths', [len(x) for x in parts], flush=True)
+          t0='5475c379a99e29b7763af75ed45324b6af00fe57'
+          if blob_sha(parts[0]) != t0:
+              found=None
+              for i in range(len(parts[0])):
+                  c=parts[0][:i]+parts[0][i+1:]
+                  if blob_sha(c)==t0:
+                      found=c; print('part00_delete',i,flush=True); break
+              if found is None: raise RuntimeError('part00 repair failed')
+              parts[0]=found
+          t4='85f165b0cdce4eb63bd025753036737249123212'
+          if blob_sha(parts[4]) != t4:
+              found=None; bad=parts[4]; prefix=b'blob 20000\0'
+              for i in range(len(bad)+1):
+                  a,badright=bad[:i],bad[i:]
+                  for ch in alphabet:
+                      c=a+ch+badright
+                      if hashlib.sha1(prefix+c.encode('ascii')).hexdigest()==t4:
+                          found=c; print('part04_insert',i,ch,flush=True); break
+                  if found is not None: break
+              if found is None: raise RuntimeError('part04 repair failed')
+              parts[4]=found
+          data=base64.b64decode(''.join(parts),validate=True)
+          sha=hashlib.sha256(data).hexdigest()
+          print('zip_sha256',sha,flush=True)
+          if sha!='eadd960b38c763bf79651cb272748f04a67c7c044f0e9a34e022eefdc80bf622':
+              raise RuntimeError('whole archive SHA mismatch')
+          Path('source.zip').write_bytes(data)
+          Path('srcpkg').mkdir(exist_ok=True)
+          import zipfile
+          zipfile.ZipFile('source.zip').extractall('srcpkg')
+          '@ | Set-Content -Encoding utf8 repair.py
+          python repair.py *> repair.log
+          $e=$LASTEXITCODE
+          Get-Content repair.log
+          if($e -ne 0){ exit $e }
+
+      - name: Configure
+        id: configure
+        if: steps.repair.outcome == 'success'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          cmake -S srcpkg/native -B srcpkg/native/build -A x64 -DBUILD_TESTING=ON -DSDL_TEST=OFF -DSDL_TESTS=OFF -DSDLIMAGE_SAMPLES=OFF -DSDLIMAGE_TESTS=OFF -DSDL2IMAGE_SAMPLES=OFF -DSDL2IMAGE_TESTS=OFF -DSDLTTF_SAMPLES=OFF *> configure.log
+          $e=$LASTEXITCODE
+          Get-Content configure.log
+          if($e -ne 0){ exit $e }
+
+      - name: Build
+        id: compile
+        if: steps.configure.outcome == 'success'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          cmake --build srcpkg/native/build --config Release --parallel 2 *> build.log
+          $e=$LASTEXITCODE
+          Get-Content build.log
+          if($e -ne 0){ exit $e }
+
+      - name: Test
+        id: test
+        if: steps.compile.outcome == 'success'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          ctest --test-dir srcpkg/native/build -C Release --output-on-failure *> test.log
+          $e=$LASTEXITCODE
+          Get-Content test.log
+          if($e -ne 0){ exit $e }
+
+      - name: Package
+        id: package
+        if: steps.test.outcome == 'success'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Set-Location srcpkg
+          powershell -ExecutionPolicy Bypass -File native/scripts/package.ps1 *> ../package.log
+          $e=$LASTEXITCODE
+          Set-Location ..
+          Get-Content package.log
+          if($e -ne 0){ exit $e }
+
+      - name: Upload Windows package
+        id: upload
+        if: steps.package.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKE-Native-Prototype-0.1-Windows-x64
+          path: srcpkg/native/dist/PKE_Native_Prototype_0.1.zip
+          if-no-files-found: error
+
+      - name: Publish compact status
+        if: always()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $lines=@()
+          $lines += 'run_id=${{ github.run_id }}'
+          $lines += 'repair=${{ steps.repair.outcome }}'
+          $lines += 'configure=${{ steps.configure.outcome }}'
+          $lines += 'compile=${{ steps.compile.outcome }}'
+          $lines += 'test=${{ steps.test.outcome }}'
+          $lines += 'package=${{ steps.package.outcome }}'
+          $lines += 'upload=${{ steps.upload.outcome }}'
+          foreach($f in @('repair.log','configure.log','build.log','test.log','package.log')){
+            if(Test-Path $f){ $lines += "--- $f tail ---"; $lines += (Get-Content $f -Tail 20) }
+          }
+          $status=$lines -join "`n"
+          git fetch origin build-status
+          git worktree add status-work origin/build-status
+          Set-Content -Path status-work/build-status.txt -Value $status -Encoding utf8
+          Push-Location status-work
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add build-status.txt
+          git commit -m 'ci: update native build status' --allow-empty
+          git push origin HEAD:build-status
+          Pop-Location
+
+      - name: Fail workflow if any stage failed
+        if: always()
+        shell: pwsh
+        run: |
+          if('${{ steps.repair.outcome }}' -ne 'success' -or '${{ steps.configure.outcome }}' -ne 'success' -or '${{ steps.compile.outcome }}' -ne 'success' -or '${{ steps.test.outcome }}' -ne 'success' -or '${{ steps.package.outcome }}' -ne 'success' -or '${{ steps.upload.outcome }}' -ne 'success'){ exit 1 }
