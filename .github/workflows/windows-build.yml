@@ -8,7 +8,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  core:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout tracked native source
+        uses: actions/checkout@v4
+
+      - name: Install offline-core build headers
+        run: sudo apt-get update -qq && sudo apt-get install -y libboost-dev
+
+      - name: Configure offline core
+        run: cmake -S native -B native/build-offline -DPKE_NATIVE_OFFLINE_CORE=ON -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build offline core
+        run: cmake --build native/build-offline --parallel 2
+
+      - name: Test offline core
+        run: ctest --test-dir native/build-offline --output-on-failure
+
   build:
+    needs: core
     runs-on: windows-2022
     timeout-minutes: 45
     steps:

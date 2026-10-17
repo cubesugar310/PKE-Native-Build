@@ -21,8 +21,9 @@ struct AudioEngine::DeviceImpl {
 #endif
 };
 
-AudioEngine::AudioEngine():device_(std::make_unique<DeviceImpl>()){}
+AudioEngine::AudioEngine(IAudioOutput* output):device_(std::make_unique<DeviceImpl>()),output_(output){}
 AudioEngine::~AudioEngine(){
+    if(output_) output_->Stop();
 #ifdef PKE_NATIVE_WITH_AUDIO_DEPS
     if(device_ && device_->initialized){ ma_device_uninit(&device_->device); device_->initialized=false; }
 #endif
@@ -82,6 +83,14 @@ bool AudioEngine::Start(){
     if(State()!=AudioState::Ready && State()!=AudioState::Paused) return false;
     songFrame_.store(State()==AudioState::Ready?0:SongFrame(),std::memory_order_relaxed);
     state_=AudioState::Playing;
+    if(output_){
+        std::string error;
+        if(!output_->Start(*this,outputSampleRate_,outputChannels_,error)){
+            SetError(error.empty() ? "Failed to start audio output" : std::move(error));
+            return false;
+        }
+        return true;
+    }
 #ifdef PKE_NATIVE_WITH_AUDIO_DEPS
     if(!EnsureDevice()) return false;
     if(ma_device_start(&device_->device)!=MA_SUCCESS){ SetError("Failed to start WASAPI/miniaudio playback device"); return false; }
@@ -91,6 +100,7 @@ bool AudioEngine::Start(){
 void AudioEngine::Pause(){ if(State()==AudioState::Playing) state_=AudioState::Paused; }
 void AudioEngine::Resume(){ if(State()==AudioState::Paused) state_=AudioState::Playing; }
 void AudioEngine::Stop(){ state_=AudioState::Stopped;
+    if(output_){ output_->Stop(); return; }
 #ifdef PKE_NATIVE_WITH_AUDIO_DEPS
     if(device_&&device_->initialized) ma_device_stop(&device_->device);
 #endif

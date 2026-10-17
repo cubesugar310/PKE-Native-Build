@@ -27,9 +27,17 @@ struct DecodedAudio {
     std::vector<float> pcm;
     uint64_t frameCount{0};
 };
+class AudioEngine;
+class IAudioOutput {
+public:
+    virtual ~IAudioOutput() = default;
+    virtual bool Start(AudioEngine& engine,uint32_t sampleRate,uint32_t channels,std::string& error) = 0;
+    virtual void Stop() noexcept = 0;
+};
 class AudioEngine : public IAudioClock {
 public:
-    AudioEngine();
+    // An injected output must outlive the engine; nullptr selects the native device.
+    explicit AudioEngine(IAudioOutput* output=nullptr);
     ~AudioEngine();
     AudioEngine(const AudioEngine&)=delete;
     AudioEngine& operator=(const AudioEngine&)=delete;
@@ -58,6 +66,7 @@ public:
 private:
     struct DeviceImpl;
     std::unique_ptr<DeviceImpl> device_;
+    IAudioOutput* output_{nullptr};
     static DecodedAudio ConvertTo(const DecodedAudio& src,uint32_t sampleRate,uint32_t channels);
     void SetError(std::string message,AudioState state=AudioState::Error);
     bool EnsureDevice();
