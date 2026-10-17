@@ -40,6 +40,7 @@ public:
 struct PopulationRuntimeOptions {
     std::filesystem::path compatibilityDirectory;
     std::string initializeJson;
+    std::shared_future<std::string> initializeJsonFuture;
     std::string checkpointJson;
     std::string locale; // empty selects the Native OS locale
     QuickJsLimits limits{512u*1024u*1024u,256u*1024u,120000};

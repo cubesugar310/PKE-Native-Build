@@ -3,6 +3,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+#include <atomic>
+#include <chrono>
 #ifdef PKE_NATIVE_USE_NLOHMANN
 #include <nlohmann/json.hpp>
 #else
@@ -60,6 +62,11 @@ public:
         for(const auto* name:{"cpu-timing.js","title-system.js","population-social-sessions.js",
                              "boss-battle.js","song-difficulty.js","population-imports.js","population.js"})
             Require(runtime_.Evaluate(ReadSource(options_.compatibilityDirectory/name),name));
+        if(options_.initializeJsonFuture.valid()){
+            while(options_.initializeJsonFuture.wait_for(std::chrono::milliseconds(5))!=std::future_status::ready)
+                if(cancelled_.load())throw std::runtime_error("Population catalog wait cancelled");
+            options_.initializeJson=options_.initializeJsonFuture.get();
+        }
         if(options_.checkpointJson.empty())
             return ParseSummary(Require(runtime_.CallJson("pkePopulationInitialize",options_.initializeJson)));
         // Fresh process restore keeps the supplied catalog and reconstructs
@@ -74,10 +81,11 @@ public:
     std::string Serialize() override{
         return Require(runtime_.CallJson("pkePopulationSerialize","{}"));
     }
-    void RequestInterrupt() noexcept override{runtime_.RequestInterrupt();}
+    void RequestInterrupt() noexcept override{cancelled_.store(true);runtime_.RequestInterrupt();}
 private:
     PopulationRuntimeOptions options_;
     QuickJsRuntime runtime_;
+    std::atomic<bool> cancelled_{};
 };
 }
 PopulationRuntime::PopulationRuntime(PopulationRuntimeOptions options)

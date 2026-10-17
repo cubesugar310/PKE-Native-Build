@@ -82,6 +82,8 @@ struct LegacyImportResult {
 
 LegacyFullSaveData ReadLegacyFullSave(const std::filesystem::path& path);
 NativeSaveSummary ReadNativeSaveSummary(const std::filesystem::path& path);
+NativeSaveSummary ParseNativeSaveSummary(const std::string& json);
+std::string SerializeNativeSaveSummary(const NativeSaveSummary& summary);
 void WriteNativeSaveSummary(const std::filesystem::path& path, const NativeSaveSummary& summary);
 
 int CompareProgressMarkers(const PlayerProgressMarker& left, const PlayerProgressMarker& right);

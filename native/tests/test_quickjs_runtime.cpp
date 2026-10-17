@@ -205,3 +205,25 @@ PKE_TEST("QuickJS Native collation propagates operand string conversion exceptio
         PKE_REQUIRE(runtime.Evaluate("'a'.localeCompare('b')").ok);
     }
 }
+
+PKE_TEST("QuickJS catalog collation matches original natural base sensitivity sorting") {
+    pke::QuickJsRuntime runtime;
+    PKE_REQUIRE(runtime.InstallLocaleCompare("en-US").ok);
+    PKE_REQUIRE(runtime.Evaluate(R"(
+        function nativeNaturalSort(){return ['Song 10','song 2','Sóng 1','Song 02','song 1']
+            .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));}
+    )").ok);
+    const auto result=runtime.CallJson("nativeNaturalSort","{}");
+    PKE_REQUIRE(result.ok);
+    PKE_REQUIRE(result.json==R"(["Sóng 1","song 1","song 2","Song 02","Song 10"])");
+    PKE_REQUIRE(runtime.Evaluate(R"(
+        if('A'.localeCompare('a',undefined,{numeric:true,sensitivity:'base'})!==0)throw Error('base');
+        if('A'.localeCompare('a')===0)throw Error('default sensitivity changed');
+    )").ok);
+    const auto throwing=runtime.Evaluate(R"(
+        'a'.localeCompare('b',undefined,{get numeric(){throw Error('sentinel-options');},sensitivity:'base'});
+    )");
+    PKE_REQUIRE(!throwing.ok);
+    PKE_REQUIRE(throwing.error.find("sentinel-options")!=std::string::npos);
+    PKE_REQUIRE(!runtime.Evaluate("'a'.localeCompare('b','en-US')").ok);
+}

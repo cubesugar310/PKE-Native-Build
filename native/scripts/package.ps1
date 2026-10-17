@@ -26,7 +26,7 @@ New-Item -ItemType Directory -Force $licenses | Out-Null
 Copy-Item (Join-Path $root "native/third_party/quickjs-ng/LICENSE") (Join-Path $licenses "quickjs-ng-LICENSE.txt")
 $compat = Join-Path $out "compat"
 New-Item -ItemType Directory -Force $compat | Out-Null
-foreach ($script in @("cpu-timing.js", "title-system.js", "population-social-sessions.js", "boss-battle.js", "song-difficulty.js", "population-imports.js", "population.js")) {
+foreach ($script in @("cpu-timing.js", "title-system.js", "population-social-sessions.js", "boss-battle.js", "song-difficulty.js", "population-imports.js", "population.js", "chart-utils.js", "catalog-imports.js", "catalog.js", "practice-replay.js")) {
     Copy-Item (Join-Path $root "native/compat/$script") (Join-Path $compat $script)
 }
 $forbidden = Get-ChildItem -Path $out -Recurse | Where-Object { $_.Name -match 'WebView2|Chromium|chrome_elf|msedgewebview' }

@@ -1,4 +1,5 @@
 #include "pke/LegacySaveImporter.hpp"
+#include "pke/SaveService.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -36,14 +37,6 @@ std::string ReadAll(const std::filesystem::path& path) {
     std::ostringstream ss;
     ss << in.rdbuf();
     return ss.str();
-}
-
-void WriteAll(const std::filesystem::path& path, const std::string& value) {
-    std::ofstream out(path, std::ios::binary | std::ios::trunc);
-    if (!out) throw std::runtime_error("cannot create save file");
-    out.write(value.data(), static_cast<std::streamsize>(value.size()));
-    out.flush();
-    if (!out) throw std::runtime_error("cannot finish save file write");
 }
 
 std::string JsonEscape(const std::string& s) {
@@ -260,11 +253,22 @@ std::string SerializeNative(const NativeSaveSummary& s) {
     return out.str();
 }
 
-void ReplaceFileFromTemp(const std::filesystem::path& temp, const std::filesystem::path& target) {
+bool SameFile(const std::filesystem::path& left,const std::filesystem::path& right){
     std::error_code ec;
-    std::filesystem::copy_file(temp,target,std::filesystem::copy_options::overwrite_existing,ec);
-    if(ec) throw std::runtime_error("cannot replace native save file: "+ec.message());
-    std::filesystem::remove(temp,ec);
+    if(std::filesystem::equivalent(left,right,ec))return true;
+    const auto a=std::filesystem::weakly_canonical(left),b=std::filesystem::weakly_canonical(right);
+    return a==b;
+}
+void ValidateLegacyBackup(std::string_view text){
+    const auto root=ParseJson(std::string(text));
+#ifdef PKE_NATIVE_USE_NLOHMANN
+    if(!root.is_object()||root.value("format",std::string{})!=kLegacyFormat||
+       root.value("version",0)!=kLegacyVersion||!root.contains("localStorage")||!root["localStorage"].is_object())
+#else
+    if(root.get<std::string>("format","")!=kLegacyFormat||root.get<int>("version",0)!=kLegacyVersion||
+       !root.get_child_optional("localStorage"))
+#endif
+        throw std::runtime_error("Invalid legacy backup bytes");
 }
 
 } // namespace
@@ -300,29 +304,18 @@ LegacyFullSaveData ReadLegacyFullSave(const std::filesystem::path& path) {
     return out;
 }
 
-NativeSaveSummary ReadNativeSaveSummary(const std::filesystem::path& path) {
-    NativeSaveSummary out;
-    try {
-        const auto root=ParseJson(ReadAll(path));
-#ifdef PKE_NATIVE_USE_NLOHMANN
-        if(!root.is_object()||root.value("format",std::string{})!=kNativeFormat||root.value("version",0)!=kNativeVersion) return out;
-        out.version=root.value("version",1); out.importedAt=root.value("importedAt",std::string{}); out.legacyExportedAt=root.value("legacyExportedAt",std::string{}); out.legacyBackupFile=root.value("legacyBackupFile",std::string("legacy-full-save-v1.json")); out.legacySourcePath=root.value("legacySourcePath",std::string{});
-        const auto p=root.value("player",Json::object()); out.progress.rp=ClampInt(p.value("rp",0LL)); out.progress.wins=ClampInt(p.value("wins",0LL)); out.progress.losses=ClampInt(p.value("losses",0LL)); out.progress.draws=ClampInt(p.value("draws",0LL)); out.progress.matches=ClampUInt64(p.value("matches",0LL)); out.progress.accuracy=std::clamp(p.value("accuracy",0.0),0.0,100.0); out.progress.accuracySum=std::max(0.0,p.value("accuracySum",0.0)); out.progress.accuracyMatches=ClampUInt64(p.value("accuracyMatches",0LL)); out.progress.recentAt=ClampUInt64(p.value("recentAt",0LL)); out.progress.peakRp=ClampInt(p.value("peakRp",0LL)); out.progress.onlineSongRangeTier=NormalizeRange(p.value("onlineSongRangeTier",std::string("beginner"))); out.progress.lastOpponentId=p.value("lastOpponentId",std::string{});
-        out.playerName=root.value("playerName",std::string{}); out.equippedTitle=root.value("equippedTitle",std::string{}); out.selectedSkin=root.value("selectedSkin",std::string{}); if(root.contains("settings")){const auto& s=root["settings"];out.masterVolume=std::clamp(s.value("masterVolume",1.0),0.0,1.0);out.scrollDirection=s.value("scrollDirection",std::string("up"));out.judgementPosition=s.value("judgementPosition",std::string("center"));} if(root.contains("halloween")){const auto& h=root["halloween"];out.halloweenCandy=ClampInt(h.value("candy",0LL));out.purchasedSkinIds=StringVector(h,"purchasedSkinIds");out.unlockedTitleIds=StringVector(h,"unlockedTitleIds");} out.earnedTitleIds=StringVector(root,"earnedTitleIds");
-#else
-        if(root.get<std::string>("format","")!=kNativeFormat||root.get<int>("version",0)!=kNativeVersion) return out;
-        out.version=root.get<int>("version",1);out.importedAt=root.get<std::string>("importedAt","");out.legacyExportedAt=root.get<std::string>("legacyExportedAt","");out.legacyBackupFile=root.get<std::string>("legacyBackupFile","legacy-full-save-v1.json");out.legacySourcePath=root.get<std::string>("legacySourcePath","");
-        if(auto p=root.get_child_optional("player")){out.progress.rp=ClampInt(p->get<long long>("rp",0));out.progress.wins=ClampInt(p->get<long long>("wins",0));out.progress.losses=ClampInt(p->get<long long>("losses",0));out.progress.draws=ClampInt(p->get<long long>("draws",0));out.progress.matches=ClampUInt64(p->get<long long>("matches",0));out.progress.accuracy=std::clamp(p->get<double>("accuracy",0),0.0,100.0);out.progress.accuracySum=std::max(0.0,p->get<double>("accuracySum",0));out.progress.accuracyMatches=ClampUInt64(p->get<long long>("accuracyMatches",0));out.progress.recentAt=ClampUInt64(p->get<long long>("recentAt",0));out.progress.peakRp=ClampInt(p->get<long long>("peakRp",0));out.progress.onlineSongRangeTier=NormalizeRange(p->get<std::string>("onlineSongRangeTier","beginner"));out.progress.lastOpponentId=p->get<std::string>("lastOpponentId","");}
-        out.playerName=root.get<std::string>("playerName","");out.equippedTitle=root.get<std::string>("equippedTitle","");out.selectedSkin=root.get<std::string>("selectedSkin","");if(auto s=root.get_child_optional("settings")){out.masterVolume=std::clamp(s->get<double>("masterVolume",1),0.0,1.0);out.scrollDirection=s->get<std::string>("scrollDirection","up");out.judgementPosition=s->get<std::string>("judgementPosition","center");}if(auto h=root.get_child_optional("halloween")){out.halloweenCandy=ClampInt(h->get<long long>("candy",0));out.purchasedSkinIds=StringVector(*h,"purchasedSkinIds");out.unlockedTitleIds=StringVector(*h,"unlockedTitleIds");}out.earnedTitleIds=StringVector(root,"earnedTitleIds");
-#endif
-        out.valid=true;
-    } catch(...) { out.valid=false; }
-    return out;
+NativeSaveSummary ParseNativeSaveSummary(const std::string& json) {
+    try{return DecodeNativePlayerSave(json);}catch(...){return {};}
 }
 
+NativeSaveSummary ReadNativeSaveSummary(const std::filesystem::path& path) {
+    try{return ParseNativeSaveSummary(ReadAll(path));}
+    catch(...){return {};}
+}
+std::string SerializeNativeSaveSummary(const NativeSaveSummary& summary){return SerializeNative(summary);}
 void WriteNativeSaveSummary(const std::filesystem::path& path, const NativeSaveSummary& summary) {
-    std::filesystem::create_directories(path.parent_path());
-    const auto temp=path.string()+".tmp"; WriteAll(temp,SerializeNative(summary)); ReplaceFileFromTemp(temp,path);
+    if(ReadLegacyFullSave(path).valid)throw std::runtime_error("Refusing to replace a legacy migration source");
+    WriteValidatedSaveFile(path,SerializeNativeSaveSummary(summary),ValidateNativePlayerSave);
 }
 
 std::vector<std::filesystem::path> DiscoverLegacyFullSaves(const std::filesystem::path& executableDir,const std::filesystem::path& localAppData,const std::optional<std::filesystem::path>& explicitPath) {
@@ -346,8 +339,11 @@ LegacyImportResult ImportLegacyFullSave(const std::filesystem::path& sourcePath,
     const auto legacy=ReadLegacyFullSave(sourcePath); if(!legacy.valid){result.status=LegacyImportStatus::InvalidLegacySave;result.message="Legacy Full Save is invalid or unsupported";return result;}
     const auto existing=ReadNativeSaveSummary(result.nativeSavePath); if(existing.valid&&CompareProgressMarkers(ProgressMarkerFor(existing.progress),ProgressMarkerFor(legacy.progress))>=0){result.status=LegacyImportStatus::NativeIsNewerOrEqual;result.message="Native player progress is newer or equal; legacy save left untouched";return result;}
     try {
+        if(SameFile(sourcePath,result.nativeSavePath)||SameFile(sourcePath,nativeSaveRoot/"population-state-v1.json"))
+            throw std::runtime_error("Legacy migration source aliases a Native save destination");
         std::filesystem::create_directories(nativeSaveRoot);
-        const auto raw=ReadAll(sourcePath); const auto backup=nativeSaveRoot/"legacy-full-save-v1.json"; const auto backupTemp=nativeSaveRoot/"legacy-full-save-v1.json.tmp"; WriteAll(backupTemp,raw); ReplaceFileFromTemp(backupTemp,backup);
+        const auto raw=ReadAll(sourcePath);const auto backup=nativeSaveRoot/"legacy-full-save-v1.json";
+        if(!SameFile(sourcePath,backup))WriteValidatedSaveFile(backup,raw,ValidateLegacyBackup);
         auto summary=ToNative(legacy); WriteNativeSaveSummary(result.nativeSavePath,summary);
         result.status=LegacyImportStatus::Imported; result.message="Legacy PKE save imported without modifying the source"; return result;
     } catch(const std::exception& e) { result.status=LegacyImportStatus::WriteFailed; result.message=e.what(); return result; }

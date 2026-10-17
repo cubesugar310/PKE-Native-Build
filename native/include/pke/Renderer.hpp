@@ -6,13 +6,20 @@
 #include "pke/SdlCompat.hpp"
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace pke {
-struct Viewport { SDL_Rect destination{}; double scale{1.0}; };
-Viewport ComputeLetterboxedViewport(int outputW,int outputH,int logicalW=1920,int logicalH=1080);
+inline constexpr int kLogicalWidth=1280,kLogicalHeight=720;
+struct Viewport { SDL_Rect destination{}; double scale{}; };
+Viewport ComputeLetterboxedViewport(int outputW,int outputH,int logicalW=kLogicalWidth,int logicalH=kLogicalHeight);
+struct LogicalPoint {double x{},y{};};
+// SDL mouse coordinates are window units; renderer output may have a different
+// pixel density. Reject points in bars and outside the logical canvas.
+std::optional<LogicalPoint> WindowToLogical(double x,double y,int windowW,int windowH,int outputW,int outputH);
 double ComputeNoteY(double noteTimeMs,double songTimeMs,double scrollSpeed,double receptorY,double pixelsPerMsAtSpeed1=0.45);
 
 struct CharacterRenderView {
@@ -20,6 +27,7 @@ struct CharacterRenderView {
     const CharacterDefinition* definition{nullptr};
     AnimationFrameView frame{};
     SDL_Point basePosition{};
+    double presentationScale{1.0};
 };
 bool NeedsDiagnosticFallback(const CharacterRenderView& view,bool textureAvailable) noexcept;
 struct RenderState {
@@ -52,6 +60,7 @@ void ForEachRenderableNote(const RenderState& state,Fn&& fn){
 
 class Renderer {
 public:
+    struct CacheCounters {std::uint64_t imageLoads{},textRasterizations{},textCacheHits{};};
     Renderer();
     ~Renderer();
     Renderer(const Renderer&)=delete;
@@ -59,8 +68,9 @@ public:
     bool Initialize(SDL_Renderer* renderer);
     bool PreloadCharacter(std::string key,const CharacterDefinition& definition);
     bool PreloadFont(const std::filesystem::path& fontPath,int pointSize=28);
-    void Draw(const RenderState& state);
+    void Draw(const RenderState& state,bool present=true);
     std::string LastError() const;
+    CacheCounters CacheStats() const noexcept;
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;

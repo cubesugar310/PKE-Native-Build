@@ -46,13 +46,19 @@ The native executable reads existing PKE assets directly. No conversion step is 
 
 The master rhythm clock is the mixed audio output frame cursor. Dropped render frames do not advance judgement state.
 
-### Prototype controls
+### Native Practice controls
 
 - Arrow keys: player lanes (configurable in `pke-native.json`)
-- Enter: start the selected song
-- Esc: leave gameplay / quit from selection
+- Home: click プラクティスモード or press Enter
+- Practice: type in the search field, select BF/DAD and stars; Up/Down selects a song, Enter or a song click starts it
+- Esc: return from Gameplay/Result to Practice, then from Practice to Home
+- Result: save the original `PKE_REPLAY` schema to the Native save directory's `replays/` folder, or return to song selection
 - F3: toggle the allocation-light timing diagnostics overlay
 - F11: toggle borderless desktop fullscreen
+
+Practice does not change Online RP, average accuracy, or W/L/D. The real population worker continues through every scene. Name and selected skin changes are saved on Home. Close the window to flush the population checkpoint and exit.
+
+This branch is a playable-route milestone. Halloween/shop, strict reference visual comparison and the remaining Home destinations are still pending. Configure asset roots in `pke-native.json`; folder-picker buttons are not connected in this milestone.
 
 Character compatibility accepts both common PKE/Psych animation schemas: `anim` + atlas `name`, and `name` + atlas `prefix`. If a character JSON points at an image basename different from the JSON filename, the sibling Sparrow XML/PNG/WebP is resolved from the JSON `image` field.
 
@@ -108,8 +114,56 @@ Only the `qjs` library is linked. The standalone CLI and std/os libc helpers are
 
 The offline-core mode still avoids fetching GUI/audio dependencies; it uses the already initialized pinned QuickJS submodule. A separate `quickjs_runtime` CTest entry covers the wrapper. The runtime is a Block 1 foundation; population and scene parity are separate implementation tasks.
 
-The `compat/` directory contains the selected V1.12 calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. See `compat/README.md` for the exact import scope and adaptations. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player are retained in these tests. This component is not yet connected to the prototype's scenes; the dedicated Native worker and V1.14 Home/Practice integration are subsequent Block 1 tasks.
+The `compat/` directory contains the selected V1.12 calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. See `compat/README.md` for the exact import scope and adaptations. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player are retained in these tests. This component is not yet connected to the prototype's scenes; the dedicated worker is implemented and V1.14 Home/Practice scene integration remains a later Block 1 task.
 
 Release packages include the seven runtime compatibility scripts and QuickJS license. Test-only reference code and fixtures are excluded.
 
 Imported comparisons opt into ICU through `QuickJsRuntime::InstallLocaleCompare`. The Native C API preserves browser-style Unicode/case ordering, normalization, embedded NULs and UTF-16 surrogates; no browser object is added. Windows builds link the OS ICU APIs (`icuin`, `icuuc`, Windows 10 version 1703 or later) and balance COM initialization on the owning thread. Linux development/CI also requires `libicu-dev`. Compatibility fixtures explicitly choose `en-US`; an empty language tag uses the Native locale. The imported game uses one-argument comparisons; explicit JS locale/options arguments are rejected by this narrow adapter.
+
+## Durable Native checkpoints
+
+`SaveService` loads the normalized `native-save-v1.json` player state and the
+separate `population-state-v1.json` worker checkpoint. Writes create a unique
+sibling temporary, flush and close it, read/validate its actual JSON bytes and
+schema, and only then replace the durable target by rename. Linux also flushes
+the directory; Windows uses OS file flush and replacement APIs. Incomplete
+startup temporaries are ignored. A failed population generation cannot be saved.
+
+Existing files whose identity cannot be determined safely are preserved and the
+save reports an error. Legacy-format files are protected even at Native file
+names; migration also rejects source/destination aliases and never rewrites an
+import whose source is already the full-backup file. Native schema validation
+retains JSON types, numeric values, player IDs, clocks and expiring LIVE-room
+identity fields. File input is capped at 64 MiB and Native JSON nesting at 64.
+The offline build uses Boost.JSON for typed validation/decoding; the dependency
+build uses its pinned nlohmann JSON implementation.
+
+`save_service` covers load states, validated round trips, corrupted temporaries,
+partial writes/interrupted replacement, invalid state, legacy byte preservation,
+aliases and the reviewed boundary cases. The real population integration saves
+its complete 270-second checkpoint to disk, reloads it and restores a fresh worker.
+Scene flush points and final shutdown routing remain later Block 1 work.
+
+## Cached asset catalog
+
+`AssetService` refreshes Songs/Characters explicitly and publishes immutable
+metadata. It preserves the reference default chart, difficulty ratings and icon
+priority while isolating corrupt files. Search and star filters read cached
+metadata, including NFKC width/kana normalization, with no repeated file parsing.
+Character discovery supports cross-directory atlases, XML imagePath priority
+and original duplicate-definition selection. Source/fixture details are in
+`compat/README.md` and `compat/catalog-provenance.json`. Application-scene wiring
+is part of the remaining Block 1 work.
+
+## Logical rendering and input
+
+The Native renderer uses a 1280×720 logical canvas with uniform scaling and
+black bars at other aspect ratios. `WindowToLogical` applies the inverse of
+the same rounded viewport, including window/output pixel-density conversion,
+and rejects clicks in the bars. Exact Home/Practice/gameplay reference layouts
+remain the later Block 1 scene tasks.
+
+Unchanged text and character images reuse loaded textures. A font change
+invalidates text slots; failed image/font replacement retains the prior cache.
+Cache counters support the later performance gate. Software-SDL tests exercise
+real pixels, repeated draws, source-file removal and allocation failures.

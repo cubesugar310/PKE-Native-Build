@@ -1,7 +1,11 @@
 #include "pke/GameSession.hpp"
+#include "pke/QuickJsRuntime.hpp"
 #include <algorithm>
 #include <cmath>
 #include <exception>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 
 namespace pke {
 GameSession::GameSession(Config cfg,std::filesystem::path exe,IAudioClock* injected)
@@ -37,13 +41,41 @@ bool GameSession::Load(const SongSelection& selection){
         state_=SessionState::Ready; return true;
     } catch(const std::exception& e){ Fail(e.what()); return false; }
 }
+bool GameSession::LoadPractice(const SongAsset& song,const AssetCatalog& catalog,Side side,std::string_view skin){
+    state_=SessionState::Loading;failureMessage_.clear();warnings_.clear();nextOpponentNote_=0;
+    songName_=song.displayName;judgementText_.clear();lastJudgementAt_=-1000;
+    songFolder_=song.folderName;instName_=song.instPath.filename().string();
+    voicesName_=song.voicesPath?song.voicesPath->filename().string():"";
+    replayInputs_.clear();practiceOpponent_=side==Side::Opponent;
+    try{
+        if(song.charts.empty())throw std::runtime_error("No cached chart");
+        chart_=song.charts.front().chart;
+        if(side==Side::Opponent)for(auto& note:chart_.notes)note.side=note.side==Side::Player?Side::Opponent:Side::Player;
+        rhythm_.Reset(chart_);
+        auto character=[&](std::string id){
+            const auto colon=id.find_last_of(':');if(colon!=std::string::npos)id.erase(0,colon+1);
+            for(const auto& c:catalog.characters)if(c.id==id)return *c.definition;
+            return FallbackCharacter(id);
+        };
+        const auto playerId=skin.empty()?(chart_.player1.empty()?"bf":chart_.player1):std::string(skin);
+        bfDef_=character(playerId);dadDef_=character(song.opponentCharacterId.empty()?chart_.player2:song.opponentCharacterId);
+        bfAnimator_.SetCharacter(&bfDef_);dadAnimator_.SetCharacter(&dadDef_);
+        if(!injectedClock_){ownedAudio_.SetLatencyCompensationMs(config_.audioLatencyCompensationMs);
+            if(!ownedAudio_.Load(song.instPath,song.voicesPath)){Fail(ownedAudio_.LastError());return false;}}
+        if(renderer_){if(!bfDef_.imagePath.empty())renderer_->PreloadCharacter("bf",bfDef_);
+            if(!dadDef_.imagePath.empty())renderer_->PreloadCharacter("dad",dadDef_);}
+        state_=SessionState::Ready;return true;
+    }catch(const std::exception& e){Fail(e.what());return false;}
+}
 void GameSession::HandleKeyDown(SDL_Scancode key){
     if(state_!=SessionState::Playing) return;
     const int lane=LaneForKey(key);
     if(lane<0) return;
+    replayInputs_.push_back({std::round(clock_->SongTimeMs()*1000)/1000,lane,false});
     const double t=clock_->SongTimeMs()+config_.inputOffsetMs;
-    const auto judgement=rhythm_.KeyDown(lane,t);
+    const auto judgement=rhythm_.KeyDown(lane,t,clock_->SongTimeMs());
     if(!judgement) return;
+    judgementText_=*judgement==Judgement::Sick?"SICK!":*judgement==Judgement::Good?"GOOD":"BAD";lastJudgementAt_=t;
     const RuntimeNoteState* hit=nullptr;
     for(const auto& n:rhythm_.NoteStates()) {
         if(n.note.lane==lane && n.judgement && std::fabs(n.hitTimeMs-t)<1e-6) hit=&n;
@@ -54,7 +86,9 @@ void GameSession::HandleKeyDown(SDL_Scancode key){
         bfAnimator_.TriggerSing(lane,t,hold);
     }
 }
-void GameSession::HandleKeyUp(SDL_Scancode key){ if(state_!=SessionState::Playing)return; int lane=LaneForKey(key); if(lane>=0) rhythm_.KeyUp(lane,clock_->SongTimeMs()+config_.inputOffsetMs); }
+void GameSession::HandleKeyUp(SDL_Scancode key){ if(state_!=SessionState::Playing)return; int lane=LaneForKey(key); if(lane>=0){
+    replayInputs_.push_back({std::round(clock_->SongTimeMs()*1000)/1000,lane,true});
+    rhythm_.KeyUp(lane,clock_->SongTimeMs());}}
 void GameSession::UpdateOpponentAnimations(double t){
     while(nextOpponentNote_<chart_.notes.size()){
         const auto& n=chart_.notes[nextOpponentNote_]; if(n.timeMs>t) break; if(n.side==Side::Opponent){ double hold=n.sustainMs>0?n.timeMs+n.sustainMs:n.timeMs+150.0; dadAnimator_.TriggerSing(n.lane,n.timeMs,hold); } ++nextOpponentNote_;
@@ -66,26 +100,53 @@ void GameSession::Update(){
     if(state_!=SessionState::Playing) return;
     if(clock_->State()==AudioState::DeviceLost){ failureMessage_=clock_->LastErrorCopy(); state_=SessionState::DeviceLost; return; }
     if(clock_->State()==AudioState::Error){ Fail(clock_->LastErrorCopy()); return; }
-    const double t=clock_->SongTimeMs(); rhythm_.Update(t); UpdateOpponentAnimations(t); bfAnimator_.Update(t); dadAnimator_.Update(t); lastUpdateSongTimeMs_=t;
+    const double t=clock_->SongTimeMs(); rhythm_.Update(t,t+config_.inputOffsetMs); UpdateOpponentAnimations(t); bfAnimator_.Update(t); dadAnimator_.Update(t); lastUpdateSongTimeMs_=t;
     if(clock_->State()==AudioState::Finished){ state_=SessionState::Completed; clock_->Stop(); }
 }
 void GameSession::RecordFrameTiming(double intervalMs,double updateMs,double renderMs) noexcept {
     diagnostics_.RecordFrame({intervalMs,updateMs,renderMs,clock_?clock_->SongTimeMs():0.0});
 }
-void GameSession::Render(){
+void GameSession::Render(bool present){
     if(!renderer_) return;
     RenderState rs;
     rs.songTimeMs=clock_?clock_->SongTimeMs():0;
     rs.scrollSpeed=chart_.scrollSpeed;
     rs.chart=&chart_;
     rs.notes=&rhythm_.NoteStates();
-    rs.bf={"bf",&bfDef_,bfAnimator_.CurrentFrame(),{1200,480}};
-    rs.dad={"dad",&dadDef_,dadAnimator_.CurrentFrame(),{420,480}};
+    rs.bf={"bf",&bfDef_,bfAnimator_.CurrentFrame(),{800,320},2.0/3.0};
+    rs.dad={"dad",&dadDef_,dadAnimator_.CurrentFrame(),{280,320},2.0/3.0};
     rs.stats=rhythm_.Stats();
     rs.songName=songName_;
+    if(rs.songTimeMs-lastJudgementAt_<600)rs.judgementText=judgementText_;
     rs.diagnosticsVisible=diagnosticsVisible_;
     if(diagnosticsVisible_) rs.diagnostics=diagnostics_.Summary();
-    renderer_->Draw(rs);
+    renderer_->Draw(rs,present);
 }
 void GameSession::RequestStop(){ if(clock_)clock_->Stop(); state_=SessionState::Completed; }
+
+std::string GameSession::ExportReplay(const std::filesystem::path& compatibilityDirectory) const{
+    if(state_!=SessionState::Completed)throw std::runtime_error("Complete the song before saving its replay");
+    std::ifstream script(compatibilityDirectory/"practice-replay.js",std::ios::binary);
+    if(!script)throw std::runtime_error("Missing Practice replay compatibility script");
+    const std::string source{std::istreambuf_iterator<char>(script),{}};
+    QuickJsRuntime runtime;const auto loaded=runtime.Evaluate(source,"practice-replay.js");
+    if(!loaded.ok)throw std::runtime_error(loaded.error);
+    const auto quote=[](std::string_view value){std::string out="\"";constexpr char hex[]="0123456789abcdef";
+        for(unsigned char c:value){if(c=='"'||c=='\\'){out+='\\';out+=c;}else if(c<32){out+="\\u00";out+=hex[c>>4];out+=hex[c&15];}else out+=c;}return out+'"';};
+    std::ostringstream json;json<<std::setprecision(17);
+    json<<"{\"song\":"<<quote(songName_)<<",\"songFolder\":"<<quote(songFolder_)<<",\"opponent\":"<<quote(chart_.player2)
+        <<",\"inst\":"<<quote(instName_)<<",\"voices\":"<<quote(voicesName_)<<",\"side\":"<<(practiceOpponent_?"true":"false")
+        <<",\"offset\":"<<config_.inputOffsetMs<<",\"speed\":"<<chart_.scrollSpeed<<",\"notes\":[";
+    bool comma=false;for(const auto& n:chart_.notes){if(comma)json<<',';comma=true;
+        json<<"{\"time\":"<<n.timeMs<<",\"lane\":"<<n.lane<<",\"length\":"<<n.sustainMs<<",\"noteType\":"<<quote(n.noteType)
+            <<",\"gfNote\":"<<(n.gfNote?"true":"false")<<",\"altAnim\":"<<(n.altAnim?"true":"false")
+            <<",\"side\":"<<quote(n.side==Side::Opponent?"opponent":"player")<<'}';}
+    json<<"],\"bpm\":[";comma=false;for(const auto& b:chart_.bpmTimeline){if(comma)json<<',';comma=true;json<<"{\"time\":"<<b.timeMs<<",\"bpm\":"<<b.bpm<<'}';}
+    const auto total=std::count_if(rhythm_.NoteStates().begin(),rhythm_.NoteStates().end(),[](const auto& n){return n.judgement.has_value();});
+    const auto& s=rhythm_.Stats();json<<"],\"totalPlayed\":"<<total<<",\"stats\":{\"score\":"<<s.rawScore<<",\"combo\":"<<s.combo<<",\"maxCombo\":"<<s.maxCombo
+        <<",\"sick\":"<<s.sick<<",\"good\":"<<s.good<<",\"bad\":"<<s.bad<<",\"miss\":"<<s.miss<<",\"accuracy\":"<<s.accuracyPercent<<"},\"inputs\":[";
+    comma=false;for(const auto& e:replayInputs_){if(comma)json<<',';comma=true;json<<"{\"time\":"<<e.time<<",\"lane\":"<<e.lane<<",\"type\":"<<quote(e.up?"up":"down")<<'}';}
+    json<<"]}";const auto result=runtime.CallJson("pkeBuildPracticeReplay",json.str());
+    if(!result.ok)throw std::runtime_error(result.error);return result.json;
+}
 }

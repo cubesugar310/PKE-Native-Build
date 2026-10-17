@@ -38,8 +38,8 @@ public:
                            std::string_view filename="native-compat.js");
     QuickJsResult CallJson(std::string_view functionName,std::string_view inputJson);
     QuickJsResult CollectGarbage();
-    // Install ICU default-locale collation for the one-argument localeCompare
-    // calls used by the imported game. Empty locale selects the Native locale.
+    // Install ICU default-locale collation, including the original catalog's
+    // numeric/base options. Empty locale selects the Native locale.
     QuickJsResult InstallLocaleCompare(std::string_view locale={});
     // Thread safe. A requested interruption is permanent for this instance.
     void RequestInterrupt() noexcept;

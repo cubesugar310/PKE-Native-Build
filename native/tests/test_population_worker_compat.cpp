@@ -1,5 +1,6 @@
 #include "TestHarness.hpp"
 #include "pke/PopulationRuntime.hpp"
+#include "pke/SaveService.hpp"
 #include <chrono>
 #include <filesystem>
 #include <thread>
@@ -58,9 +59,21 @@ PKE_TEST("Real QuickJS worker continues 15000 players through the accepted 270 s
     PKE_REQUIRE(final.json.find("\"now\":1791990269000")!=std::string::npos);
     PKE_REQUIRE(final.json.find("\"lastTick\":1791990269000")!=std::string::npos);
     PKE_REQUIRE(runtime.Status()->maxStepMs>0);
+    const auto saveRoot=std::filesystem::temp_directory_path()/
+        ("pke-worker-persistence-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    struct RemoveSavedTestFiles {
+        std::filesystem::path root;
+        ~RemoveSavedTestFiles(){std::error_code ec;std::filesystem::remove_all(root,ec);}
+    } cleanup{saveRoot};
+    pke::SaveService saves(saveRoot);
+    const auto written=saves.SavePopulation(final);
+    if(!written.ok)throw std::runtime_error("Real population persistence: "+written.error);
+    const auto loaded=saves.LoadPopulation();
+    PKE_REQUIRE(loaded.status==pke::SaveLoadStatus::Loaded);
+    PKE_REQUIRE(loaded.checkpoint.json==final.json&&loaded.checkpoint.nowMs==final.nowMs);
     // Restore is a new application generation, with its original recovery
     // window; it must retain the saved clock and real records at startup.
-    auto restoredOptions=Options();restoredOptions.checkpointJson=final.json;
+    auto restoredOptions=Options();restoredOptions.checkpointJson=loaded.checkpoint.json;
     pke::PopulationRuntime restored(std::move(restoredOptions));
     const auto savedAgain=Checkpoint(restored);
     PKE_REQUIRE(savedAgain.nowMs==final.nowMs);

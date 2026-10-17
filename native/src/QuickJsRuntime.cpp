@@ -53,7 +53,7 @@ struct NativeCollator {
     CollationCom com;
 #endif
     std::unique_ptr<UCollator,decltype(&ucol_close)> value{nullptr,&ucol_close};
-    explicit NativeCollator(std::string_view requested){
+    explicit NativeCollator(std::string_view requested,bool natural=false){
         std::string locale;
         if(requested.empty()){
 #ifdef _WIN32
@@ -85,7 +85,8 @@ struct NativeCollator {
         // canonical normalization on, variant sensitivity, locale punctuation.
         status=U_ZERO_ERROR;
         ucol_setAttribute(value.get(),UCOL_NORMALIZATION_MODE,UCOL_ON,&status);
-        ucol_setStrength(value.get(),UCOL_TERTIARY);
+        ucol_setStrength(value.get(),natural?UCOL_PRIMARY:UCOL_TERTIARY);
+        ucol_setAttribute(value.get(),UCOL_NUMERIC_COLLATION,natural?UCOL_ON:UCOL_OFF,&status);
         if(U_FAILURE(status))throw std::runtime_error("Could not configure Native ICU collation");
     }
     int Compare(const uint16_t* left,std::size_t leftSize,const uint16_t* right,std::size_t rightSize){
@@ -105,6 +106,7 @@ struct QuickJsRuntime::Impl {
     JSRuntime* runtime{nullptr};
     JSContext* context{nullptr};
     std::unique_ptr<NativeCollator> collator;
+    std::unique_ptr<NativeCollator> naturalCollator;
     Clock::time_point deadline{Clock::time_point::max()};
     std::atomic<bool> interrupted{false};
     std::string initializationError;
@@ -154,7 +156,7 @@ struct QuickJsRuntime::Impl {
         if(!self||!self->collator)return JS_ThrowInternalError(context,"Native collator is unavailable");
         if(JS_IsNull(receiver)||JS_IsUndefined(receiver))
             return JS_ThrowTypeError(context,"localeCompare requires a string receiver");
-        if((argc>1&&!JS_IsUndefined(argv[1]))||(argc>2&&!JS_IsUndefined(argv[2])))
+        if(argc>1&&!JS_IsUndefined(argv[1]))
             return JS_ThrowTypeError(context,"Imported comparisons use the installed Native locale");
         // JS_ToCStringLenUTF16 uses QuickJS's diagnostic string coercion,
         // which may fall back to Error.message. Preserve ordinary ToString
@@ -163,6 +165,19 @@ struct QuickJsRuntime::Impl {
         if(JS_IsException(leftString.value))return JS_EXCEPTION;
         JsValue rightString(context,JS_ToString(context,argc?argv[0]:JS_UNDEFINED));
         if(JS_IsException(rightString.value))return JS_EXCEPTION;
+        NativeCollator* selected=self->collator.get();
+        if(argc>2&&!JS_IsUndefined(argv[2])){
+            if(!JS_IsObject(argv[2]))return JS_ThrowTypeError(context,"Native collation options must be an object");
+            JsValue numeric(context,JS_GetPropertyStr(context,argv[2],"numeric"));
+            if(JS_IsException(numeric.value))return JS_EXCEPTION;
+            JsValue sensitivity(context,JS_GetPropertyStr(context,argv[2],"sensitivity"));
+            if(JS_IsException(sensitivity.value))return JS_EXCEPTION;
+            JsCString name{context,JS_ToCString(context,sensitivity.value)};
+            if(!name.value)return JS_EXCEPTION;
+            if(!JS_ToBool(context,numeric.value)||std::string_view(name.value)!="base")
+                return JS_ThrowTypeError(context,"Unsupported Native collation options");
+            selected=self->naturalCollator.get();
+        }
         std::size_t leftSize=0,rightSize=0;
         JsUtf16 left{context,JS_ToCStringLenUTF16(context,&leftSize,leftString.value)};
         if(!left.value)return JS_EXCEPTION;
@@ -170,7 +185,7 @@ struct QuickJsRuntime::Impl {
         if(!right.value)return JS_EXCEPTION;
         if(leftSize>1024*1024||rightSize>1024*1024)
             return JS_ThrowRangeError(context,"Native compatibility sort key is too long");
-        try{return JS_NewInt32(context,self->collator->Compare(left.value,leftSize,right.value,rightSize));}
+        try{return JS_NewInt32(context,selected->Compare(left.value,leftSize,right.value,rightSize));}
         catch(const std::exception& e){return JS_ThrowInternalError(context,"%s",e.what());}
         catch(...){return JS_ThrowInternalError(context,"Native collation failed");}
     }
@@ -287,7 +302,9 @@ QuickJsResult QuickJsRuntime::InstallLocaleCompare(std::string_view locale){
     if(auto failure=impl_->Check("install-locale-compare"))return std::move(*failure);
     Impl::ExecutionScope scope(*impl_);
     std::unique_ptr<NativeCollator> candidate;
-    try{candidate=std::make_unique<NativeCollator>(locale);}
+    std::unique_ptr<NativeCollator> naturalCandidate;
+    try{candidate=std::make_unique<NativeCollator>(locale);
+        naturalCandidate=std::make_unique<NativeCollator>(locale,true);}
     catch(const std::exception& e){return impl_->Failure("install-locale-compare",e.what());}
     JSContext* context=impl_->context;
     JsValue global(context,JS_GetGlobalObject(context));
@@ -302,6 +319,7 @@ QuickJsResult QuickJsRuntime::InstallLocaleCompare(std::string_view locale){
         JS_PROP_WRITABLE|JS_PROP_CONFIGURABLE|JS_PROP_THROW)<0)
         return impl_->CaptureException("install-locale-compare");
     impl_->collator=std::move(candidate);
+    impl_->naturalCollator=std::move(naturalCandidate);
     return Success();
 }
 void QuickJsRuntime::RequestInterrupt() noexcept {

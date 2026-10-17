@@ -1,0 +1,85 @@
+{
+  "sourceSha256": "a9400aa2620d338896486256ff995ca712647b74fe9313273399777481f1631a",
+  "declarations": [
+    {
+      "name": "replayHashString",
+      "lines": [
+        10744,
+        10752
+      ],
+      "sha256": "4471142b3b52741fc156be80e5b9dbdb0ed1ca8f80f46c19c75ca905f054017a"
+    },
+    {
+      "name": "buildReplayChartSignaturePayload",
+      "lines": [
+        10809,
+        10838
+      ],
+      "sha256": "d75a1f1b3c43f4bc209e99b962ff370ef01c31aa252d8ec265924ad86ece6ba2"
+    },
+    {
+      "name": "getReplayChartHash",
+      "lines": [
+        10840,
+        10844
+      ],
+      "sha256": "f0ca08100651c6caad522e593824ca82dadab3db3dacf9740edf1d84b3306c34"
+    },
+    {
+      "name": "captureReplayChartSnapshot",
+      "lines": [
+        10846,
+        10886
+      ],
+      "sha256": "7d206b9b376fccbaa1397cfa708d774940841582663c6bc23435d489f4c78d1c"
+    },
+    {
+      "name": "captureReplayGameplaySettings",
+      "lines": [
+        11016,
+        11036
+      ],
+      "sha256": "cbc27a03a68256c3978411247c27171956f5b4f1db7124b3b7fbf175e1bc7889"
+    },
+    {
+      "name": "captureReplayResultSnapshot",
+      "lines": [
+        11038,
+        11067
+      ],
+      "sha256": "93de6ae87038ac6ad8ef273fdf14cb791685dff269aa7ebc5daf44ba641d2a63"
+    },
+    {
+      "name": "getAccuracy",
+      "lines": [
+        36457,
+        36460
+      ],
+      "sha256": "1f8b2166798617ed426e523fa3725f143343dc731cee8a39cdb187ee56b9e28d"
+    },
+    {
+      "name": "getFCStatus",
+      "lines": [
+        36471,
+        36485
+      ],
+      "sha256": "001783050d19657b10bc276a83cf9d83d01796b6e73ce6a7ede37f366d4dea1a"
+    },
+    {
+      "name": "getScore",
+      "lines": [
+        36487,
+        36489
+      ],
+      "sha256": "8a5fa654613395bc2d67ae6d62dc8728d5cf6dde2ed18e1738906ad1f1b45eba"
+    },
+    {
+      "name": "buildReplayObject",
+      "lines": [
+        11079,
+        11114
+      ],
+      "sha256": "f93d0a1305ef52111bbe47d1a87b29e8bbe86aac1ca2be825b6cd7601b06b1c2"
+    }
+  ]
+}

@@ -1,0 +1,1395 @@
+{
+  "source": "V1.12 exact catalog functions and original async difficulty, Node V8",
+  "charts": [
+    {
+      "name": "section ownership and sustain",
+      "input": {
+        "song": {
+          "song": "Original",
+          "bpm": 400,
+          "speed": 1.6,
+          "scrollSpeed": 9,
+          "player2": "characters/DAD.json",
+          "notes": [
+            {
+              "mustHitSection": true,
+              "sectionNotes": [
+                [
+                  0,
+                  0,
+                  200
+                ],
+                [
+                  65,
+                  1,
+                  0
+                ],
+                [
+                  100,
+                  4,
+                  0
+                ],
+                [
+                  100,
+                  5,
+                  0
+                ],
+                [
+                  200,
+                  0,
+                  0,
+                  "Hurt Note"
+                ],
+                [
+                  300,
+                  1,
+                  0,
+                  "Alt Animation"
+                ],
+                [
+                  400,
+                  2,
+                  0,
+                  "GF Sing"
+                ],
+                [
+                  500,
+                  3,
+                  0,
+                  "Normal Note"
+                ]
+              ]
+            }
+          ]
+        }
+      },
+      "fallback": "folder",
+      "expected": {
+        "displayName": "Original",
+        "opponentCharacterId": "dad",
+        "beatBattleLightweightChart": {
+          "times": [
+            0,
+            65,
+            100,
+            100,
+            300,
+            400,
+            500
+          ],
+          "sides": [
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "lanes": [
+            0,
+            1,
+            0,
+            1,
+            1,
+            2,
+            3
+          ],
+          "lengths": [
+            200,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rapidFlags": [
+            1,
+            1,
+            0,
+            0,
+            1,
+            1,
+            1
+          ],
+          "difficultyRegularFlags": [
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1
+          ],
+          "baseBpm": 320,
+          "playerNoteCount": 5,
+          "opponentNoteCount": 2,
+          "playerRapidRatio": 1,
+          "opponentRapidRatio": 0,
+          "durationMs": 30000,
+          "runtimeSongName": "Original"
+        },
+        "beatBattleDifficulty": {
+          "version": 3,
+          "player": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 3,
+            "averageNps": 2,
+            "typicalNps": 1,
+            "peakNps": 3,
+            "peakThreeSecondNps": 1,
+            "peakOneSecondSpanMs": 500,
+            "peakThreeSecondSpanMs": 500,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "opponent": {
+            "stars": 2,
+            "label": "NORMAL",
+            "noteCount": 2,
+            "averageNps": 2,
+            "typicalNps": 0.6666666666666666,
+            "peakNps": 2,
+            "peakThreeSecondNps": 0.6666666666666666,
+            "peakOneSecondSpanMs": 0,
+            "peakThreeSecondSpanMs": 0,
+            "severeBurstCount": 0,
+            "maxChord": 2,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "maxStars": 2,
+          "scrollSpeed": 1.6
+        }
+      }
+    },
+    {
+      "name": "absolute converted ownership",
+      "input": {
+        "song": {
+          "format": "psych_v1_convert",
+          "songName": "Converted",
+          "bpm": 20,
+          "notes": [
+            {
+              "mustHitSection": false,
+              "sectionNotes": [
+                [
+                  1000,
+                  0,
+                  50
+                ],
+                [
+                  1000,
+                  4,
+                  0
+                ],
+                [
+                  1035,
+                  1,
+                  0
+                ],
+                [
+                  1205,
+                  2,
+                  0
+                ],
+                [
+                  1376,
+                  3,
+                  0
+                ]
+              ]
+            }
+          ]
+        }
+      },
+      "fallback": "folder",
+      "expected": {
+        "displayName": "Converted",
+        "opponentCharacterId": "",
+        "beatBattleLightweightChart": {
+          "times": [
+            1000,
+            1000,
+            1035,
+            1205,
+            1376
+          ],
+          "sides": [
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          "lanes": [
+            0,
+            0,
+            1,
+            2,
+            3
+          ],
+          "lengths": [
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rapidFlags": [
+            1,
+            0,
+            1,
+            1,
+            0
+          ],
+          "difficultyRegularFlags": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "baseBpm": 40,
+          "playerNoteCount": 4,
+          "opponentNoteCount": 1,
+          "playerRapidRatio": 0.75,
+          "opponentRapidRatio": 0,
+          "durationMs": 30000,
+          "runtimeSongName": "Converted"
+        },
+        "beatBattleDifficulty": {
+          "version": 3,
+          "player": {
+            "stars": 2,
+            "label": "NORMAL",
+            "noteCount": 4,
+            "averageNps": 2.9069767441860463,
+            "typicalNps": 1.3333333333333333,
+            "peakNps": 4,
+            "peakThreeSecondNps": 1.3333333333333333,
+            "peakOneSecondSpanMs": 376,
+            "peakThreeSecondSpanMs": 376,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "opponent": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 1,
+            "averageNps": 1,
+            "typicalNps": 0.3333333333333333,
+            "peakNps": 1,
+            "peakThreeSecondNps": 0.3333333333333333,
+            "peakOneSecondSpanMs": 0,
+            "peakThreeSecondSpanMs": 0,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "maxStars": 2,
+          "scrollSpeed": null
+        }
+      }
+    },
+    {
+      "name": "custom types and speed",
+      "input": {
+        "name": "Custom",
+        "speed": 2.4,
+        "opponent": "dad",
+        "notes": [
+          {
+            "time": 100,
+            "lane": 0,
+            "length": 250
+          },
+          {
+            "time": 135,
+            "lane": 1,
+            "side": "enemy"
+          },
+          {
+            "time": 305,
+            "lane": 2,
+            "owner": "DAD"
+          },
+          {
+            "time": 340,
+            "lane": 3,
+            "opponent": true,
+            "noteType": "Mine"
+          },
+          {
+            "time": 500,
+            "lane": 0,
+            "noteType": "Hey!"
+          },
+          {
+            "time": 600,
+            "lane": 1,
+            "noteType": 0
+          },
+          {
+            "time": 700,
+            "lane": 4
+          },
+          {
+            "time": 800,
+            "lane": 2.5
+          }
+        ]
+      },
+      "fallback": "folder",
+      "expected": {
+        "displayName": "Custom",
+        "opponentCharacterId": "dad",
+        "beatBattleLightweightChart": {
+          "times": [
+            100,
+            135,
+            305,
+            500,
+            600
+          ],
+          "sides": [
+            0,
+            1,
+            1,
+            0,
+            0
+          ],
+          "lanes": [
+            0,
+            1,
+            2,
+            0,
+            1
+          ],
+          "lengths": [
+            250,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rapidFlags": [
+            0,
+            1,
+            1,
+            1,
+            1
+          ],
+          "difficultyRegularFlags": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ],
+          "baseBpm": 140,
+          "playerNoteCount": 3,
+          "opponentNoteCount": 2,
+          "playerRapidRatio": 0.6666666666666666,
+          "opponentRapidRatio": 1,
+          "durationMs": 30000,
+          "runtimeSongName": "Custom"
+        },
+        "beatBattleDifficulty": {
+          "version": 3,
+          "player": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 2,
+            "averageNps": 1.3333333333333333,
+            "typicalNps": 0.6666666666666666,
+            "peakNps": 2,
+            "peakThreeSecondNps": 0.6666666666666666,
+            "peakOneSecondSpanMs": 500,
+            "peakThreeSecondSpanMs": 500,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "opponent": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 2,
+            "averageNps": 1.7094017094017093,
+            "typicalNps": 0.6666666666666666,
+            "peakNps": 2,
+            "peakThreeSecondNps": 0.6666666666666666,
+            "peakOneSecondSpanMs": 170,
+            "peakThreeSecondSpanMs": 170,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "maxStars": 1,
+          "scrollSpeed": 2.4
+        }
+      }
+    },
+    {
+      "name": "custom bare array",
+      "input": [
+        {
+          "time": 100,
+          "lane": 0
+        },
+        {
+          "time": 200,
+          "lane": 1,
+          "opponent": true
+        }
+      ],
+      "fallback": "folder",
+      "expected": {
+        "displayName": "folder",
+        "opponentCharacterId": "",
+        "beatBattleLightweightChart": {
+          "times": [
+            100,
+            200
+          ],
+          "sides": [
+            0,
+            1
+          ],
+          "lanes": [
+            0,
+            1
+          ],
+          "lengths": [
+            0,
+            0
+          ],
+          "rapidFlags": [
+            0,
+            0
+          ],
+          "difficultyRegularFlags": [
+            1,
+            1
+          ],
+          "baseBpm": 140,
+          "playerNoteCount": 1,
+          "opponentNoteCount": 1,
+          "playerRapidRatio": 0,
+          "opponentRapidRatio": 0,
+          "durationMs": 30000,
+          "runtimeSongName": "folder"
+        },
+        "beatBattleDifficulty": {
+          "version": 3,
+          "player": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 1,
+            "averageNps": 1,
+            "typicalNps": 0.3333333333333333,
+            "peakNps": 1,
+            "peakThreeSecondNps": 0.3333333333333333,
+            "peakOneSecondSpanMs": 0,
+            "peakThreeSecondSpanMs": 0,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "opponent": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 1,
+            "averageNps": 1,
+            "typicalNps": 0.3333333333333333,
+            "peakNps": 1,
+            "peakThreeSecondNps": 0.3333333333333333,
+            "peakOneSecondSpanMs": 0,
+            "peakThreeSecondSpanMs": 0,
+            "severeBurstCount": 0,
+            "maxChord": 1,
+            "maxJackNps": 0,
+            "maxJackRun": 1,
+            "jackRunCount": 0
+          },
+          "maxStars": 1,
+          "scrollSpeed": null
+        }
+      }
+    },
+    {
+      "name": "empty chart",
+      "input": {
+        "song": {
+          "notes": [
+            {
+              "sectionNotes": [
+                [
+                  0,
+                  0,
+                  0,
+                  "Hurt"
+                ]
+              ]
+            }
+          ]
+        }
+      },
+      "fallback": "folder",
+      "expected": null
+    },
+    {
+      "name": "dense regular jack",
+      "input": {
+        "name": "Jack",
+        "notes": [
+          {
+            "time": 0,
+            "lane": 1
+          },
+          {
+            "time": 65,
+            "lane": 1
+          },
+          {
+            "time": 130,
+            "lane": 1
+          },
+          {
+            "time": 195,
+            "lane": 1
+          },
+          {
+            "time": 260,
+            "lane": 1
+          },
+          {
+            "time": 325,
+            "lane": 1
+          },
+          {
+            "time": 390,
+            "lane": 1
+          },
+          {
+            "time": 455,
+            "lane": 1
+          },
+          {
+            "time": 520,
+            "lane": 1
+          },
+          {
+            "time": 585,
+            "lane": 1
+          },
+          {
+            "time": 650,
+            "lane": 1
+          },
+          {
+            "time": 715,
+            "lane": 1
+          },
+          {
+            "time": 780,
+            "lane": 1
+          },
+          {
+            "time": 845,
+            "lane": 1
+          },
+          {
+            "time": 910,
+            "lane": 1
+          },
+          {
+            "time": 975,
+            "lane": 1
+          },
+          {
+            "time": 1040,
+            "lane": 1
+          },
+          {
+            "time": 1105,
+            "lane": 1
+          },
+          {
+            "time": 1170,
+            "lane": 1
+          },
+          {
+            "time": 1235,
+            "lane": 1
+          },
+          {
+            "time": 1300,
+            "lane": 1
+          },
+          {
+            "time": 1365,
+            "lane": 1
+          },
+          {
+            "time": 1430,
+            "lane": 1
+          },
+          {
+            "time": 1495,
+            "lane": 1
+          },
+          {
+            "time": 1560,
+            "lane": 1
+          },
+          {
+            "time": 1625,
+            "lane": 1
+          },
+          {
+            "time": 1690,
+            "lane": 1
+          },
+          {
+            "time": 1755,
+            "lane": 1
+          },
+          {
+            "time": 1820,
+            "lane": 1
+          },
+          {
+            "time": 1885,
+            "lane": 1
+          },
+          {
+            "time": 1950,
+            "lane": 1
+          },
+          {
+            "time": 2015,
+            "lane": 1
+          },
+          {
+            "time": 2080,
+            "lane": 1
+          },
+          {
+            "time": 2145,
+            "lane": 1
+          },
+          {
+            "time": 2210,
+            "lane": 1
+          },
+          {
+            "time": 2275,
+            "lane": 1
+          },
+          {
+            "time": 2340,
+            "lane": 1
+          },
+          {
+            "time": 2405,
+            "lane": 1
+          },
+          {
+            "time": 2470,
+            "lane": 1
+          },
+          {
+            "time": 2535,
+            "lane": 1
+          },
+          {
+            "time": 2600,
+            "lane": 1
+          },
+          {
+            "time": 2665,
+            "lane": 1
+          },
+          {
+            "time": 2730,
+            "lane": 1
+          },
+          {
+            "time": 2795,
+            "lane": 1
+          },
+          {
+            "time": 2860,
+            "lane": 1
+          },
+          {
+            "time": 2925,
+            "lane": 1
+          },
+          {
+            "time": 2990,
+            "lane": 1
+          },
+          {
+            "time": 3055,
+            "lane": 1
+          },
+          {
+            "time": 3120,
+            "lane": 1
+          },
+          {
+            "time": 3185,
+            "lane": 1
+          },
+          {
+            "time": 3250,
+            "lane": 1
+          },
+          {
+            "time": 3315,
+            "lane": 1
+          },
+          {
+            "time": 3380,
+            "lane": 1
+          },
+          {
+            "time": 3445,
+            "lane": 1
+          },
+          {
+            "time": 3510,
+            "lane": 1
+          },
+          {
+            "time": 3575,
+            "lane": 1
+          },
+          {
+            "time": 3640,
+            "lane": 1
+          },
+          {
+            "time": 3705,
+            "lane": 1
+          },
+          {
+            "time": 3770,
+            "lane": 1
+          },
+          {
+            "time": 3835,
+            "lane": 1
+          },
+          {
+            "time": 3900,
+            "lane": 1
+          },
+          {
+            "time": 3965,
+            "lane": 1
+          },
+          {
+            "time": 4030,
+            "lane": 1
+          },
+          {
+            "time": 4095,
+            "lane": 1
+          }
+        ]
+      },
+      "fallback": "folder",
+      "expected": {
+        "displayName": "Jack",
+        "opponentCharacterId": "",
+        "beatBattleLightweightChart": {
+          "times": [
+            0,
+            65,
+            130,
+            195,
+            260,
+            325,
+            390,
+            455,
+            520,
+            585,
+            650,
+            715,
+            780,
+            845,
+            910,
+            975,
+            1040,
+            1105,
+            1170,
+            1235,
+            1300,
+            1365,
+            1430,
+            1495,
+            1560,
+            1625,
+            1690,
+            1755,
+            1820,
+            1885,
+            1950,
+            2015,
+            2080,
+            2145,
+            2210,
+            2275,
+            2340,
+            2405,
+            2470,
+            2535,
+            2600,
+            2665,
+            2730,
+            2795,
+            2860,
+            2925,
+            2990,
+            3055,
+            3120,
+            3185,
+            3250,
+            3315,
+            3380,
+            3445,
+            3510,
+            3575,
+            3640,
+            3705,
+            3770,
+            3835,
+            3900,
+            3965,
+            4030,
+            4095
+          ],
+          "sides": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "lanes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "lengths": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "rapidFlags": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "difficultyRegularFlags": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "baseBpm": 140,
+          "playerNoteCount": 64,
+          "opponentNoteCount": 0,
+          "playerRapidRatio": 1,
+          "opponentRapidRatio": 0,
+          "durationMs": 30000,
+          "runtimeSongName": "Jack"
+        },
+        "beatBattleDifficulty": {
+          "version": 3,
+          "player": {
+            "stars": 7,
+            "label": "IMPOSSIBLE",
+            "noteCount": 64,
+            "averageNps": 12.561334641805692,
+            "typicalNps": 15.666666666666666,
+            "peakNps": 16,
+            "peakThreeSecondNps": 15.666666666666666,
+            "peakOneSecondSpanMs": 975,
+            "peakThreeSecondSpanMs": 2990,
+            "severeBurstCount": 4,
+            "maxChord": 1,
+            "maxJackNps": 15.384615384615385,
+            "maxJackRun": 64,
+            "jackRunCount": 1
+          },
+          "opponent": {
+            "stars": 1,
+            "label": "EASY",
+            "noteCount": 0,
+            "averageNps": 0,
+            "typicalNps": 0,
+            "peakNps": 0,
+            "peakThreeSecondNps": 0,
+            "peakOneSecondSpanMs": 0,
+            "peakThreeSecondSpanMs": 0,
+            "severeBurstCount": 0,
+            "maxChord": 0,
+            "maxJackNps": 0,
+            "maxJackRun": 0,
+            "jackRunCount": 0
+          },
+          "maxStars": 7,
+          "scrollSpeed": null
+        }
+      }
+    }
+  ],
+  "songs": [
+    {
+      "displayName": "ＴＥＳＴ カタカナ",
+      "folderName": "wide_name",
+      "chartFile": {
+        "name": "chart-hard.json"
+      },
+      "beatBattleDifficulty": {
+        "player": {
+          "stars": 7
+        },
+        "opponent": {
+          "stars": 1
+        }
+      }
+    },
+    {
+      "displayName": "Test 2",
+      "folderName": "other-folder",
+      "chartFile": {
+        "name": "chart.json"
+      },
+      "beatBattleDifficulty": {
+        "player": {
+          "stars": 1
+        },
+        "opponent": {
+          "stars": 3
+        }
+      }
+    },
+    {
+      "displayName": "ΣΟΣ é",
+      "folderName": "accent",
+      "chartFile": {
+        "name": "data.json"
+      },
+      "beatBattleDifficulty": {
+        "player": {
+          "stars": 2
+        },
+        "opponent": {
+          "stars": 2
+        }
+      }
+    }
+  ],
+  "search": [
+    {
+      "name": "compatibility width kana",
+      "input": {
+        "query": "test ｶﾀｶﾅ",
+        "side": "player",
+        "stars": 0
+      },
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "all terms separator case",
+      "input": {
+        "query": "NAME　ＷＩＤＥ",
+        "side": "player",
+        "stars": 0
+      },
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "opponent star",
+      "input": {
+        "query": "",
+        "side": "opponent",
+        "stars": 1
+      },
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "player star",
+      "input": {
+        "query": "test",
+        "side": "player",
+        "stars": 7
+      },
+      "expected": [
+        0
+      ]
+    },
+    {
+      "name": "greek contextual lower",
+      "input": {
+        "query": "σος",
+        "side": "player",
+        "stars": 0
+      },
+      "expected": [
+        2
+      ]
+    },
+    {
+      "name": "canonical combining",
+      "input": {
+        "query": "é",
+        "side": "player",
+        "stars": 0
+      },
+      "expected": [
+        2
+      ]
+    },
+    {
+      "name": "no match",
+      "input": {
+        "query": "absent",
+        "side": "player",
+        "stars": 0
+      },
+      "expected": []
+    }
+  ]
+}

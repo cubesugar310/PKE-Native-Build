@@ -1,7 +1,11 @@
 #include "pke/App.hpp"
+#include "pke/ApplicationFlow.hpp"
+#include "pke/ApplicationView.hpp"
 #include "pke/GameSession.hpp"
 #include "pke/LegacySaveImporter.hpp"
-#include "pke/Renderer.hpp"
+#include "pke/PopulationRuntime.hpp"
+#include "pke/SaveService.hpp"
+#include "pke/QuickJsRuntime.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -16,36 +20,161 @@
 #endif
 
 namespace pke {
+namespace {
+std::int64_t UtcNow(){return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();}
+std::string JsonString(std::string_view text){
+    std::string out="\"";constexpr char hex[]="0123456789abcdef";
+    for(unsigned char c:text){if(c=='"'||c=='\\'){out+='\\';out+=c;}else if(c<32){out+="\\u00";out+=hex[c>>4];out+=hex[c&15];}else out+=c;}return out+'"';
+}
+void EraseLast(std::string& text){if(text.empty())return;auto end=text.size()-1;while(end>0&&(static_cast<unsigned char>(text[end])&0xc0)==0x80)--end;text.resize(end);}
+}
 int App::Run(int argc,char** argv){
     const auto exeDir=std::filesystem::absolute(argc>0?std::filesystem::path(argv[0]).parent_path():std::filesystem::current_path());
-    std::filesystem::path localAppData;
-    if(const char* value=std::getenv("LOCALAPPDATA")) localAppData=value;
-    std::optional<std::filesystem::path> explicitLegacySave;
-    if(const char* value=std::getenv("PKE_LEGACY_SAVE_PATH")){ if(*value) explicitLegacySave=std::filesystem::path(value); }
-    const auto migration=AutoImportLegacyFullSaves(exeDir,localAppData,explicitLegacySave);
-    if(migration.status==LegacyImportStatus::Imported) std::cout<<"Imported legacy PKE save: "<<migration.sourcePath.string()<<" -> "<<migration.nativeSavePath.string()<<"\n";
-    else if(explicitLegacySave && migration.status!=LegacyImportStatus::NativeIsNewerOrEqual) std::cerr<<"Legacy save import: "<<migration.message<<"\n";
-    Config cfg; try{ cfg=LoadConfig(exeDir,exeDir/"pke-native.json"); }catch(const std::exception& e){ std::cerr<<e.what()<<"\n"; return 1; }
+    std::filesystem::path localAppData;if(const char* value=std::getenv("LOCALAPPDATA"))localAppData=value;
+    std::optional<std::filesystem::path> explicitLegacy;
+    if(const char* value=std::getenv("PKE_LEGACY_SAVE_PATH"))if(*value)explicitLegacy=value;
+    const auto migration=AutoImportLegacyFullSaves(exeDir,localAppData,explicitLegacy);
+    if(migration.status==LegacyImportStatus::WriteFailed)std::cerr<<migration.message<<'\n';
+    Config config;try{config=LoadConfig(exeDir,exeDir/"pke-native.json");}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 #ifndef PKE_NATIVE_WITH_SDL
-    std::cout<<"PKE Native Prototype core build: SDL/WASAPI disabled\n"; return 0;
+    std::cout<<"PKE Native core build: SDL/audio disabled\n";return 0;
 #else
-    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0){ std::cerr<<SDL_GetError()<<"\n"; return 2; }
-    IMG_Init(IMG_INIT_PNG|IMG_INIT_WEBP); TTF_Init();
-    Uint32 flags=SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE; SDL_Window* win=SDL_CreateWindow("PKE Native Prototype 0.1",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,1280,720,flags); if(!win){std::cerr<<SDL_GetError()<<"\n";return 3;}
-    Uint32 rflags=SDL_RENDERER_ACCELERATED|(cfg.vsync?SDL_RENDERER_PRESENTVSYNC:0); SDL_Renderer* sr=SDL_CreateRenderer(win,-1,rflags); if(!sr){std::cerr<<SDL_GetError()<<"\n";SDL_DestroyWindow(win);return 4;}
-    Renderer renderer; renderer.Initialize(sr);
-    if(const char* windir=std::getenv("WINDIR")){ auto font=std::filesystem::path(windir)/"Fonts"/"segoeui.ttf"; if(std::filesystem::exists(font) && !renderer.PreloadFont(font,28)) std::cerr<<"Font preload warning: "<<renderer.LastError()<<"\n"; }
-    std::vector<std::string> songs; if(std::filesystem::exists(cfg.songsRoot)) for(const auto& e:std::filesystem::directory_iterator(cfg.songsRoot)) if(e.is_directory()) songs.push_back(e.path().filename().string()); std::sort(songs.begin(),songs.end());
-    size_t selected=0; if(argc>1){ auto it=std::find(songs.begin(),songs.end(),std::string(argv[1])); if(it!=songs.end())selected=size_t(it-songs.begin()); }
-    std::unique_ptr<GameSession> session; State state=State::SongSelection; bool running=true; bool fullscreen=false; auto last=std::chrono::steady_clock::now(); auto previousFrameStart=last;
-    auto updateTitle=[&]{ std::string t="PKE Native Prototype 0.1 - "; t += songs.empty()?"No Songs found":songs[selected]+" [ENTER]"; SDL_SetWindowTitle(win,t.c_str()); }; updateTitle();
-    if(argc>1 && !songs.empty()){ session=std::make_unique<GameSession>(cfg,exeDir); session->SetRenderer(&renderer); if(session->Load({songs[selected],argc>2?argv[2]:"hard"})) state=State::Gameplay; else std::cerr<<session->FailureMessage()<<"\n"; }
-    while(running){ auto frameStart=std::chrono::steady_clock::now(); const double frameIntervalMs=std::chrono::duration<double,std::milli>(frameStart-previousFrameStart).count(); previousFrameStart=frameStart; SDL_Event e{}; while(SDL_PollEvent(&e)){ if(e.type==SDL_QUIT)running=false; if(e.type==SDL_KEYDOWN&&!e.key.repeat){ if(e.key.keysym.scancode==SDL_SCANCODE_F11){ fullscreen=!fullscreen; if(SDL_SetWindowFullscreen(win,fullscreen?SDL_WINDOW_FULLSCREEN_DESKTOP:0)!=0){ fullscreen=!fullscreen; std::cerr<<"Fullscreen toggle failed: "<<SDL_GetError()<<"\n"; } } else if(state==State::Gameplay&&e.key.keysym.scancode==SDL_SCANCODE_F3){ session->ToggleDiagnostics(); } else if(e.key.keysym.scancode==SDL_SCANCODE_ESCAPE){ if(state==State::Gameplay){session->RequestStop();session.reset();state=State::SongSelection;updateTitle();}else running=false; } else if(state==State::SongSelection&&!songs.empty()){ if(e.key.keysym.scancode==SDL_SCANCODE_UP){selected=(selected+songs.size()-1)%songs.size();updateTitle();} else if(e.key.keysym.scancode==SDL_SCANCODE_DOWN){selected=(selected+1)%songs.size();updateTitle();} else if(e.key.keysym.scancode==SDL_SCANCODE_RETURN){session=std::make_unique<GameSession>(cfg,exeDir);session->SetRenderer(&renderer);if(session->Load({songs[selected],"hard"}))state=State::Gameplay;else std::cerr<<session->FailureMessage()<<"\n";} } else if(state==State::Gameplay) session->HandleKeyDown(e.key.keysym.scancode); } if(e.type==SDL_KEYUP&&state==State::Gameplay) session->HandleKeyUp(e.key.keysym.scancode); }
-        if(state==State::Gameplay&&session){ auto u0=std::chrono::steady_clock::now(); session->Update(); auto u1=std::chrono::steady_clock::now(); session->Render(); auto r1=std::chrono::steady_clock::now(); session->RecordFrameTiming(frameIntervalMs,std::chrono::duration<double,std::milli>(u1-u0).count(),std::chrono::duration<double,std::milli>(r1-u1).count()); if(session->State()==SessionState::Completed||session->State()==SessionState::Failed||session->State()==SessionState::DeviceLost){ if(session->State()!=SessionState::Completed)std::cerr<<session->FailureMessage()<<"\n"; session.reset();state=State::SongSelection;updateTitle(); } }
-        else { SDL_SetRenderDrawColor(sr,12,12,18,255);SDL_RenderClear(sr);SDL_RenderPresent(sr); }
-        if(!cfg.vsync&&cfg.fpsCap>0){ auto now=std::chrono::steady_clock::now(); double target=1.0/double(cfg.fpsCap); double elapsed=std::chrono::duration<double>(now-last).count(); if(elapsed<target)std::this_thread::sleep_for(std::chrono::duration<double>(target-elapsed)); last=std::chrono::steady_clock::now(); }
-    }
-    session.reset(); SDL_DestroyRenderer(sr);SDL_DestroyWindow(win);TTF_Quit();IMG_Quit();SDL_Quit();return 0;
+    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0){std::cerr<<SDL_GetError()<<'\n';return 2;}
+    IMG_Init(IMG_INIT_PNG|IMG_INIT_WEBP);TTF_Init();
+    auto* window=SDL_CreateWindow("PKE Beat Battle",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,kLogicalWidth,kLogicalHeight,
+        SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI);
+    if(!window){std::cerr<<SDL_GetError()<<'\n';TTF_Quit();IMG_Quit();SDL_Quit();return 3;}
+    auto* sdl=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED|(config.vsync?SDL_RENDERER_PRESENTVSYNC:0));
+    if(!sdl)sdl=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
+    if(!sdl){std::cerr<<SDL_GetError()<<'\n';SDL_DestroyWindow(window);TTF_Quit();IMG_Quit();SDL_Quit();return 4;}
+    int exitCode=0;
+    try {
+        Renderer gameplay;gameplay.Initialize(sdl);
+        if(const auto* windir=std::getenv("WINDIR"))for(const auto* name:{"meiryo.ttc","segoeui.ttf"})
+            if(gameplay.PreloadFont(std::filesystem::path(windir)/"Fonts"/name,19))break;
+        UiRenderer ui;if(!ui.Initialize(sdl))throw std::runtime_error(ui.LastError());
+        ui.Begin({21,17,34,255});ui.Text("startup","PKE Beat Battle",{200,260,880,80},40,{255,226,135,255},true);
+        ui.Text("startup-status","CHECKING...",{200,360,880,50},18,{255,255,255,255},true);ui.End();
+        SaveService saves(DefaultNativeSaveRoot(exeDir,localAppData));const auto loaded=saves.LoadPlayer();
+        NativeSaveSummary player=loaded.player;
+        if(loaded.status!=SaveLoadStatus::Loaded){player.valid=true;player.playerName="YOU";player.progress.rp=1500;player.progress.peakRp=1500;}
+        const auto populationSave=saves.LoadPopulation();std::promise<std::string> catalogReady;
+        const bool playerWritable=loaded.status==SaveLoadStatus::Loaded||loaded.status==SaveLoadStatus::Missing;
+        const bool populationWritable=populationSave.status==SaveLoadStatus::Loaded||populationSave.status==SaveLoadStatus::Missing;
+        PopulationRuntimeOptions options;options.compatibilityDirectory=exeDir/"compat";
+        options.initializeJsonFuture=catalogReady.get_future().share();
+        if(populationSave.status==SaveLoadStatus::Loaded)options.checkpointJson=populationSave.checkpoint.json;
+        PopulationRuntime population(std::move(options));
+        AssetService assets(config,exeDir,exeDir/"compat");
+        try {
+            assets.Refresh();auto json=assets.PopulationCatalogJson();json.pop_back();
+            json+=",\"now\":"+std::to_string(UtcNow())+",\"playerName\":"+JsonString(player.playerName)+",\"playerSkin\":"+JsonString(player.selectedSkin)+'}';
+            catalogReady.set_value(std::move(json));
+        }catch(...){catalogReady.set_exception(std::current_exception());throw;}
+        ApplicationFlow flow(assets,std::move(player));ApplicationView view(ui);view.Prepare(flow);
+        if(!playerWritable)view.persistenceError="Player save preserved; writes disabled: "+loaded.error;
+        if(!populationWritable)view.persistenceError+=" Population save preserved; writes disabled: "+populationSave.error;
+        std::unique_ptr<GameSession> session;
+        std::future<PopulationCheckpoint> pendingCheckpoint;std::optional<PopulationCheckpoint> lastCheckpoint;
+        auto nextCheckpoint=UtcNow()+30000;
+        // Native time continues even through a modal OS operation or a resize.
+        std::jthread clockPump([&](std::stop_token stop){while(!stop.stop_requested()){
+            population.AdvanceTo(UtcNow());std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
+        const auto savePlayer=[&]{if(!playerWritable)return;const auto result=saves.SavePlayer(flow.Player());if(!result.ok)view.status=result.error;};
+        const auto requestCheckpoint=[&]{if(populationWritable&&!pendingCheckpoint.valid())pendingCheckpoint=population.RequestCheckpoint();};
+        const auto back=[&]{if(session){session->RequestStop();session.reset();}flow.Back();view.sideMenu=view.starMenu=view.searchFocus=view.nameFocus=false;
+            view.composition.clear();SDL_StopTextInput();view.status.clear();view.EnsureSelected(flow);requestCheckpoint();};
+        const auto launch=[&]{if(!flow.SelectedSong())return;
+            auto candidate=std::make_unique<GameSession>(config,exeDir);candidate->SetRenderer(&gameplay);
+            if(!candidate->LoadPractice(flow.Catalog()->songs.at(*flow.SelectedSong()),*flow.Catalog(),flow.PracticeSide(),flow.Player().selectedSkin)){
+                view.status=candidate->FailureMessage();return;}
+            if(!flow.BeginGameplay())return;session=std::move(candidate);view.replaySaved=false;view.searchFocus=view.nameFocus=false;view.sideMenu=view.starMenu=false;
+            view.status.clear();view.composition.clear();SDL_StopTextInput();};
+        const auto commitName=[&]{flow.SetPlayerName(view.nameEdit);savePlayer();view.nameFocus=false;view.composition.clear();SDL_StopTextInput();};
+        const auto changeSkin=[&](int direction){const auto& characters=flow.Catalog()->characters;if(characters.empty())return;
+            auto found=std::find_if(characters.begin(),characters.end(),[&](const auto& c){return c.id==flow.Player().selectedSkin;});
+            int position=found==characters.end()?0:int(std::distance(characters.begin(),found));
+            position=(position+direction+int(characters.size()))%int(characters.size());flow.SetSkin(characters[position].id);savePlayer();view.Prepare(flow);};
+        bool running=true,fullscreen=false;auto previous=std::chrono::steady_clock::now();const auto opened=previous;
+        while(running){
+            const auto frameStart=std::chrono::steady_clock::now();const double interval=std::chrono::duration<double,std::milli>(frameStart-previous).count();previous=frameStart;
+            SDL_Event event{};
+            while(SDL_PollEvent(&event)){
+                if(event.type==SDL_QUIT){running=false;continue;}
+                if(event.type==SDL_WINDOWEVENT&&event.window.event==SDL_WINDOWEVENT_FOCUS_LOST&&session&&flow.Screen()==AppScreen::Gameplay)
+                    for(auto key:config.playerKeys)session->HandleKeyUp(key);
+                if(event.type==SDL_TEXTEDITING){view.composition=event.edit.text;continue;}
+                if(event.type==SDL_TEXTINPUT){view.composition.clear();if(view.searchFocus){flow.SetSearch(flow.Search()+event.text.text);view.EnsureSelected(flow);}
+                    else if(view.nameFocus)view.nameEdit+=event.text.text;continue;}
+                if(event.type==SDL_MOUSEWHEEL&&flow.Screen()==AppScreen::Practice){view.Scroll(flow,-event.wheel.y);continue;}
+                if(event.type==SDL_MOUSEBUTTONDOWN&&event.button.button==SDL_BUTTON_LEFT){
+                    int ww,wh,ow,oh;SDL_GetWindowSize(window,&ww,&wh);SDL_GetRendererOutputSize(sdl,&ow,&oh);
+                    const auto point=WindowToLogical(event.button.x,event.button.y,ww,wh,ow,oh);if(!point)continue;
+                    const auto hit=view.Hit(flow,point->x,point->y);
+                    if(hit.action!=UiAction::Name&&hit.action!=UiAction::SaveName&&view.nameFocus)commitName();
+                    if(hit.action!=UiAction::Search){view.searchFocus=false;view.composition.clear();if(!view.nameFocus)SDL_StopTextInput();}
+                    switch(hit.action){
+                        case UiAction::Practice:flow.OpenPractice();view.status.clear();view.EnsureSelected(flow);break;
+                        case UiAction::Back:back();break;
+                        case UiAction::Song:flow.SelectSong(hit.index);launch();break;
+                        case UiAction::Search:view.searchFocus=true;view.nameFocus=false;SDL_StartTextInput();break;
+                        case UiAction::Name:view.nameEdit=flow.Player().playerName;view.nameFocus=true;SDL_StartTextInput();break;
+                        case UiAction::SaveName:if(view.nameFocus)commitName();break;
+                        case UiAction::SkinPrevious:changeSkin(-1);break;
+                        case UiAction::SkinNext:changeSkin(1);break;
+                        case UiAction::SaveReplay:if(session&&!view.replaySaved){try{
+                            const auto json=session->ExportReplay(exeDir/"compat");
+                            const auto destination=DefaultNativeSaveRoot(exeDir,localAppData)/"replays"/("practice-"+std::to_string(UtcNow())+".pke-replay.json");
+                            WriteValidatedSaveFile(destination,json,[](std::string_view text){QuickJsRuntime check;
+                                const auto parsed=check.Evaluate("JSON.parse("+JsonString(text)+")");if(!parsed.ok)throw std::runtime_error(parsed.error);});
+                            view.replaySaved=true;view.status=destination.string();
+                        }catch(const std::exception& error){view.status=error.what();}}break;
+                        case UiAction::Side:if(hit.index){flow.SetSide(hit.index==1?Side::Player:Side::Opponent);view.sideMenu=false;view.EnsureSelected(flow);}else{view.sideMenu=!view.sideMenu;view.starMenu=false;}break;
+                        case UiAction::Stars:if(hit.index){flow.SetStars(int(hit.index)-1);view.starMenu=false;view.EnsureSelected(flow);}else{view.starMenu=!view.starMenu;view.sideMenu=false;}break;
+                        default:view.sideMenu=view.starMenu=false;break;
+                    }
+                }
+                if(event.type==SDL_KEYDOWN){const auto key=event.key.keysym.scancode;
+                    if(key==SDL_SCANCODE_F11&&!event.key.repeat){fullscreen=!fullscreen;SDL_SetWindowFullscreen(window,fullscreen?SDL_WINDOW_FULLSCREEN_DESKTOP:0);continue;}
+                    if(view.nameFocus){if(key==SDL_SCANCODE_RETURN)commitName();else if(key==SDL_SCANCODE_ESCAPE){view.nameFocus=false;SDL_StopTextInput();}
+                        else if(key==SDL_SCANCODE_BACKSPACE)EraseLast(view.nameEdit);continue;}
+                    if(view.searchFocus){if(key==SDL_SCANCODE_BACKSPACE){auto text=flow.Search();EraseLast(text);flow.SetSearch(std::move(text));view.EnsureSelected(flow);}
+                        else if(key==SDL_SCANCODE_ESCAPE||key==SDL_SCANCODE_TAB){view.searchFocus=false;view.composition.clear();SDL_StopTextInput();}continue;}
+                    if(key==SDL_SCANCODE_ESCAPE&&!event.key.repeat){if(view.sideMenu||view.starMenu)view.sideMenu=view.starMenu=false;
+                        else if(flow.Screen()!=AppScreen::Home)back();continue;}
+                    if(flow.Screen()==AppScreen::Practice){if(key==SDL_SCANCODE_UP||key==SDL_SCANCODE_DOWN){flow.MoveSelection(key==SDL_SCANCODE_UP?-1:1);view.EnsureSelected(flow);}
+                        else if(key==SDL_SCANCODE_RETURN&&!event.key.repeat)launch();else if(key==SDL_SCANCODE_TAB){view.searchFocus=true;SDL_StartTextInput();}}
+                    else if(flow.Screen()==AppScreen::Home&&key==SDL_SCANCODE_RETURN&&!event.key.repeat){flow.OpenPractice();view.EnsureSelected(flow);}
+                    else if(flow.Screen()==AppScreen::Result&&key==SDL_SCANCODE_RETURN&&!event.key.repeat)back();
+                    else if(flow.Screen()==AppScreen::Gameplay&&session&&!event.key.repeat){if(key==SDL_SCANCODE_F3)session->ToggleDiagnostics();else session->HandleKeyDown(key);}
+                }
+                if(event.type==SDL_KEYUP&&flow.Screen()==AppScreen::Gameplay&&session)session->HandleKeyUp(event.key.keysym.scancode);
+            }
+            if(!running)break;
+            if(flow.Screen()==AppScreen::Gameplay&&session){const auto updateStart=std::chrono::steady_clock::now();session->Update();const auto drawStart=std::chrono::steady_clock::now();
+                session->Render(false);view.GameplayOverlay();const auto drawEnd=std::chrono::steady_clock::now();
+                session->RecordFrameTiming(interval,std::chrono::duration<double,std::milli>(drawStart-updateStart).count(),std::chrono::duration<double,std::milli>(drawEnd-drawStart).count());
+                if(session->State()==SessionState::Completed){flow.FinishGameplay(session->Stats());view.status.clear();requestCheckpoint();}
+                else if(session->State()==SessionState::Failed||session->State()==SessionState::DeviceLost){const auto error=session->FailureMessage();back();view.status=error;}
+            }else{
+                if(pendingCheckpoint.valid()&&pendingCheckpoint.wait_for(std::chrono::milliseconds(0))==std::future_status::ready){
+                    auto checkpoint=pendingCheckpoint.get();if(checkpoint.ok){const auto result=saves.SavePopulation(checkpoint);
+                        if(result.ok)lastCheckpoint=std::move(checkpoint);else view.status=result.error;}else view.status=checkpoint.error;}
+                const auto now=UtcNow();if(now>=nextCheckpoint){requestCheckpoint();nextCheckpoint=now+30000;}
+                const auto snapshot=population.Snapshot();const auto state=population.Status();
+                view.Draw(flow,snapshot.get(),state.get(),std::chrono::duration<double,std::milli>(frameStart-opened).count());
+            }
+            if(!config.vsync&&config.fpsCap>0){const auto remaining=std::chrono::duration<double>(1.0/config.fpsCap)-(std::chrono::steady_clock::now()-frameStart);
+                if(remaining.count()>0)std::this_thread::sleep_for(remaining);}
+        }
+        if(view.nameFocus)commitName();clockPump.request_stop();clockPump.join();population.AdvanceTo(UtcNow());
+        if(populationWritable){auto finalCheckpoint=population.RequestCheckpoint();if(finalCheckpoint.wait_for(std::chrono::seconds(10))==std::future_status::ready){
+            const auto checkpoint=finalCheckpoint.get();if(checkpoint.ok){const auto result=saves.SavePopulation(checkpoint);if(!result.ok)std::cerr<<result.error<<'\n';}
+            else if(lastCheckpoint)saves.SavePopulation(*lastCheckpoint);
+        }else if(lastCheckpoint)saves.SavePopulation(*lastCheckpoint);}
+        population.Stop();session.reset();
+    }catch(const std::exception& error){std::cerr<<error.what()<<'\n';SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,"PKE Beat Battle",error.what(),window);exitCode=5;}
+    SDL_DestroyRenderer(sdl);SDL_DestroyWindow(window);TTF_Quit();IMG_Quit();SDL_Quit();return exitCode;
 #endif
 }
 }

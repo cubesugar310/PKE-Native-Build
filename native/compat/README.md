@@ -26,6 +26,8 @@ declaration names its source lines. The full browser app is never evaluated.
 
 ## Native boundaries
 
+`practice-replay.js` is loaded only for explicit completed-run export. Its ten original pure replay/hash/result declarations are recorded in `replay-provenance.json`; Native supplies the cached chart, audio-clock input events and final Practice statistics. It uses the original `PKE_REPLAY` schema and does not update ranked progress. Native owns the exported file and durable write.
+
 | Reference responsibility | Native adaptation |
 | --- | --- |
 | Browser scheduling and secondary compute workers | The original in-context fallback runs synchronously on the dedicated Native worker. `async`/`await` tokens are removed; former browser yields do no work. Calculation and RNG order are retained. |
@@ -34,7 +36,7 @@ declaration names its source lines. The full browser app is never evaluated.
 | localStorage, IndexedDB and save timers | Native owns durable files. Reference save/journal boundaries mark the current generation dirty. Explicit checkpoints contain records and the original bounded ten-per-player history, deduplicated by match ID. |
 | Home labels and debug console output | Native reads a compact summary and owns presentation/diagnostics. JS errors still reach `QuickJsRuntime` diagnostics. |
 | Player name and skin DOM controls | Native supplies the normalized name and selected skin. No DOM controls are modeled. |
-| Browser language collation | `QuickJsRuntime::InstallLocaleCompare` supplies ICU collation for the original one-argument string comparisons. This preserves case-sensitive weekly song selection without changing the reference module. Fixtures pin `en-US`; the worker can select the Native locale. |
+| Browser language collation | `QuickJsRuntime::InstallLocaleCompare` supplies ICU default collation and the catalog's explicit numeric/base comparison. Default case-sensitive weekly selection stays unchanged. Fixtures pin `en-US`; the worker can select the Native locale. |
 
 Original ONLINE/demand/cap calculations are preserved. ONLINE is the reference's
 time-bucket/hash calculation, rather than a new count of presence flags.
@@ -89,6 +91,7 @@ node native/tests/reference/capture_population_fixture.cjs
 node native/tests/reference/capture_helper_fixtures.cjs
 node native/tests/reference/capture_catalog_fixture.cjs
 node native/tests/reference/capture_recovery_fixture.cjs
+node native/tests/reference/capture_asset_fixtures.cjs
 ```
 
 ## Dedicated Native worker
@@ -111,3 +114,26 @@ Callers must capture/save their final checkpoint before stopping the worker.
 
 Diagnostics record initialization time and each completed step's last/max elapsed
 time. These component timings do not replace the later full-game performance gate.
+
+## Cached Native asset catalog
+
+`AssetService` explicitly scans Songs and Characters on refresh. File reads,
+chart analysis, candidate fallback and character/atlas parsing happen there.
+It publishes immutable metadata/definitions; a retained old snapshot remains
+valid after a refresh. Corrupt files produce item-specific diagnostics and do
+not discard other playable songs or characters.
+
+The catalog context loads `chart-utils.js` (byte-identical), the existing
+`song-difficulty.js`, `catalog-imports.js`, then `catalog.js`. The separate
+`catalog-provenance.json` records each original pure helper's source/hash.
+The original hard-chart priority, natural/base sorting, audio extension list,
+display name/opponent/icon rules, authored-note filtering and star calculations
+are retained. Additional valid chart candidates are cached as difficulty
+metadata without changing the original default selection.
+
+Search caches normalized song/folder/chart names and side-specific stars.
+Queries use the original NFKC, Japanese case conversion, whitespace/underscore/
+hyphen splitting and all-terms matching, with no file reads or chart parsing.
+Frozen original functions and async-difficulty fixtures independently verify
+section/absolute ownership, harmless versus damage-only heads, rapid boundaries,
+sustains, speed/BPM values, width/kana/Greek/accent search and BF/DAD filters.

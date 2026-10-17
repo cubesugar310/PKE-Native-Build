@@ -1,0 +1,238 @@
+{
+  "referenceZipSha256": "29294463b238e10815c017ac2496567de24b91f4f1d6326f770d81f1125fac3c",
+  "appSha256": "a9400aa2620d338896486256ff995ca712647b74fe9313273399777481f1631a",
+  "entries": [
+    {
+      "file": "app.js",
+      "name": "getFreeplayChartCandidates",
+      "sourceLines": [
+        31283,
+        31357
+      ],
+      "sourceSha256": "b260b02db97f6a3f46a58f1bb8678ef6e9bb4a43731fa7c367da2f1c8c62a073",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "chooseFreeplayAudioFile",
+      "sourceLines": [
+        31406,
+        31415
+      ],
+      "sourceSha256": "aab72378654c1c8b0fe4117503f2062f09b1d10b08189ffca0015b55d1b0c9c8",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getFreeplaySongDisplayName",
+      "sourceLines": [
+        31417,
+        31432
+      ],
+      "sourceSha256": "515f6b5aeda374f1138a4b39955f8816bf0de2fb41c1534f04233bae4f06c256",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getFreeplayChartReferenceSpeed",
+      "sourceLines": [
+        31434,
+        31444
+      ],
+      "sourceSha256": "baabc617f034d00468503d5338eaedbe1b481c610f9a37fd4f6c1ef6180670fd",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "isBeatBattleDifficultyRegularNoteType",
+      "sourceLines": [
+        31452,
+        31459
+      ],
+      "sourceSha256": "2415a9790540e8e923223393142040a079a3f1b8b2cb98cc20b9df366f5af8f6",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "buildBeatBattleLightweightChartData",
+      "sourceLines": [
+        31461,
+        31615
+      ],
+      "sourceSha256": "c4da8ddf673b4ce94c329b901732b818333bd20da68354e68de67a3ef1ee8568",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getFreeplayOpponentCharacterId",
+      "sourceLines": [
+        31710,
+        31721
+      ],
+      "sourceSha256": "4347328607c18eebc2827442c9f21a51c7c2e892d399599d2a10717d91a08ee4",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "findFreeplayOpponentIconFile",
+      "sourceLines": [
+        31723,
+        31754
+      ],
+      "sourceSha256": "1a76128a6893ce4484273ddde61fd1078bc97701b58f52f8b734ef1e707f8845",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getFileExtension",
+      "sourceLines": [
+        31257,
+        31261
+      ],
+      "sourceSha256": "ce86d12f1a312d849bd0ae6dc86458251ae56f8c046ed77d41daddf275eacdb8",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getBeatBattleChartBaseBpm",
+      "sourceLines": [
+        19349,
+        19359
+      ],
+      "sourceSha256": "8e78d2ab31e3c7ee533b3cc28f428c976de9dfae0073ddf0e49ef2d2bfdfc575",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "normalizeBeatBattlePracticeSearch",
+      "sourceLines": [
+        8167,
+        8173
+      ],
+      "sourceSha256": "3300d720368547dae68ae12d75e7fb0b94eae644e7753a16bcb2568188ee5025",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "cleanAssetBaseName",
+      "sourceLines": [
+        131,
+        135
+      ],
+      "sourceSha256": "8abb43183eaaaf8afbac8654ec68be24cce3d30a59b142c07e71707641a4fa7f",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "fileBaseName",
+      "sourceLines": [
+        137,
+        139
+      ],
+      "sourceSha256": "fb99504b26c4f4af44f0bf7f5ac8176b1e4ccc18e96c5f3568bd22be0750a007",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "getFileRelativePath",
+      "sourceLines": [
+        141,
+        149
+      ],
+      "sourceSha256": "fdbe49a2424138a62ee30006c61cd1b56cdc59a685fae5e0dc0e57ddbaa09cce",
+      "adapted": false
+    },
+    {
+      "file": "js/cpu-timing.js",
+      "name": "clampPopulationNumber",
+      "sourceLines": [
+        418,
+        420
+      ],
+      "sourceSha256": "9ec0cc36bc5eb238e95c26a9f636a8c18e18cdac12b15029641cb887adddc04c",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "findFolderFileInDirectory",
+      "sourceLines": [
+        16519,
+        16535
+      ],
+      "sourceSha256": "cac946cdb953980831d92c2a2a4fa217b79aca78ae7f8a366a0d4566ebfc4335",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "findFolderFile",
+      "sourceLines": [
+        17709,
+        17734
+      ],
+      "sourceSha256": "ee77c81309bc6a99f835b6d6f8dc5ac2f918e19ab74c61e0736fe3d2f56388b2",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getSparrowSourcePriority",
+      "sourceLines": [
+        17459,
+        17469
+      ],
+      "sourceSha256": "1512be55c6ef240f486d9e930cf2212b0e957422c40828c767e9af8369e64b65",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "preferSparrowDefinition",
+      "sourceLines": [
+        17470,
+        17481
+      ],
+      "sourceSha256": "2b4c30c5d3cf0937b35ef9105d52be0fb6797adf64fef0e05fed61cc7d02d3f9",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "getFileDirectoryPath",
+      "sourceLines": [
+        151,
+        155
+      ],
+      "sourceSha256": "e9ca44504cd72026dc503e2fc67bd38fe4c61eb264b543ec31f479593d9a78bb",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "prettifyDetectedBFSkinName",
+      "sourceLines": [
+        164,
+        184
+      ],
+      "sourceSha256": "793cf5fa3d2baf54a645271c6912fec5e44ea79b2c7e6bfb5aea4721ace3ed50",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "getDetectedCharacterDisplayNameFromJson",
+      "sourceLines": [
+        204,
+        276
+      ],
+      "sourceSha256": "f04a27deff1e6c05eb955e53cd7210e5dca82a46547daf03654ace19d96d09b9",
+      "adapted": false
+    }
+  ],
+  "files": [
+    {
+      "path": "chart-utils.js",
+      "originalSha256": "ed7d78753ba62e8f572379f3c394e30c6980fdaf9ea84ddd241bd9b552284e0e",
+      "mode": "byte-identical"
+    }
+  ],
+  "boundaries": [
+    "Native discovers and reads files explicitly; JS receives only JSON and file metadata.",
+    "catalog.js converts typed arrays to JSON arrays, caches normalized search strings, and drains the existing synchronous difficulty helper.",
+    "No DOM, filesystem or browser timer exists in the runtime."
+  ]
+}

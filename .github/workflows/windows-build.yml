@@ -76,7 +76,7 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path 'native/dist/PKE_Native_Prototype_0.1/PKE Native Prototype.exe')) { throw 'EXE missing from package' }
-          foreach ($script in @("cpu-timing.js", "title-system.js", "population-social-sessions.js", "boss-battle.js", "song-difficulty.js", "population-imports.js", "population.js")) {
+          foreach ($script in @("cpu-timing.js", "title-system.js", "population-social-sessions.js", "boss-battle.js", "song-difficulty.js", "population-imports.js", "population.js", "chart-utils.js", "catalog-imports.js", "catalog.js", "practice-replay.js")) {
             if (-not (Test-Path "native/dist/PKE_Native_Prototype_0.1/compat/$script")) { throw "Compatibility script missing: $script" }
           }
           if ((Test-Path 'native/dist/PKE_Native_Prototype_0.1/tests') -or (Test-Path 'native/dist/PKE_Native_Prototype_0.1/reference')) { throw 'Test/reference sources unexpectedly packaged' }
