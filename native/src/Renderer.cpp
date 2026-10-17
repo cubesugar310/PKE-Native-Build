@@ -1,5 +1,6 @@
 #include "pke/Renderer.hpp"
 #include "pke/CharacterLoader.hpp"
+#include "pke/CharacterPresentation.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -118,9 +119,14 @@ void Renderer::Draw(const RenderState& state,bool present){
             return;
         }
         if(cv.frame.atlasFrameIndex>=cv.definition->atlas.size()) return;
-        const auto& af=cv.definition->atlas[cv.frame.atlasFrameIndex]; auto p=ComputeFramePlacement(af,{cv.basePosition.x+int(std::lround(cv.definition->position.x*cv.presentationScale)),cv.basePosition.y+int(std::lround(cv.definition->position.y*cv.presentationScale))},cv.definition->scale*cv.presentationScale,cv.definition->flipX);
-        SDL_Rect dst{int(std::lround(p.destinationX)),int(std::lround(p.destinationY)),int(std::lround(p.destinationW)),int(std::lround(p.destinationH))};
-        SDL_RendererFlip flip=p.flipX?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE; SDL_RenderCopyEx(impl_->renderer,it->second.texture.get(),&p.source,&dst,p.rotated?-90.0:0.0,nullptr,flip);
+        const auto& af=cv.definition->atlas[cv.frame.atlasFrameIndex];
+        const auto p=cv.originalTransform?ComputePracticeCharacterPlacement(*cv.definition,cv.frame,cv.sourcePlayer?CharacterRole::Player:CharacterRole::Opponent,cv.opponentPerspective,*cv.originalTransform):
+            ComputeFramePlacement(af,{cv.basePosition.x+int(std::lround(cv.definition->position.x*cv.presentationScale)),cv.basePosition.y+int(std::lround(cv.definition->position.y*cv.presentationScale))},cv.definition->scale*cv.presentationScale,cv.definition->flipX);
+        SDL_FRect dst{float(p.destinationX),float(p.destinationY),float(p.destinationW),float(p.destinationH)};
+        if(p.rotated)dst={float(p.destinationX+(p.destinationW-p.destinationH)/2),float(p.destinationY+(p.destinationH-p.destinationW)/2),float(p.destinationH),float(p.destinationW)};
+        const bool noAntialiasing=cv.definition->noAntialiasing&&(!cv.originalTransform||cv.sourcePlayer);
+        SDL_SetTextureScaleMode(it->second.texture.get(),noAntialiasing?SDL_ScaleModeNearest:SDL_ScaleModeLinear);
+        SDL_RendererFlip flip=p.flipX?(p.rotated?SDL_FLIP_VERTICAL:SDL_FLIP_HORIZONTAL):SDL_FLIP_NONE; SDL_RenderCopyExF(impl_->renderer,it->second.texture.get(),&p.source,&dst,p.rotated?-90.0:0.0,nullptr,flip);
     };
     auto drawSlot=[&](Impl::TextSlot& slot,std::string_view text,int x,int y){ updateTextTexture(impl_->renderer,impl_->font,text,slot.text,slot.texture,slot.w,slot.h,impl_->counters); if(slot.texture){SDL_Rect d{x,y,slot.w,slot.h};SDL_RenderCopy(impl_->renderer,slot.texture,nullptr,&d);} };
     int ow=0,oh=0; SDL_GetRendererOutputSize(impl_->renderer,&ow,&oh); auto vp=ComputeLetterboxedViewport(ow,oh);if(vp.scale<=0)return;

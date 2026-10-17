@@ -91,17 +91,30 @@ PKE_TEST("V114 Halloween state and configured slots survive Native save reload w
     PKE_REQUIRE(loaded.player.halloweenDev.bossSongRefs[0]=="songs/test");
     PKE_REQUIRE(loaded.player.halloweenDev.eventOverride=="force-off");
 }
+PKE_TEST("Native saves preserve the complete original character layout object without changing its settings") {
+    auto player=Player();player.characterLayoutsJson=pke::NormalizeCharacterLayoutsJson(R"({"bf":{"psych:bf":{"scale":1.75,"offsetX":-31,"offsetY":22,"flipXOverride":true,"poseAdjustments":{"singLEFT":{"x":7,"y":-8}}}},"characterPosition":{"psych:bf":{"x":-31,"y":22}},"gf":{"g":{"scale":0.9}},"custom":{"untouched":[1,2,3]}})");
+    player.characterIdentityHistoryJson=R"({"sparrow:holiday":["psych:bf"]})";
+    const auto root=Temp("character-layout");pke::SaveService saves(root);PKE_REQUIRE(saves.SavePlayer(player).ok);
+    const auto loaded=saves.LoadPlayer();PKE_REQUIRE(loaded.status==pke::SaveLoadStatus::Loaded);
+    PKE_REQUIRE(loaded.player.characterLayoutsJson==player.characterLayoutsJson);
+    PKE_REQUIRE(loaded.player.characterIdentityHistoryJson==player.characterIdentityHistoryJson);
+    PKE_REQUIRE(loaded.player.progress.rp==player.progress.rp);
+}
 PKE_TEST("Upgrading an older Native summary recovers missing event history from the preserved full backup") {
     const auto root=Temp("event-upgrade");auto player=Player();auto old=SerializeNativeSaveSummary(player);
     const auto optional=old.find(",\"claimedRewardIds\"");old.erase(optional,old.find("},\n",optional)-optional);
     const auto dev=old.find("  \"halloweenDev\":");old.erase(dev,old.find('\n',dev)-dev+1);
+    const auto layout=old.find("  \"characterLayouts\":");old.erase(layout,old.find('\n',layout)-layout+1);
+    const auto identity=old.find("  \"characterIdentityHistory\":");old.erase(identity,old.find('\n',identity)-identity+1);
     Write(root/"native-save-v1.json",old);
-    const std::string backup=R"({"format":"pke-beat-battle-full-save","version":1,"localStorage":{"pke-beat-battle-halloween-v1":"{\"candy\":9999,\"claimedRewardIds\":[\"online|old\"],\"historyByYear\":{\"2025\":{\"onlineWins\":12}}}","pke-beat-battle-halloween-dev-v1":"{\"eventOverride\":\"force-off\"}"}})";
+    const std::string backup=R"({"format":"pke-beat-battle-full-save","version":1,"localStorage":{"pke-beat-battle-halloween-v1":"{\"candy\":9999,\"claimedRewardIds\":[\"online|old\"],\"historyByYear\":{\"2025\":{\"onlineWins\":12}}}","pke-beat-battle-halloween-dev-v1":"{\"eventOverride\":\"force-off\"}","pke-beat-battle-saved-layouts-v1":"{\"bf\":{\"psych:bf\":{\"scale\":1.75,\"offsetX\":-31}}}","pke-beat-battle-skin-identity-history-v1":"{\"sparrow:holiday\":[\"psych:bf\"]}"}})";
     Write(root/"legacy-full-save-v1.json",backup);pke::SaveService saves(root);const auto loaded=saves.LoadPlayer();
     PKE_REQUIRE(loaded.status==pke::SaveLoadStatus::Loaded);PKE_REQUIRE(loaded.player.halloweenCandy==player.halloweenCandy);
     PKE_REQUIRE(loaded.player.progress.rp==player.progress.rp);PKE_REQUIRE(loaded.player.halloweenHistory.at("2025").onlineWins==12);
     PKE_REQUIRE(loaded.player.claimedRewardIds==std::vector<std::string>{"online|old"});
     PKE_REQUIRE(loaded.player.halloweenDev.eventOverride=="force-off");
+    PKE_REQUIRE(loaded.player.characterLayoutsJson==pke::NormalizeCharacterLayoutsJson(R"({"bf":{"psych:bf":{"scale":1.75,"offsetX":-31}}})"));
+    PKE_REQUIRE(loaded.player.characterIdentityHistoryJson==R"({"sparrow:holiday":["psych:bf"]})");
     PKE_REQUIRE(Read(root/"native-save-v1.json")==old);PKE_REQUIRE(Read(root/"legacy-full-save-v1.json")==backup);
 }
 PKE_TEST("Rejected but parseable Native destinations survive default-state writes") {

@@ -20,6 +20,7 @@ void ValidateNativePlayerSave(std::string_view json);
 NativeSaveSummary DecodeNativePlayerSave(std::string_view json);
 void ImportHalloweenState(HalloweenData&,std::string_view json);
 void ImportHalloweenConfig(HalloweenData&,std::string_view json);
+std::string NormalizeCharacterLayoutsJson(std::string_view);
 std::int64_t ValidateNativePopulationSave(std::string_view json);
 
 // File operations are explicit startup/checkpoint/shutdown work. This service

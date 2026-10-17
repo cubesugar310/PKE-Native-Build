@@ -16,6 +16,8 @@ GameSession::~GameSession(){
 }
 void GameSession::ApplyPreferences(const NativeSaveSummary& player){
     ownedAudio_.SetMasterVolume(player.masterVolume);downScroll_=player.scrollDirection=="down";cornerJudgement_=player.judgementPosition=="corner";
+    savedCharacterLayouts_=player.characterLayoutsJson;
+    savedCharacterIdentityHistory_=player.characterIdentityHistoryJson;
 }
 
 void GameSession::Fail(std::string m){ failureMessage_=std::move(m); state_=SessionState::Failed; if(clock_) clock_->Stop(); }
@@ -50,6 +52,7 @@ bool GameSession::LoadPractice(const SongAsset& song,const AssetCatalog& catalog
     songFolder_=song.folderName;instName_=song.instPath.filename().string();
     voicesName_=song.voicesPath?song.voicesPath->filename().string():"";
     replayInputs_.clear();practiceOpponent_=side==Side::Opponent;
+    sourcePracticePresentation_=true;bfTransform_={};dadTransform_={1,-88.56,52};
     try{
         if(song.charts.empty())throw std::runtime_error("No cached chart");
         chart_=song.charts.front().chart;
@@ -62,6 +65,11 @@ bool GameSession::LoadPractice(const SongAsset& song,const AssetCatalog& catalog
         const auto playerId=skin.empty()?(allowChartSkinFallback?(chart_.player1.empty()?"bf":chart_.player1):""):std::string(skin);
         if(playerId.empty())warnings_.push_back("No unlocked player skin available; using diagnostic fallback");
         bfDef_=character(playerId);dadDef_=character(song.opponentCharacterId.empty()?chart_.player2:song.opponentCharacterId);
+        if(savedCharacterLayouts_!="{}"){
+            auto profiles=LoadCharacterTransforms(executableDir_/"compat",savedCharacterLayouts_,FindCharacterAsset(catalog,playerId),
+                FindCharacterAsset(catalog,song.opponentCharacterId.empty()?chart_.player2:song.opponentCharacterId),savedCharacterIdentityHistory_);
+            bfTransform_=std::move(profiles.first);dadTransform_=std::move(profiles.second);
+        }
         bfAnimator_.SetCharacter(&bfDef_);dadAnimator_.SetCharacter(&dadDef_);
         if(!injectedClock_){ownedAudio_.SetLatencyCompensationMs(config_.audioLatencyCompensationMs);
             if(!ownedAudio_.Load(song.instPath,song.voicesPath)){Fail(ownedAudio_.LastError());return false;}}
@@ -119,6 +127,8 @@ void GameSession::Render(bool present){
     rs.notes=&rhythm_.NoteStates();
     rs.bf={"bf",&bfDef_,bfAnimator_.CurrentFrame(),{800,320},2.0/3.0};
     rs.dad={"dad",&dadDef_,dadAnimator_.CurrentFrame(),{280,320},2.0/3.0};
+    if(sourcePracticePresentation_){rs.bf.originalTransform=&bfTransform_;rs.dad.originalTransform=&dadTransform_;
+        rs.bf.sourcePlayer=true;rs.dad.sourcePlayer=false;rs.bf.opponentPerspective=rs.dad.opponentPerspective=practiceOpponent_;}
     rs.stats=rhythm_.Stats();
     rs.songName=songName_;
     if(rs.songTimeMs-lastJudgementAt_<600)rs.judgementText=judgementText_;

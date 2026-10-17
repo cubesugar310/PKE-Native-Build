@@ -66,6 +66,39 @@ PKE_TEST("SDL character texture cache retains the loaded image when its source d
     PKE_REQUIRE(renderer.PreloadCharacter("bf",definition));PKE_REQUIRE(renderer.CacheStats().imageLoads==1);
     PKE_REQUIRE(!renderer.PreloadCharacter("new-key",definition));
 }
+PKE_TEST("Rotated atlas pixels retain the original unrotated size and horizontal mirror") {
+    SurfaceRenderer source(4,2);const auto path=std::filesystem::temp_directory_path()/("pke-rotated-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())+".bmp");
+    for(int y=0;y<2;++y)for(int x=0;x<4;++x){SDL_Rect pixel{x,y,1,1};
+        const auto color=y==0?(x<2?SDL_Color{255,0,0,255}:SDL_Color{0,255,0,255}):(x<2?SDL_Color{0,0,255,255}:SDL_Color{255,255,0,255});
+        SDL_FillRect(source.surface,&pixel,SDL_MapRGB(source.surface->format,color.r,color.g,color.b));}
+    PKE_REQUIRE(SDL_SaveBMP(source.surface,path.string().c_str())==0);
+    SurfaceRenderer output(1280,720);pke::Renderer renderer;PKE_REQUIRE(renderer.Initialize(output.renderer));
+    pke::CharacterDefinition c;c.imagePath=path;c.scale=20;c.flipX=true;c.noAntialiasing=true;
+    c.atlas.push_back({"idle",{0,0,4,2},0,0,2,4,true});PKE_REQUIRE(renderer.PreloadCharacter("bf",c));std::filesystem::remove(path);
+    pke::RenderState state;state.bf={"bf",&c,{0,"idle",0},{100,200}};renderer.Draw(state);
+    output.Color(110,210,255,255,0);output.Color(130,210,0,255,0);
+    output.Color(110,270,0,0,255);output.Color(130,270,255,0,0);
+}
+PKE_TEST("Practice renderer uses the original anchors and applies saved transforms before drawing") {
+    const auto root=std::filesystem::temp_directory_path()/("pke-source-pose-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    struct Cleanup{std::filesystem::path path;~Cleanup(){std::filesystem::remove_all(path);}} cleanup{root};
+    std::filesystem::create_directories(root/"compat");std::filesystem::copy_file(std::filesystem::path(PKE_COMPAT_DIR)/"character-presentation.js",root/"compat/character-presentation.js");
+    SurfaceRenderer pixels(12,12);SDL_FillRect(pixels.surface,nullptr,SDL_MapRGB(pixels.surface->format,255,0,0));
+    const auto path=root/"bf.bmp";PKE_REQUIRE(SDL_SaveBMP(pixels.surface,path.string().c_str())==0);
+    auto definition=std::make_shared<pke::CharacterDefinition>();definition->imagePath=path;
+    definition->atlas.push_back({"idle",{0,0,12,12},0,0,12,12,false});pke::AnimationDef idle;idle.anim="idle";idle.frameIndices={0};definition->animations["idle"]=idle;pke::PrepareCharacterGeometry(*definition);
+    pke::AssetCatalog catalog;catalog.characters.push_back({"bf","BF",{},definition,"sparrow:bf"});
+    pke::SongAsset song;song.displayName="Pose";song.charts.emplace_back();song.charts[0].chart.player1="bf";
+    class Clock final:public pke::IAudioClock{public:bool Start()override{return true;}void Pause()override{}void Resume()override{}void Stop()override{}double SongTimeMs()const override{return 0;}pke::AudioState State()const override{return pke::AudioState::Ready;}std::string LastErrorCopy()const override{return {};}} clock;
+    SurfaceRenderer output(1280,720);pke::Renderer renderer;PKE_REQUIRE(renderer.Initialize(output.renderer));
+    {pke::GameSession session({},root,&clock);session.SetRenderer(&renderer);PKE_REQUIRE(session.LoadPractice(song,catalog,pke::Side::Player,"sparrow:bf",false));session.Render();
+        output.Color(1082,683,255,0,0);output.Color(800,320,20,20,28);}
+    {pke::GameSession session({},root,&clock);session.SetRenderer(&renderer);pke::NativeSaveSummary prefs;
+        prefs.characterLayoutsJson=R"({"bf":{"psych:bf":{"scale":0.5,"offsetX":-400,"offsetY":-300,"flipXOverride":false}}})";
+        session.ApplyPreferences(prefs);PKE_REQUIRE(session.LoadPractice(song,catalog,pke::Side::Player,"sparrow:bf",false));
+        std::filesystem::remove(root/"compat/character-presentation.js");std::filesystem::remove(path);session.Render();
+        output.Color(687,390,255,0,0);output.Color(1082,683,20,20,28);}
+}
 
 PKE_TEST("Gameplay uses source lane centers and colored directional notes at the audio-clock position") {
     SurfaceRenderer output(1280,720);pke::Renderer renderer;PKE_REQUIRE(renderer.Initialize(output.renderer));

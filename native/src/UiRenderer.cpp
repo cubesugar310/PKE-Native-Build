@@ -158,12 +158,13 @@ bool UiRenderer::Character(std::string_view key,const CharacterDefinition& def,A
     const auto& atlas=def.atlas[frame.atlasFrameIndex];const auto fullW=atlas.frameWidth>0?atlas.frameWidth:atlas.source.w;
     const auto fullH=atlas.frameHeight>0?atlas.frameHeight:atlas.source.h;if(fullW<=0||fullH<=0)return false;
     const auto scale=std::min(double(box.w)/fullW,double(box.h)/fullH)*0.9;
-    SDL_Point offset{};if(const auto anim=def.animations.find(std::string(frame.animationName));anim!=def.animations.end())offset=anim->second.offset;
+    CharacterPoint offset{};if(const auto anim=def.animations.find(std::string(frame.animationName));anim!=def.animations.end())offset=anim->second.offset;
     const SDL_Point origin{int(std::lround(box.x+(box.w-fullW*scale)/2-offset.x*scale)),int(std::lround(box.y+(box.h-fullH*scale)/2-offset.y*scale))};
     const auto placement=ComputeFramePlacement(atlas,origin,scale,def.flipX);
     SDL_FRect destination{float(placement.destinationX),float(placement.destinationY),float(placement.destinationW),float(placement.destinationH)};
+    if(placement.rotated)destination={float(placement.destinationX+(placement.destinationW-placement.destinationH)/2),float(placement.destinationY+(placement.destinationH-placement.destinationW)/2),float(placement.destinationH),float(placement.destinationW)};
     SDL_SetTextureScaleMode(it->second.texture.get(),def.noAntialiasing?SDL_ScaleModeNearest:SDL_ScaleModeLinear);
-    return SDL_RenderCopyExF(impl_->renderer,it->second.texture.get(),&placement.source,&destination,placement.rotated?-90:0,nullptr,placement.flipX?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE)==0;
+    return SDL_RenderCopyExF(impl_->renderer,it->second.texture.get(),&placement.source,&destination,placement.rotated?-90:0,nullptr,placement.flipX?(placement.rotated?SDL_FLIP_VERTICAL:SDL_FLIP_HORIZONTAL):SDL_FLIP_NONE)==0;
 #else
     (void)key;(void)def;(void)frame;(void)box;return false;
 #endif

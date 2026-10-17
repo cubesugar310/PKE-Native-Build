@@ -8,6 +8,7 @@
 #include "pke/Config.hpp"
 #include "pke/Diagnostics.hpp"
 #include "pke/LegacySaveImporter.hpp"
+#include "pke/CharacterPresentation.hpp"
 #include "pke/Renderer.hpp"
 #include "pke/RhythmEngine.hpp"
 #include <filesystem>
@@ -75,5 +76,9 @@ private:
     std::vector<ReplayInput> replayInputs_;
     bool diagnosticsVisible_{false};
     bool downScroll_{},cornerJudgement_{};
+    CharacterTransform bfTransform_,dadTransform_{1,-88.56,52};
+    std::string savedCharacterLayouts_{"{}"};
+    std::string savedCharacterIdentityHistory_{"{}"};
+    bool sourcePracticePresentation_{};
 };
 }

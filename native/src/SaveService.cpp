@@ -168,6 +168,7 @@ void ProtectLegacyDestination(const std::filesystem::path& path,const std::share
 }
 }
 
+std::string NormalizeCharacterLayoutsJson(std::string_view text){const auto root=ParseBounded(text);RequireObject(root);return Encode(root);}
 void ImportHalloweenState(HalloweenData& out,std::string_view text){
     if(text.empty())return;const auto value=ParseBounded(text);if(!Object(value))return;
     out.halloweenCandy=SafeOr(Optional(value,"candy"));out.purchasedSkinIds=IdList(Optional(value,"purchasedSkinIds"));
@@ -203,6 +204,8 @@ static void ValidatePlayerDocument(const Json& root){
     const auto scroll=String(At(settings,"scrollDirection")),judgement=String(At(settings,"judgementPosition"));
     if(scroll!="up"&&scroll!="down")Invalid("Invalid Native scroll direction");
     if(judgement!="center"&&judgement!="corner")Invalid("Invalid Native judgement position");
+    if(Has(root,"characterLayouts"))RequireObject(At(root,"characterLayouts"));
+    if(Has(root,"characterIdentityHistory"))RequireObject(At(root,"characterIdentityHistory"));
     const auto& halloween=At(root,"halloween");RequireObject(halloween);
     Integer(At(halloween,"candy"));
     Strings(At(halloween,"purchasedSkinIds"));Strings(At(halloween,"unlockedTitleIds"));Strings(At(root,"earnedTitleIds"));
@@ -240,6 +243,8 @@ NativeSaveSummary DecodeNativePlayerSave(std::string_view text){
     out.progress.lastOpponentId=String(At(player,"lastOpponentId"));
     const auto& settings=At(root,"settings");out.masterVolume=Number(At(settings,"masterVolume"));
     out.scrollDirection=String(At(settings,"scrollDirection"));out.judgementPosition=String(At(settings,"judgementPosition"));
+    if(Has(root,"characterLayouts"))out.characterLayoutsJson=Encode(At(root,"characterLayouts"));
+    if(Has(root,"characterIdentityHistory"))out.characterIdentityHistoryJson=Encode(At(root,"characterIdentityHistory"));
     const auto& halloween=At(root,"halloween");out.halloweenCandy=static_cast<std::uint64_t>(Integer(At(halloween,"candy")));
     const auto strings=[](const Json& array){
         std::vector<std::string> result;EachArray(array,[&](const auto& item){result.emplace_back(String(item));});return result;
@@ -325,13 +330,15 @@ PlayerSaveLoad SaveService::LoadPlayer() const{
         auto player=DecodeNativePlayerSave(text);
         if(!player.valid)Invalid("Native player save could not be normalized");
         const auto root=ParseBounded(text);const auto& event=At(root,"halloween");
-        if(!Has(root,"halloweenDev")||!Has(event,"historyByYear")||!Has(event,"claimedRewardIds")){
+        if(!Has(root,"halloweenDev")||!Has(event,"historyByYear")||!Has(event,"claimedRewardIds")||!Has(root,"characterLayouts")||!Has(root,"characterIdentityHistory")){
             // Enrich only fields that the earlier Native summary did not store.
             // The preserved full backup never replaces current Candy/progress.
             const auto legacy=ReadLegacyFullSave(root_/"legacy-full-save-v1.json");
             if(legacy.valid){if(!Has(root,"halloweenDev"))player.halloweenDev=legacy.halloweenDev;
                 if(!Has(event,"historyByYear"))player.halloweenHistory=legacy.halloweenHistory;
-                if(!Has(event,"claimedRewardIds"))player.claimedRewardIds=legacy.claimedRewardIds;}
+                if(!Has(event,"claimedRewardIds"))player.claimedRewardIds=legacy.claimedRewardIds;
+                if(!Has(root,"characterLayouts"))player.characterLayoutsJson=legacy.characterLayoutsJson;
+                if(!Has(root,"characterIdentityHistory"))player.characterIdentityHistoryJson=legacy.characterIdentityHistoryJson;}
         }
         return {SaveLoadStatus::Loaded,std::move(player),{}};
     }catch(const std::exception& e){return {SaveLoadStatus::Invalid,{},e.what()};}

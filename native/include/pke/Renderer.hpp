@@ -13,6 +13,7 @@
 #include <vector>
 
 namespace pke {
+struct CharacterTransform;
 inline constexpr int kLogicalWidth=1280,kLogicalHeight=720;
 struct Viewport { SDL_Rect destination{}; double scale{}; };
 Viewport ComputeLetterboxedViewport(int outputW,int outputH,int logicalW=kLogicalWidth,int logicalH=kLogicalHeight);
@@ -28,6 +29,8 @@ struct CharacterRenderView {
     AnimationFrameView frame{};
     SDL_Point basePosition{};
     double presentationScale{1.0};
+    const CharacterTransform* originalTransform{};
+    bool sourcePlayer{true},opponentPerspective{};
 };
 bool NeedsDiagnosticFallback(const CharacterRenderView& view,bool textureAvailable) noexcept;
 struct RenderState {

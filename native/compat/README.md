@@ -1,9 +1,10 @@
 # Block 1 compatibility calculations
 
-Source authority is the approved Block 1 plan. These calculations come from the
-embedded V1.12 executable, ZIP SHA-256
+Source authority is the supplied V1.14 extracted source and approved Block 1 plan.
+The first imported calculations came from the embedded V1.12 executable, ZIP SHA-256
 `29294463b238e10815c017ac2496567de24b91f4f1d6326f770d81f1125fac3c`.
-They are not presented as an inspection of the unavailable V1.14 executable.
+Their V1.14 comparison is recorded below; subsequent character imports use
+the actual supplied V1.14 files directly.
 `provenance.json` records the extracted app hash, original declaration spans and
 hashes, complete helper-file hashes, and the adapted boundaries.
 
@@ -16,6 +17,10 @@ Load order:
 5. `song-difficulty.js`
 6. `population-imports.js`
 7. `population.js`
+
+The separate catalog loads `chart-utils.js`, `catalog-imports.js` and `catalog.js`.
+`practice-replay.js` and `character-presentation.js` are explicit cold-path
+contexts rather than population-context modules. All twelve are packaged.
 
 The first four files are byte-identical reference modules. Difficulty retains
 the original authored-head generator and range helpers; a synchronous generator
@@ -142,9 +147,37 @@ sustains, speed/BPM values, width/kana/Greek/accent search and BF/DAD filters.
 The supplied V1.14 extracted-source archive was inspected directly (SHA-256
 `7524ef2060505615167d90003617a58d83f0447f3174cbc14b11915644e9bbaa`).
 `v114-reference-verification.json` records the comparison: index/styles and
-ten helper modules are byte-identical; all 174 imported named function
-declarations are structurally unchanged. Three changed functions and two
+ten helper modules are byte-identical; the 196 named app functions referenced
+by these modules have no V1.12-to-V1.14 source revision differences. Native
+boundary adaptations are recorded separately. Three changed functions and two
 new helpers concern the browser Online-result lifecycle; none is an imported
 Native calculation. Existing V1.12 extraction provenance remains intact.
 Native event state/shop transactions and gameplay preferences use the V1.14
 rules directly. The original browser host is not included in this Native build.
+
+## Original character layout and geometry
+
+`character-provenance.json` records 26 verbatim V1.14 declarations for median
+anchors, trim stabilization, Psych frame placement, saved-layout keys, shared
+transforms, identity-backed alias migration and pose maps. `character-presentation.js` resolves settings only
+when a Practice session loads. It operates on a private copy; `SaveService`
+preserves the complete imported layout JSON and identity history and owns all durable writes.
+Native geometry caches reproduce the original frame/anchor calculations.
+BF's full XML-name-group trim pass precedes JSON indices; Dad retains its
+separate selected-animation trim pass. Matching shared keys synchronize scale
+after opponent profile loading, preserving the original role-local positions.
+Rendering uses those cached values without JavaScript calls or file reads.
+
+The 60 frozen placement cases exercise both roles, Practice sides, rotations,
+scale bounds, authored flip, override, trim and pose offsets. With the extracted
+source available, reproduce their reference check and all declaration hashes:
+
+```sh
+node native/scripts/verify-character-reference.cjs /path/to/v1.14/web
+```
+
+The checker evaluates original declarations extracted from the supplied source,
+independently of the Native implementation. Software-SDL tests additionally
+check actual rotated/mirrored pixels and saved-transform session wiring.
+Broader original animation timing, note presentation and scene acceptance
+remain separate unfinished tasks.

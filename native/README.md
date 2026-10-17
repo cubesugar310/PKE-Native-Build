@@ -116,9 +116,9 @@ Only the `qjs` library is linked. The standalone CLI and std/os libc helpers are
 
 The offline-core mode still avoids fetching GUI/audio dependencies; it uses the already initialized pinned QuickJS submodule. A separate `quickjs_runtime` CTest entry covers the wrapper. The runtime is a Block 1 foundation; population and scene parity are separate implementation tasks.
 
-The `compat/` directory contains the selected original calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. V1.14 comparison confirms all 174 imported named function declarations are structurally unchanged; see `compat/v114-reference-verification.json` and `compat/README.md`. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player run on the dedicated worker through every Native scene.
+The `compat/` directory contains the selected original calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. The 196 named app functions referenced by these modules have no source revision differences between V1.12 and V1.14; adaptations are recorded separately. See `compat/v114-reference-verification.json` and `compat/README.md`. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player run on the dedicated worker through every Native scene.
 
-Release packages include the seven runtime compatibility scripts and QuickJS license. Test-only reference code and fixtures are excluded.
+Release packages include twelve runtime compatibility scripts and the QuickJS license. Test-only reference code and fixtures are excluded.
 
 Imported comparisons opt into ICU through `QuickJsRuntime::InstallLocaleCompare`. The Native C API preserves browser-style Unicode/case ordering, normalization, embedded NULs and UTF-16 surrogates; no browser object is added. Windows builds link the OS ICU APIs (`icuin`, `icuuc`, Windows 10 version 1703 or later) and balance COM initialization on the owning thread. Linux development/CI also requires `libicu-dev`. Compatibility fixtures explicitly choose `en-US`; an empty language tag uses the Native locale. The imported game uses one-argument comparisons; explicit JS locale/options arguments are rejected by this narrow adapter.
 
@@ -169,3 +169,11 @@ Unchanged text and character images reuse loaded textures. A font change
 invalidates text slots; failed image/font replacement retains the prior cache.
 Cache counters support the later performance gate. Software-SDL tests exercise
 real pixels, repeated draws, source-file removal and allocation failures.
+
+Practice Psych/Sparrow character drawing now uses V1.14's idle median anchors,
+authored trim/animation offsets, role-specific scale and horizontal mirroring.
+Original shared position/scale, role flip overrides and pose adjustments are
+resolved on load from the imported saved-layout store. The complete original
+layout JSON remains in the Native save, including fields used by later scenes.
+Reference calculations and rendering pixels are covered separately; this does
+not complete original note presentation, animation timing or full scene parity.

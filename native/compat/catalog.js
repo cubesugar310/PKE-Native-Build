@@ -17,7 +17,7 @@
     const id=logic.cleanAssetBaseName(logic.fileBaseName(file)).toLowerCase();
     return {id,sourceSkinId:logic.buildDetectedBFSkinId('sparrow',directory,id),
       displayName:logic.getDetectedCharacterDisplayNameFromJson(json,file,imageBase),
-      xml:xml.key,imageBase,directory};
+      xml:xml.key,imageBase,directory,presentationBaseName:logic.getLastPathSegment(directory)||logic.fileBaseName(file)};
   };
   globalThis.pkeCatalogCharacterImage=input=>{
     const xmlBase=logic.cleanAssetBaseName(input.xmlImagePath);

@@ -31,6 +31,7 @@ struct CharacterAsset {
     std::filesystem::path jsonPath;
     std::shared_ptr<const CharacterDefinition> definition;
     std::string sourceSkinId;
+    std::string presentationDescriptor;
 };
 struct AssetCatalog {
     std::uint64_t generation{};

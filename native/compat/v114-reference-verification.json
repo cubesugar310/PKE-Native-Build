@@ -11,7 +11,7 @@
     "saveBeatBattleRankedResultDurably"
   ],
   "removedFunctionDeclarations": [],
-  "unchangedImportedFunctionDeclarations": 174,
+  "unchangedImportedFunctionDeclarations": 196,
   "affectedImportedFunctionDeclarations": [],
   "files": {
     "index.html": {
@@ -67,5 +67,5 @@
       "byteIdenticalToV112": true
     }
   },
-  "nativeChanges": "Native Halloween state/shop/history and persisted gameplay preferences are transcribed from V1.14. Online durable-result/browser host code is outside this milestone."
+  "nativeChanges": "Native Halloween state/shop/history, persisted gameplay preferences and Practice character layout/geometry are transcribed from V1.14. Online durable-result/browser host code and broader scene/note/animation parity remain outside this incremental milestone."
 }

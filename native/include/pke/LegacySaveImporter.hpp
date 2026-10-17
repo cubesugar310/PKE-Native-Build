@@ -57,6 +57,8 @@ struct LegacyFullSaveData : HalloweenData {
     double masterVolume{1.0};
     std::string scrollDirection{"up"};
     std::string judgementPosition{"center"};
+    std::string characterLayoutsJson{"{}"};
+    std::string characterIdentityHistoryJson{"{}"};
     std::vector<std::string> earnedTitleIds;
 };
 
@@ -74,6 +76,8 @@ struct NativeSaveSummary : HalloweenData {
     double masterVolume{1.0};
     std::string scrollDirection{"up"};
     std::string judgementPosition{"center"};
+    std::string characterLayoutsJson{"{}"};
+    std::string characterIdentityHistoryJson{"{}"};
     std::vector<std::string> earnedTitleIds;
 };
 

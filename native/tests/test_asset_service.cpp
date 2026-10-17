@@ -1,5 +1,6 @@
 #include "TestHarness.hpp"
 #include "pke/AssetService.hpp"
+#include "pke/CharacterPresentation.hpp"
 #include "pke/QuickJsRuntime.hpp"
 #include <fstream>
 #include <sstream>
@@ -109,6 +110,20 @@ PKE_TEST("Asset catalog resolves cross-directory atlases and prioritizes XML ima
     pke::AssetService service(a.config,a.root,PKE_COMPAT_DIR,"en-US");const auto c=service.Refresh();
     PKE_REQUIRE(c->characters.size()==1);
     PKE_REQUIRE(c->characters[0].definition->imagePath==a.root/"Characters"/"atlases"/"actual_sprite.png");
+}
+
+PKE_TEST("Original path-only character layouts use the detected folder basename rather than the atlas image basename") {
+    Assets a;const auto dir=a.root/"Characters"/"holiday";
+    Write(dir/"bf.json",R"({"image":"BF_Assets","animations":[{"anim":"idle","name":"Idle"}]})");
+    Write(dir/"BF_Assets.xml",R"(<TextureAtlas imagePath="BF_Assets.png"><SubTexture name="Idle0000" x="0" y="0" width="32" height="32"/></TextureAtlas>)");
+    Write(dir/"BF_Assets.png","image");
+    pke::AssetService service(a.config,a.root,PKE_COMPAT_DIR,"en-US");const auto catalog=service.Refresh();
+    PKE_REQUIRE(catalog->characters.size()==1);
+    const auto layouts=R"({"bf":{"sparrow|characters/holiday|holiday|characters/holiday/bf.json|characters/holiday/bf_assets.xml|characters/holiday/bf_assets.png":{"scale":1.75,"offsetX":-31,"offsetY":22,"flipXOverride":true,"poseAdjustments":{"singLEFT":{"x":7,"y":-8}}}}})";
+    const auto profiles=pke::LoadCharacterTransforms(PKE_COMPAT_DIR,layouts,&catalog->characters[0],nullptr);
+    PKE_REQUIRE_NEAR(profiles.first.scale,1.75,1e-9);PKE_REQUIRE_NEAR(profiles.first.offsetX,-31,1e-9);
+    PKE_REQUIRE_NEAR(profiles.first.offsetY,22,1e-9);PKE_REQUIRE(profiles.first.flipXOverride.value_or(false));
+    PKE_REQUIRE(profiles.first.poses.at("singLEFT").x==7);
 }
 
 PKE_TEST("Asset catalog prefers the original shorter character definition path") {

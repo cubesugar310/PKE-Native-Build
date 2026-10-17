@@ -218,6 +218,8 @@ NativeSaveSummary ToNative(const LegacyFullSaveData& legacy) {
     out.valid=true; out.version=kNativeVersion; out.importedAt=NowIsoUtc(); out.legacyExportedAt=legacy.exportedAt; out.legacySourcePath=legacy.sourcePath.string(); out.progress=legacy.progress;
     out.playerName=legacy.playerName; out.equippedTitle=legacy.equippedTitle; out.selectedSkin=legacy.selectedSkin; out.masterVolume=legacy.masterVolume; out.scrollDirection=legacy.scrollDirection; out.judgementPosition=legacy.judgementPosition;
     static_cast<HalloweenData&>(out)=legacy;out.earnedTitleIds=legacy.earnedTitleIds;
+    out.characterLayoutsJson=legacy.characterLayoutsJson;
+    out.characterIdentityHistoryJson=legacy.characterIdentityHistoryJson;
     return out;
 }
 
@@ -246,6 +248,8 @@ std::string SerializeNative(const NativeSaveSummary& s) {
         << "  \"playerName\":\"" << JsonEscape(s.playerName) << "\",\n"
         << "  \"equippedTitle\":\"" << JsonEscape(s.equippedTitle) << "\",\n"
         << "  \"selectedSkin\":\"" << JsonEscape(s.selectedSkin) << "\",\n"
+        << "  \"characterLayouts\":"<<s.characterLayoutsJson<<",\n"
+        << "  \"characterIdentityHistory\":"<<s.characterIdentityHistoryJson<<",\n"
         << "  \"settings\":{\"masterVolume\":" << s.masterVolume << ",\"scrollDirection\":\"" << JsonEscape(s.scrollDirection) << "\",\"judgementPosition\":\"" << JsonEscape(s.judgementPosition) << "\"},\n"
         << "  \"halloween\":{\"candy\":" << s.halloweenCandy << ",\"purchasedSkinIds\":" << StringArrayJson(s.purchasedSkinIds) << ",\"unlockedTitleIds\":" << StringArrayJson(s.unlockedTitleIds)
         << ",\"claimedRewardIds\":"<<StringArrayJson(s.claimedRewardIds)<<",\"historyByYear\":"<<history.str()<<"},\n"
@@ -301,6 +305,8 @@ LegacyFullSaveData ReadLegacyFullSave(const std::filesystem::path& path) {
         try { FillSettings(out,StorageString(root,kSettingsKey)); } catch(...) {}
         try { FillHalloween(out,StorageString(root,kHalloweenKey)); } catch(...) {}
         try { ImportHalloweenConfig(out,StorageString(root,"pke-beat-battle-halloween-dev-v1")); } catch(...) {}
+        try {const auto raw=StorageString(root,"pke-beat-battle-saved-layouts-v1");if(!raw.empty())out.characterLayoutsJson=NormalizeCharacterLayoutsJson(raw);} catch(...) {}
+        try {const auto raw=StorageString(root,"pke-beat-battle-skin-identity-history-v1");if(!raw.empty())out.characterIdentityHistoryJson=NormalizeCharacterLayoutsJson(raw);} catch(...) {}
         out.playerName=StorageString(root,kPlayerNameKey); out.equippedTitle=StorageString(root,kPlayerTitleKey); out.selectedSkin=StorageString(root,kTitleSkinKey);
         out.valid=true;
     } catch(...) { out.valid=false; }

@@ -1,0 +1,272 @@
+{
+  "referenceZipSha256": "7524ef2060505615167d90003617a58d83f0447f3174cbc14b11915644e9bbaa",
+  "appSha256": "a0e8e0fe90321e8be2da5d43d90f88c992deab47c425b25920734c53047880cd",
+  "entries": [
+    {
+      "file": "app.js",
+      "name": "medianNumber",
+      "sourceLines": [
+        13292,
+        13306
+      ],
+      "sha256": "755197121bae74eee7172419f2f39dc047da7ed5c08825d1bf8fc2dcb176376f",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getAnimationAnchorBox",
+      "sourceLines": [
+        13392,
+        13421
+      ],
+      "sha256": "fed231f3a8cb467c0d63b4c5950f2c536e67d8c4e50883dcdfca9acef203e51c",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getPsychCharacterFramePlacement",
+      "sourceLines": [
+        13492,
+        13540
+      ],
+      "sha256": "2c82a92b99b666dd5c637467cc703a0e75739e567dadc3492099e973288e27ab",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "stabilizeIsolatedAtlasTrimOutliers",
+      "sourceLines": [
+        13308,
+        13377
+      ],
+      "sha256": "01875d5f529207acd5b0ccb24bcb6e01c38f0de1f5ad48d4b5b02ec8cd2bc0b1",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "stabilizeAnimationMapTrimOutliers",
+      "sourceLines": [
+        13379,
+        13390
+      ],
+      "sha256": "b2be87f606f31d98e8e68579dec22d715a2b5793578443228b255cc7e6f4c9de",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "clampSharedCharacterScale",
+      "sourceLines": [
+        29419,
+        29423
+      ],
+      "sha256": "142b38b533db9e2595fee68722f0afe46085afc6858bb506e0fe7fc2e7dda5c1",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "normalizeSharedCharacterPosition",
+      "sourceLines": [
+        29437,
+        29443
+      ],
+      "sha256": "0dd6ed7f3fb83dcc0984c3e2b053106153ccd81e8d3094a14f551568f0b46c80",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "sharedPositionToOpponentOffsets",
+      "sourceLines": [
+        29454,
+        29460
+      ],
+      "sha256": "8ce3a2f903930cf9f6021bacbc9383477dc2da923554df7e9fb900adbeb2e64a",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "opponentOffsetsToSharedPosition",
+      "sourceLines": [
+        29462,
+        29469
+      ],
+      "sha256": "3a109e269d4752804f56b3e65de6e191264b4d3622611334cfd7160b71fb5257",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getOrMigrateSharedCharacterScale",
+      "sourceLines": [
+        29561,
+        29606
+      ],
+      "sha256": "cd9317500a32071e3c49b33892191ee9aec51db10aa8a09eb597317aa7f9d8c6",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getOrMigrateSharedCharacterPosition",
+      "sourceLines": [
+        29471,
+        29525
+      ],
+      "sha256": "f2ed19eedce4dc69e407d6b66c06b30055196b5f27979661ab4696d3ec080032",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getLegacyBFSavedLayoutKey",
+      "sourceLines": [
+        28917,
+        28919
+      ],
+      "sha256": "fc18fc5333765c1b3de007b5c1a36ad036f90aa6cf0e23d34b678916f7f72f18",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getLegacyPathBasedBFSavedLayoutKey",
+      "sourceLines": [
+        28925,
+        28953
+      ],
+      "sha256": "e3450533cd931e6d8d859e7d420df62b8923bcc45fd72ee91915a71d7e70f24c",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getStableBFSavedLayoutKey",
+      "sourceLines": [
+        28955,
+        28983
+      ],
+      "sha256": "885193df05381876fd27de0d64f00a624b44ca99f7e682528bcdc1ac4c2f0bf1",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getCurrentBFSavedLayoutCandidates",
+      "sourceLines": [
+        29202,
+        29211
+      ],
+      "sha256": "7eb31558262f8c7000d5ca20aba8258fe69f29cb4624169172688810900f4621",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getOpponentBFLayoutCandidates",
+      "sourceLines": [
+        29378,
+        29417
+      ],
+      "sha256": "a72327f133c1f768012d380d4b2113f2fd730fcb2aec9b208d2a92871c437c03",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getPsychCharacterIdFromDefinition",
+      "sourceLines": [
+        16538,
+        16545
+      ],
+      "sha256": "2b9ae6a6a2db6863773f977eec077b25c48c678b9303e8d6de5d25e7a3d2b09e",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "getCanonicalPsychCharacterKeyFromDefinition",
+      "sourceLines": [
+        16547,
+        16550
+      ],
+      "sha256": "2bb516e798043410f2240b68ccb5e935a57964b962aab86edde6d5da329d7f34",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "cleanAssetBaseName",
+      "sourceLines": [
+        131,
+        135
+      ],
+      "sha256": "8abb43183eaaaf8afbac8654ec68be24cce3d30a59b142c07e71707641a4fa7f",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "fileBaseName",
+      "sourceLines": [
+        137,
+        139
+      ],
+      "sha256": "fb99504b26c4f4af44f0bf7f5ac8176b1e4ccc18e96c5f3568bd22be0750a007",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "getFileRelativePath",
+      "sourceLines": [
+        141,
+        149
+      ],
+      "sha256": "fdbe49a2424138a62ee30006c61cd1b56cdc59a685fae5e0dc0e57ddbaa09cce",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "cloneOpponentPoseAdjustmentMap",
+      "sourceLines": [
+        629,
+        644
+      ],
+      "sha256": "293c5b30a357b05ca8582f6bb3802e9348ae98a071fe7161fe5f67262ea9d779",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "cloneBFPoseAdjustmentMap",
+      "sourceLines": [
+        646,
+        661
+      ],
+      "sha256": "9dc8ebe10a3de0f0dd36931ceecebd617240265ebb0f424ac94b0beccb0e61e7",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "createEmptySavedLayoutStore",
+      "sourceLines": [
+        663,
+        671
+      ],
+      "sha256": "b26036b7971bbd81c1d7930fd90ca263d7fc1f6c8536b5c2bd37aba21283d66c",
+      "adapted": false
+    },
+    {
+      "file": "js/character-utils.js",
+      "name": "cloneSavedLayoutStore",
+      "sourceLines": [
+        673,
+        766
+      ],
+      "sha256": "8a897bf6941286710458f7ad7b0f916b20e1a66bd5db1372d02c36456fbad603",
+      "adapted": false
+    },
+    {
+      "file": "app.js",
+      "name": "canonicalizeSavedLayoutAliasesFromIdentityHistory",
+      "sourceLines": [
+        29099,
+        29159
+      ],
+      "sha256": "91f99e9d1e93337a8e7924ffece46a0cc3eb12edcb147c1206cfe5b5b680081c",
+      "adapted": false
+    }
+  ],
+  "boundaries": [
+    "Private cold-path copy of original saved layouts; Native owns persistence.",
+    "Native C++ applies the original placement arithmetic from cached anchors without calling JS per frame.",
+    "Native supplies the preserved skin identity history; original unique-alias canonicalization runs on the private layout copy.",
+    "Both roles resolve in one cold context; original shared-scale synchronization is applied after opponent load."
+  ]
+}

@@ -125,6 +125,9 @@ std::shared_ptr<const AssetCatalog> AssetService::Refresh(){
                 ",\"imageBase\":"+Dump(At(plan,"imageBase"))+",\"xmlImagePath\":"+Quote(AtlasImagePath(paths.xml))+'}');
             if(Integer(image)<0)throw std::runtime_error("Character image is missing");
             paths.image=characterFiles.at(Index(image,characterFiles.size()));
+            const auto descriptorFile=[&](const auto& path){return "{\"name\":"+Quote(Utf8(path.filename()))+",\"pkeRelativePath\":"+Quote(Utf8(path.lexically_relative(impl_->charactersRoot.parent_path())))+'}';};
+            const auto descriptor="{\"type\":\"sparrow\",\"directory\":"+Dump(At(plan,"directory"))+",\"baseName\":"+Dump(At(plan,"presentationBaseName"))+
+                ",\"jsonFile\":"+descriptorFile(file)+",\"xmlFile\":"+descriptorFile(paths.xml)+",\"imageFile\":"+descriptorFile(paths.image)+'}';
             auto definition=std::make_shared<CharacterDefinition>(LoadCharacter(paths));
             if(definition->atlas.empty()||definition->imagePath.empty()||!std::filesystem::is_regular_file(definition->imagePath))
                 throw std::runtime_error("Character atlas or image is missing");
@@ -133,8 +136,8 @@ std::shared_ptr<const AssetCatalog> AssetService::Refresh(){
                 const auto prefer=impl_->Call("pkeCatalogPreferCharacter","{\"candidate\":"+std::to_string(fileIndex)+
                     ",\"current\":"+std::to_string(selectedCharacterFiles.at(id))+'}');
                 if(Dump(prefer)!="true")continue;
-                *existing={id,Text(At(plan,"displayName")),file,std::move(definition),Text(At(plan,"sourceSkinId"))};
-            }else next->characters.push_back({id,Text(At(plan,"displayName")),file,std::move(definition),Text(At(plan,"sourceSkinId"))});
+                *existing={id,Text(At(plan,"displayName")),file,std::move(definition),Text(At(plan,"sourceSkinId")),descriptor};
+            }else next->characters.push_back({id,Text(At(plan,"displayName")),file,std::move(definition),Text(At(plan,"sourceSkinId")),descriptor});
             selectedCharacterFiles[id]=fileIndex;
         }catch(const std::exception& e){next->issues.push_back({file,e.what()});}
     }
