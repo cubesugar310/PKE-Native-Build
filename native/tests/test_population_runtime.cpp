@@ -104,18 +104,20 @@ PKE_TEST("Population worker coalesces render submissions while initialization is
     PKE_REQUIRE(result.nowMs==kStart+999990);
     PKE_REQUIRE(runtime.Snapshot()->nowMs==kStart+999990);
     std::lock_guard lock(state->mutex);
-    PKE_REQUIRE(state->steps.size()==200);
-    PKE_REQUIRE(state->steps.front()==kStart+5000);
+    PKE_REQUIRE(state->steps.size()==1);
+    PKE_REQUIRE(state->steps.front()==kStart+999990);
     PKE_REQUIRE(state->steps.back()==kStart+999990);
 }
 
 PKE_TEST("Population worker advances Home Gameplay and Result for exactly 270 seconds") {
     auto state=std::make_shared<BackendState>();pke::PopulationRuntime runtime(Factory(state));
     PKE_REQUIRE(Checkpoint(runtime).ok);
-    PKE_REQUIRE(runtime.AdvanceTo(kStart+60000));PKE_REQUIRE(Checkpoint(runtime).ok);
-    const auto home=runtime.Snapshot();PKE_REQUIRE(home->nowMs==kStart+60000);
-    PKE_REQUIRE(runtime.AdvanceTo(kStart+240000));PKE_REQUIRE(Checkpoint(runtime).ok);
-    PKE_REQUIRE(runtime.AdvanceTo(kStart+270000));PKE_REQUIRE(Checkpoint(runtime).ok);
+    std::shared_ptr<const pke::PopulationSummary> home;
+    for(int tick=1;tick<=54;tick++){
+        PKE_REQUIRE(runtime.AdvanceTo(kStart+tick*5000));PKE_REQUIRE(Checkpoint(runtime).ok);
+        if(tick==12)home=runtime.Snapshot();
+    }
+    PKE_REQUIRE(home&&home->nowMs==kStart+60000);
     PKE_REQUIRE(runtime.Snapshot()->nowMs==kStart+270000);
     PKE_REQUIRE(home->nowMs==kStart+60000); // published summaries stay immutable
     PKE_REQUIRE(runtime.Status()->completedSteps==54);
@@ -134,7 +136,7 @@ PKE_TEST("Population worker ignores backwards time and rejects invalid Native ti
     PKE_REQUIRE(!runtime.AdvanceTo(9007199254740992LL));
     const auto snapshot=runtime.Snapshot();
     PKE_REQUIRE(snapshot->nowMs==kStart+7001&&snapshot->lastTickMs==kStart+5000);
-    std::lock_guard lock(state->mutex);PKE_REQUIRE(state->steps.size()==2);
+    std::lock_guard lock(state->mutex);PKE_REQUIRE(state->steps.size()==1);
 }
 
 PKE_TEST("Population worker keeps last good summary and refuses a failed generation checkpoint") {
@@ -207,4 +209,17 @@ PKE_TEST("Population worker wakes reliably for repeated idle checkpoint requests
         PKE_REQUIRE(checkpoint.nowMs==kStart);
     }
     PKE_REQUIRE(runtime.Status()->completedSteps==0);
+}
+
+PKE_TEST("Population worker checkpoints an exact partial target before the next normal tick") {
+    auto state=std::make_shared<BackendState>();pke::PopulationRuntime runtime(Factory(state));
+    PKE_REQUIRE(Checkpoint(runtime).ok);
+    PKE_REQUIRE(runtime.AdvanceTo(kStart+1234));
+    const auto checkpoint=Checkpoint(runtime);
+    PKE_REQUIRE(checkpoint.ok&&checkpoint.nowMs==kStart+1234);
+    PKE_REQUIRE(runtime.Snapshot()->nowMs==kStart+1234);
+    PKE_REQUIRE(runtime.Snapshot()->lastTickMs==kStart);
+    PKE_REQUIRE(runtime.AdvanceTo(kStart+5000));
+    PKE_REQUIRE(Checkpoint(runtime).nowMs==kStart+5000);
+    PKE_REQUIRE(runtime.Snapshot()->lastTickMs==kStart+5000);
 }

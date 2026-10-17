@@ -86,7 +86,7 @@ struct PopulationRuntime::Impl {
                 // A checkpoint has a fixed target, so subsequent render updates
                 // cannot move its finish line indefinitely.
                 nextTarget=pending.empty()?target.load(std::memory_order_acquire):pending.front().target;
-                idle=pending.empty()&&nextTarget<=current.nowMs;
+                idle=pending.empty()&&(nextTarget<=current.nowMs||nextTarget-current.lastTickMs<5000);
                 while(!pending.empty()&&pending.front().target<=current.nowMs){
                     batch.push_back(std::move(pending.front()));pending.pop_front();
                 }
@@ -99,9 +99,10 @@ struct PopulationRuntime::Impl {
                 continue;
             }
             if(nextTarget<=current.nowMs)continue;
-            // Bound each VM call to the next reference five-second bucket.
-            // A partial last step does not skip the next full bucket.
-            const auto next=std::min(nextTarget,current.lastTickMs+5000);
+            // Like the original drain, consume the latest target once. The
+            // original tick owns elapsed-bucket caps and long-gap recovery.
+            // Explicit checkpoints may advance a partial final interval.
+            const auto next=nextTarget;
             started=Clock::now();auto advanced=backend.AdvanceTo(next);Validate(advanced);
             if(advanced.nowMs!=next||advanced.lastTickMs<current.lastTickMs)
                 throw std::runtime_error("Population backend moved outside its requested clock");

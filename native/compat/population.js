@@ -69,13 +69,11 @@ function pkePopulationInitialize(options){
 function pkePopulationAdvanceTo(input){
   const world=pkeCompatWorld(),native=world.native,target=pkeCompatTime(input&&input.now);
   if(target<=native.now)return world.logic.summary();
-  // Keep the reference five-second tick order, including every elapsed bucket.
-  // Native PopulationRuntime will divide long catch-up into bounded calls.
-  while(native.records.background.lastTick+5000<=target){
-    native.now=native.records.background.lastTick+5000;
-    world.logic.tick(native.now);
-  }
   native.now=target;
+  // The original drain consumes one latest coalesced timestamp. Its tick uses
+  // elapsedBuckets and bounded recovery bursts; replaying every missed bucket
+  // after sleep changes matchmaking, results and random-call order.
+  if(native.records.background.lastTick+5000<=target)world.logic.tick(target);
   return world.logic.summary();
 }
 function pkePopulationSummary(){return pkeCompatWorld().logic.summary();}

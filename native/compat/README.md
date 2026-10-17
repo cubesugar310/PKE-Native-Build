@@ -29,7 +29,7 @@ declaration names its source lines. The full browser app is never evaluated.
 | Reference responsibility | Native adaptation |
 | --- | --- |
 | Browser scheduling and secondary compute workers | The original in-context fallback runs synchronously on the dedicated Native worker. `async`/`await` tokens are removed; former browser yields do no work. Calculation and RNG order are retained. |
-| Browser clock | An instance-local Date/stopwatch receives only the host's explicit UTC milliseconds. Five-second reference buckets are advanced in order, including missed buckets. |
+| Browser clock | An instance-local Date/stopwatch receives only the host's explicit UTC milliseconds. Normal five-second ticks retain their order. Coalesced requests and long gaps run once at the latest timestamp, retaining the original elapsed-bucket caps and recovery calculations. |
 | Browser catalog discovery | Native supplies immutable JSON song metadata, authored chart arrays, skin IDs and bans. `chartFile.name`/`instFile` are plain metadata fields; no File objects or file handles enter JS. |
 | localStorage, IndexedDB and save timers | Native owns durable files. Reference save/journal boundaries mark the current generation dirty. Explicit checkpoints contain records and the original bounded ten-per-player history, deduplicated by match ID. |
 | Home labels and debug console output | Native reads a compact summary and owns presentation/diagnostics. JS errors still reach `QuickJsRuntime` diagnostics. |
@@ -46,8 +46,8 @@ Oct 15 00:00 JST / Nov 1 00:00 JST boundaries and Native Auto/Force overrides.
 ## JSON surface
 
 - `pkePopulationInitialize({now,songs,skins,bannedSkins,playerName,playerSkin})`
-- `pkePopulationAdvanceTo({now})` — never rewinds; the Native worker must split
-  long catch-up into bounded calls.
+- `pkePopulationAdvanceTo({now})` — never rewinds; normal ticks keep their
+  cadence and a coalesced gap invokes the original recovery tick once.
 - `pkePopulationSummary({})` — scalar Home snapshot, not the CPU graph.
 - `pkePopulationQuery({ids})` — at most 128 explicit IDs.
 - `pkePopulationSerialize({})` / `pkePopulationRestore(checkpoint)` — explicit
@@ -88,14 +88,17 @@ To recapture the frozen reference fixtures with Node:
 node native/tests/reference/capture_population_fixture.cjs
 node native/tests/reference/capture_helper_fixtures.cjs
 node native/tests/reference/capture_catalog_fixture.cjs
+node native/tests/reference/capture_recovery_fixture.cjs
 ```
 
 ## Dedicated Native worker
 
 `PopulationRuntime` constructs, uses and destroys its QuickJS backend on one
 worker thread. `AdvanceTo()` submits an atomic maximum timestamp; it allocates no
-per-frame jobs and performs no VM or file work. The worker advances every elapsed
-five-second reference bucket and handles a final partial bucket without rewinding.
+per-frame jobs and performs no VM or file work. The worker respects the
+five-second normal cadence and drains one latest coalesced target without rewinding.
+Long gaps retain the original recovery caps instead of replaying hours of jobs;
+explicit checkpoints can capture a partial interval before the next normal tick.
 An atomic revision counter prevents missed wakeups without taking a render-thread
 mutex. Only compact immutable counters/time are published to the renderer.
 

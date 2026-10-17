@@ -1,0 +1,119 @@
+{
+  "source": "V1.12 original async single-drain recovery",
+  "clock": 1791989999000,
+  "gapMs": 21600000,
+  "expected": {
+    "summary": {
+      "registered": 15000,
+      "cpuPlayers": 14999,
+      "now": 1792011599000,
+      "online": 6866,
+      "live": 2800,
+      "liveCap": 2800,
+      "waiting": 0,
+      "localPlayerState": "YOU",
+      "lastTick": 1792011599000
+    },
+    "profiles": [
+      {
+        "profile": {
+          "id": "00001",
+          "numericId": 1,
+          "name": "かなで",
+          "baseAccuracy": 95.1,
+          "skillCeiling": 96.9,
+          "accuracy": 95.1,
+          "rp": 2338,
+          "timingBiasMs": 3,
+          "rapidAffinity": -1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0.5,
+          "performanceStability": 0.13456638067368568,
+          "performanceUpside": 0.9211708698238178,
+          "performanceDownside": 0.108937528475406,
+          "playStyleTraits": [
+            "連打苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2717537853,
+          "characterId": "",
+          "careerWins": 389,
+          "careerLosses": 269,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "04242",
+          "numericId": 4242,
+          "name": "FLC_ゆの",
+          "baseAccuracy": 87.5,
+          "skillCeiling": 88.4,
+          "accuracy": 87.5,
+          "rp": 1275,
+          "timingBiasMs": -4,
+          "rapidAffinity": -1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.225916635996177,
+          "performanceUpside": 0.07453950822226225,
+          "performanceDownside": 0.4485819412974133,
+          "playStyleTraits": [
+            "連打苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2154996002,
+          "characterId": "",
+          "careerWins": 108,
+          "careerLosses": 193,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "14999",
+          "numericId": 14999,
+          "name": "とわ",
+          "baseAccuracy": 96.8,
+          "skillCeiling": 98.2,
+          "accuracy": 96.8,
+          "rp": 1525,
+          "timingBiasMs": 8,
+          "rapidAffinity": 0.5,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.788000938898884,
+          "performanceUpside": 0.4975441285636146,
+          "performanceDownside": 0.274818401149199,
+          "playStyleTraits": [
+            "速い曲苦手"
+          ],
+          "baseWins": 1,
+          "baseLosses": 0,
+          "skinSeed": 935597484,
+          "characterId": "",
+          "careerWins": 0,
+          "careerLosses": 0,
+          "draws": 0,
+          "dynamicMatches": 1,
+          "developmentMatches": 1
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      }
+    ],
+    "recordsHash": "977e5ec3",
+    "randomState": 2539014028,
+    "historyCount": 2128
+  }
+}

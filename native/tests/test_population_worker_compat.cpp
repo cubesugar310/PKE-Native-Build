@@ -2,6 +2,7 @@
 #include "pke/PopulationRuntime.hpp"
 #include <chrono>
 #include <filesystem>
+#include <thread>
 
 namespace {
 using namespace std::chrono_literals;
@@ -20,6 +21,17 @@ pke::PopulationCheckpoint Checkpoint(pke::PopulationRuntime& runtime){
     if(!result.ok)throw std::runtime_error(result.error);
     return result;
 }
+void AwaitTime(pke::PopulationRuntime& runtime,std::int64_t target){
+    const auto deadline=std::chrono::steady_clock::now()+150s;
+    while(std::chrono::steady_clock::now()<deadline){
+        const auto snapshot=runtime.Snapshot();
+        if(snapshot&&snapshot->nowMs>=target)return;
+        if(runtime.Status()->phase==pke::PopulationPhase::Failed)
+            throw std::runtime_error(runtime.Status()->error);
+        std::this_thread::sleep_for(1ms);
+    }
+    throw std::runtime_error("Population worker did not reach its submitted target");
+}
 }
 
 PKE_TEST("Real QuickJS worker continues 15000 players through the accepted 270 second flow") {
@@ -27,10 +39,16 @@ PKE_TEST("Real QuickJS worker continues 15000 players through the accepted 270 s
     const auto startup=Checkpoint(runtime);
     PKE_REQUIRE(runtime.Snapshot()->registered==15000);
     PKE_REQUIRE(runtime.Snapshot()->cpuPlayers==14999);
-    PKE_REQUIRE(runtime.AdvanceTo(kStart+60000));Checkpoint(runtime);
-    const auto home=runtime.Snapshot();PKE_REQUIRE(home->nowMs==kStart+60000);
-    PKE_REQUIRE(runtime.AdvanceTo(kStart+240000));Checkpoint(runtime);
-    PKE_REQUIRE(runtime.AdvanceTo(kStart+270000));
+    std::shared_ptr<const pke::PopulationSummary> home;
+    // These are genuinely processed normal ticks. A sleep/backlog gap instead
+    // follows the original single-drain recovery fixture, not 54 queued jobs.
+    for(int tick=1;tick<=54;tick++){
+        const auto target=kStart+tick*5000;
+        PKE_REQUIRE(runtime.AdvanceTo(target));AwaitTime(runtime,target);
+        if(tick==12){Checkpoint(runtime);home=runtime.Snapshot();}
+        if(tick==48)Checkpoint(runtime);
+    }
+    PKE_REQUIRE(home&&home->nowMs==kStart+60000);
     const auto final=Checkpoint(runtime);const auto snapshot=runtime.Snapshot();
     PKE_REQUIRE(final.nowMs-startup.nowMs==270000);
     PKE_REQUIRE(snapshot->nowMs==kStart+270000&&snapshot->lastTickMs==kStart+270000);

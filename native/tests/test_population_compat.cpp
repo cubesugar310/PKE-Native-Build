@@ -80,7 +80,7 @@ PKE_TEST("Population compatibility advances a minute without changing the local 
     pke::QuickJsRuntime runtime(limits);Initialize(runtime);
     Ok(runtime.Evaluate(R"(
         const before=pkePopulationSerialize({});
-        pkePopulationAdvanceTo({now:1791990059000});
+        for(let tick=1;tick<=12;tick++)pkePopulationAdvanceTo({now:1791989999000+tick*5000});
         requireReferencePopulation(expectedPopulationFixture.oneMinute);
         requireCompat(expectedPopulationFixture.transitions.some(t=>t.to==='SLEEP'),'sleep transition fixture');
         requireCompat(expectedPopulationFixture.transitions.some(t=>t.to==='REST'),'rest transition fixture');
@@ -103,6 +103,23 @@ PKE_TEST("Population difficulty helpers retain the original authored-note rating
             const actual=pkeSongDifficulty(item.input);
             requireCompat(JSON.stringify(actual)===JSON.stringify(item.expected),'reference difficulty: '+item.name);
         }
+    )"));
+}
+
+PKE_TEST("Population coalesced six hour recovery matches the original single async drain") {
+    pke::QuickJsLimits limits;limits.executionBudgetMs=120000;
+    pke::QuickJsRuntime runtime(limits);Initialize(runtime);
+    Ok(runtime.Evaluate("const recoveryFixture="+
+        Read(std::filesystem::path(PKE_COMPAT_DIR)/"../tests/fixtures/population/v112-recovery.json")+";"));
+    Ok(runtime.Evaluate(R"(
+        let recoveryTicks=0;const originalRecoveryTick=pkePopulationWorld.logic.tick;
+        pkePopulationWorld.logic.tick=function(now){
+            requireCompat(++recoveryTicks===1,'one coalesced recovery tick, without replaying hours');
+            return originalRecoveryTick(now);
+        };
+        pkePopulationAdvanceTo({now:recoveryFixture.clock+recoveryFixture.gapMs});
+        requireReferencePopulation(recoveryFixture.expected);
+        requireCompat(recoveryTicks===1,'reference single-drain recovery');
     )"));
 }
 
@@ -154,7 +171,7 @@ PKE_TEST("Population serialization restores equivalent summaries records and pre
     pke::QuickJsLimits limits;limits.executionBudgetMs=120000;
     pke::QuickJsRuntime runtime(limits);Initialize(runtime);
     Ok(runtime.Evaluate(R"(
-        pkePopulationAdvanceTo({now:1791990059000});
+        for(let tick=1;tick<=12;tick++)pkePopulationAdvanceTo({now:1791989999000+tick*5000});
         const saved=pkePopulationSerialize({});
         const summary=JSON.stringify(pkePopulationSummary({}));
         const players=JSON.stringify(pkePopulationQuery({ids:['00001','04242','14999']}));
