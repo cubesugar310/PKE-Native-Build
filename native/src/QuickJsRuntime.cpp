@@ -53,6 +53,14 @@ struct QuickJsRuntime::Impl {
         JS_SetCanBlock(runtime,false);
         JS_SetInterruptHandler(runtime,&Impl::Interrupt,this);
         context=JS_NewContext(runtime);
+        // Some pinned-engine intrinsics report allocation failure through a
+        // pending exception even when JS_NewContext returns a pointer.
+        if(context && JS_HasException(context)){
+            const JSValue exception=JS_GetException(context);
+            JS_FreeValue(context,exception);
+            JS_FreeContext(context);
+            context=nullptr;
+        }
         if(!context){
             initializationError="Could not initialize QuickJS context within its limits";
             Report({"initialize",initializationError,{}});

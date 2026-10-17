@@ -131,3 +131,16 @@ PKE_TEST("QuickJS context initialization failure is a normal Native error") {
     PKE_REQUIRE(!result.ok);
     PKE_REQUIRE(!result.error.empty());
 }
+
+PKE_TEST("QuickJS rejects partially initialized contexts after intrinsic allocation failure") {
+    pke::QuickJsLimits limits;
+    // On the pinned 64-bit engine this permits a context pointer but not all
+    // intrinsics. A pointer alone must never mark initialization successful.
+    limits.memoryBytes=100*1024;
+    std::vector<pke::QuickJsDiagnostic> diagnostics;
+    pke::QuickJsRuntime runtime(limits,[&](const auto& d){diagnostics.push_back(d);});
+    PKE_REQUIRE(!runtime.Ready());
+    PKE_REQUIRE(!diagnostics.empty());
+    PKE_REQUIRE(diagnostics.front().operation=="initialize");
+    PKE_REQUIRE(!runtime.Evaluate("1+1").ok);
+}
