@@ -799,7 +799,7 @@ let detectedBfSkinOrder = [];
 let detectedBfSkinNameIndex = null;
 
 // V1.12 app.js:12460-12460 — beatBattlePopulationSkinAvailability
-let beatBattlePopulationSkinAvailability={candidates:native.skins,aliases:new Set(native.skins.map(id=>cleanAssetBaseName(id).toLowerCase())),rawCandidateIds:native.skins};
+let beatBattlePopulationSkinAvailability={candidates:native.skins.filter(id=>!isPsychCharacterIdBanned(id)),aliases:new Set(native.skins.filter(id=>!isPsychCharacterIdBanned(id)).map(id=>cleanAssetBaseName(id).toLowerCase())),rawCandidateIds:native.skins};
 
 // V1.12 app.js:13169-13201 — getBeatBattleFixedSkinId
 function getBeatBattleFixedSkinId(profile, candidateIds = null) {
@@ -3980,7 +3980,7 @@ return {
    now:native.now,online:s.online,live:s.totalRooms,liveCap:s.displayCap,waiting:s.waiting,
    localPlayerState:'YOU',lastTick:native.records.background.lastTick
  };},
- query(ids){return ids.map(id=>({profile:getBeatBattleEffectivePopulationProfileById(id),
+ query(ids){return ids.map(id=>({profile:id==='YOU'?getBeatBattlePlayerProfile():getBeatBattleEffectivePopulationProfileById(id),
    baseStatus:getBeatBattlePopulationBasePresenceStatus(id,native.now),
    status:getBeatBattlePopulationPresenceStatus(id,native.now)}));},
  history(){const entries=new Map();for(const matches of beatBattlePopulationHistoryMemory.values())for(const m of matches)entries.set(m.matchId,m);

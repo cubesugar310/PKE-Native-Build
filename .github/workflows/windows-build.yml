@@ -17,7 +17,7 @@ jobs:
           submodules: true
 
       - name: Install offline-core build headers
-        run: sudo apt-get update -qq && sudo apt-get install -y libboost-dev
+        run: sudo apt-get update -qq && sudo apt-get install -y libboost-dev libicu-dev
 
       - name: Configure offline core
         run: cmake -S native -B native/build-offline -DPKE_NATIVE_OFFLINE_CORE=ON -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Debug

@@ -105,10 +105,14 @@ PKE_TEST("QuickJS contexts reject calls from a different Native thread") {
     pke::QuickJsRuntime runtime;
     PKE_REQUIRE(runtime.Evaluate("function nativeEcho(x){return x;}").ok);
     pke::QuickJsResult result;
-    std::thread other([&]{ result=runtime.CallJson("nativeEcho","{}"); });
+    pke::QuickJsResult collation;
+    std::thread other([&]{ result=runtime.CallJson("nativeEcho","{}");
+        collation=runtime.InstallLocaleCompare("en-US"); });
     other.join();
     PKE_REQUIRE(!result.ok);
     PKE_REQUIRE(result.error.find("thread")!=std::string::npos);
+    PKE_REQUIRE(!collation.ok);
+    PKE_REQUIRE(collation.error.find("thread")!=std::string::npos);
     PKE_REQUIRE(runtime.CallJson("nativeEcho","{}").ok);
 }
 
@@ -161,4 +165,43 @@ PKE_TEST("QuickJS rejects partially initialized contexts after intrinsic allocat
     PKE_REQUIRE(!diagnostics.empty());
     PKE_REQUIRE(diagnostics.front().operation=="initialize");
     PKE_REQUIRE(!runtime.Evaluate("1+1").ok);
+}
+
+PKE_TEST("QuickJS Native collation preserves browser case ordering without browser globals") {
+    pke::QuickJsRuntime runtime;
+    PKE_REQUIRE(runtime.InstallLocaleCompare("en-US").ok);
+    PKE_REQUIRE(runtime.Evaluate(R"(
+        function nativeCollation(){return ['a','B','c','D','e','F'].sort((a,b)=>a.localeCompare(b));}
+    )").ok);
+    const auto result=runtime.CallJson("nativeCollation","{}");
+    PKE_REQUIRE(result.ok);
+    PKE_REQUIRE(result.json==R"(["a","B","c","D","e","F"])");
+    PKE_REQUIRE(!runtime.InstallLocaleCompare("not a language tag").ok);
+    PKE_REQUIRE(runtime.CollectGarbage().ok);
+    PKE_REQUIRE(runtime.CallJson("nativeCollation","{}").json==result.json);
+    PKE_REQUIRE(runtime.Evaluate(R"(
+        if(typeof document!=='undefined'||typeof window!=='undefined'||typeof setTimeout!=='undefined')throw Error('browser global');
+        if('e\u0301'.localeCompare('\u00e9')!==0)throw Error('canonical equivalence');
+        if('\u0000a'.localeCompare('\u0000b')>=0)throw Error('embedded NUL');
+        '\ud800'.localeCompare('\ud801');
+    )").ok);
+    PKE_REQUIRE(runtime.Evaluate("Object.freeze(String.prototype)").ok);
+    PKE_REQUIRE(!runtime.InstallLocaleCompare("ja-JP").ok);
+    PKE_REQUIRE(runtime.CallJson("nativeCollation","{}").json==result.json);
+}
+
+PKE_TEST("QuickJS Native collation propagates operand string conversion exceptions") {
+    pke::QuickJsRuntime runtime;
+    PKE_REQUIRE(runtime.InstallLocaleCompare("en-US").ok);
+    for(const auto* expression:{"String.prototype.localeCompare.call(bad,'x')",
+                               "'x'.localeCompare(bad)"}){
+        const std::string source=std::string(R"(
+            var bad=new Error('fallback');
+            bad.toString=()=>{throw Error('sentinel-to-string');};
+        )")+expression;
+        const auto result=runtime.Evaluate(source,"collation-coercion.js");
+        PKE_REQUIRE(!result.ok);
+        PKE_REQUIRE(result.error.find("sentinel-to-string")!=std::string::npos);
+        PKE_REQUIRE(runtime.Evaluate("'a'.localeCompare('b')").ok);
+    }
 }

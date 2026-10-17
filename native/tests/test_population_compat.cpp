@@ -12,6 +12,7 @@ std::string Read(const std::filesystem::path& path){
 }
 void Ok(const pke::QuickJsResult& result){if(!result.ok)throw std::runtime_error(result.error);}
 void Load(pke::QuickJsRuntime& runtime){
+    Ok(runtime.InstallLocaleCompare("en-US"));
     for(const auto* name:{"cpu-timing.js","title-system.js","population-social-sessions.js",
                          "boss-battle.js","song-difficulty.js","population-imports.js","population.js"})
         Ok(runtime.Evaluate(Read(std::filesystem::path(PKE_COMPAT_DIR)/name),name));
@@ -63,6 +64,14 @@ PKE_TEST("Population compatibility initializes all 14999 CPUs and the local play
         const p=pkePopulationQuery({ids:['00001','10001','14999']});
         requireCompat(p.length===3 && p[2].profile.id==='14999','population profiles');
         requireCompat(p[1].profile.careerWins===0 && p[1].profile.careerLosses===0,'new registration');
+        pkePopulationInitialize({now:1791989999000,songs:[],skins:['bf','dad'],bannedSkins:['dad'],playerName:'Local',playerSkin:'bf'});
+        const bannedState=pkePopulationSerialize({});
+        requireCompat(bannedState.records.background.liveMatches.every(room=>
+            room.aCharacterId==='bf'&&room.bCharacterId==='bf'),'banned skins excluded from all LIVE rooms');
+        requireCompat(!Object.values(bannedState.records.skinById).includes('dad'),'banned skins excluded from stored CPU choices');
+        const local=pkePopulationQuery({ids:['YOU']})[0];
+        requireCompat(local.profile&&local.profile.isHuman&&local.profile.name==='Local'&&
+            local.profile.characterId==='bf'&&local.baseStatus==='YOU','local player query');
     )"));
 }
 
@@ -107,14 +116,27 @@ PKE_TEST("Population title availability retains earned and dynamic titles") {
     )"));
 }
 
+PKE_TEST("Population weekly songs retain browser collation for mixed-case folder ids") {
+    pke::QuickJsRuntime runtime;Seed(runtime);Load(runtime);
+    Ok(runtime.Evaluate(R"(
+        const songs=['a','B','c','D','e','F'].map(id=>({id,name:id,stars:6,eligible:true}));
+        const selected=PKEBossBattle.selectWeeklySongs(songs,Date.UTC(2026,9,16,12)).songs.map(s=>s.id);
+        requireCompat(JSON.stringify(selected)===JSON.stringify(['B','F','a']),'reference weekly mixed-case ordering');
+    )"));
+}
+
 PKE_TEST("Population LIVE authored-note progress and completions match the original calculations") {
     pke::QuickJsLimits limits;limits.executionBudgetMs=120000;
     pke::QuickJsRuntime runtime(limits);Seed(runtime);Load(runtime);
     Ok(runtime.Evaluate("const catalogFixture="+
         Read(std::filesystem::path(PKE_COMPAT_DIR)/"../tests/fixtures/population/v112-catalog.json")+";"));
+    Ok(runtime.Evaluate("pkePopulationInitialize(catalogFixture.input);"));
+    // Match the worker contract: bound each VM call to one reference tick.
+    // Initialization plus all six ticks must not share one execution deadline.
+    for(unsigned tick=1;tick<=6;tick++)
+        Ok(runtime.Evaluate("pkePopulationAdvanceTo({now:catalogFixture.input.now+"+
+                            std::to_string(tick*5000)+"});"));
     Ok(runtime.Evaluate(R"(
-        pkePopulationInitialize(catalogFixture.input);
-        pkePopulationAdvanceTo({now:catalogFixture.input.now+catalogFixture.elapsed});
         const actual=pkePopulationSerialize({}),expected=catalogFixture.expected;
         requireCompat(JSON.stringify(pkePopulationSummary({}))===JSON.stringify(expected.summary),'catalog summary');
         let h=0x811c9dc5;const text=JSON.stringify(actual.records);

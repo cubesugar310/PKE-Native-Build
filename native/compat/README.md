@@ -34,6 +34,7 @@ declaration names its source lines. The full browser app is never evaluated.
 | localStorage, IndexedDB and save timers | Native owns durable files. Reference save/journal boundaries mark the current generation dirty. Explicit checkpoints contain records and the original bounded ten-per-player history, deduplicated by match ID. |
 | Home labels and debug console output | Native reads a compact summary and owns presentation/diagnostics. JS errors still reach `QuickJsRuntime` diagnostics. |
 | Player name and skin DOM controls | Native supplies the normalized name and selected skin. No DOM controls are modeled. |
+| Browser language collation | `QuickJsRuntime::InstallLocaleCompare` supplies ICU collation for the original one-argument string comparisons. This preserves case-sensitive weekly song selection without changing the reference module. Fixtures pin `en-US`; the worker can select the Native locale. |
 
 Original ONLINE/demand/cap calculations are preserved. ONLINE is the reference's
 time-bucket/hash calculation, rather than a new count of presence flags.
@@ -58,6 +59,10 @@ Oct 15 00:00 JST / Nov 1 00:00 JST boundaries and Native Auto/Force overrides.
 Production uses the engine's original `Math.random` call sites. Seeded randomness
 exists only in the fixture harness. Restoring retains records, simulation time,
 sessions and bounded history; the reference does not persist a future RNG stream.
+Restore is a fresh-world load and retains the reference's new-app 15-second
+startup recovery. It is not an in-process rollback promising identical future
+note budgets. The worker must distinguish fresh load/recovery from uninterrupted
+advancement; it must not silently rewind an active generation.
 
 ## Reference verification
 
@@ -74,3 +79,11 @@ The reference harness uses the Native checkpoint container and catalog/file
 boundary; it does not emulate a browser. These are component tests. Home/gameplay
 integration, persistence hardening, visual parity, performance gates and Windows
 device acceptance remain later Block 1 tasks.
+
+To recapture the frozen reference fixtures with Node:
+
+```bash
+node native/tests/reference/capture_population_fixture.cjs
+node native/tests/reference/capture_helper_fixtures.cjs
+node native/tests/reference/capture_catalog_fixture.cjs
+```
