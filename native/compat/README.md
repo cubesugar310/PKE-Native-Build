@@ -52,6 +52,8 @@ Oct 15 00:00 JST / Nov 1 00:00 JST boundaries and Native Auto/Force overrides.
 - `pkePopulationQuery({ids})` — at most 128 explicit IDs.
 - `pkePopulationSerialize({})` / `pkePopulationRestore(checkpoint)` — explicit
   checkpoint operations, never per-frame work.
+- `pkePopulationRestoreWithOptions({options,checkpoint})` — fresh application
+  load with the Native catalog, without first simulating a discarded world.
 - `pkeHalloweenState({now,override})`
 - `pkeSongDifficulty({chart,scrollSpeed})`
 - `pkeTitleAvailability({earned,stats})`
@@ -87,3 +89,22 @@ node native/tests/reference/capture_population_fixture.cjs
 node native/tests/reference/capture_helper_fixtures.cjs
 node native/tests/reference/capture_catalog_fixture.cjs
 ```
+
+## Dedicated Native worker
+
+`PopulationRuntime` constructs, uses and destroys its QuickJS backend on one
+worker thread. `AdvanceTo()` submits an atomic maximum timestamp; it allocates no
+per-frame jobs and performs no VM or file work. The worker advances every elapsed
+five-second reference bucket and handles a final partial bucket without rewinding.
+An atomic revision counter prevents missed wakeups without taking a render-thread
+mutex. Only compact immutable counters/time are published to the renderer.
+
+Explicit checkpoint futures capture after their fixed submitted target, so newer
+render updates cannot postpone them indefinitely. A backend error retains the
+last good summary, marks that generation failed, and resolves/refuses checkpoint
+requests with the error. Shutdown cancels active VM execution, clears the borrowed
+cancellation pointer, and destroys the context and ICU/COM state on the worker.
+Callers must capture/save their final checkpoint before stopping the worker.
+
+Diagnostics record initialization time and each completed step's last/max elapsed
+time. These component timings do not replace the later full-game performance gate.

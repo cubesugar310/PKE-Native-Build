@@ -98,6 +98,12 @@ function pkePopulationRestore(input){
   pkePopulationWorld=next;
   return next.logic.summary();
 }
+function pkePopulationRestoreWithOptions(input){
+  const value=pkeCompatValidateCheckpoint(input&&input.checkpoint);
+  const next=pkeCompatMakeWorld(input.options,value);
+  pkePopulationWorld=next;
+  return next.logic.summary();
+}
 function pkeHalloweenState(input){
   const now=pkeCompatTime(input&&input.now);
   const state=getBeatBattleHalloweenEventWindow(now);
