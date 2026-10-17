@@ -1,5 +1,6 @@
 #include "TestHarness.hpp"
 #include "pke/QuickJsRuntime.hpp"
+#include <quickjs.h>
 #include <chrono>
 #include <string>
 #include <thread>
@@ -134,9 +135,26 @@ PKE_TEST("QuickJS context initialization failure is a normal Native error") {
 
 PKE_TEST("QuickJS rejects partially initialized contexts after intrinsic allocation failure") {
     pke::QuickJsLimits limits;
-    // On the pinned 64-bit engine this permits a context pointer but not all
-    // intrinsics. A pointer alone must never mark initialization successful.
-    limits.memoryBytes=100*1024;
+    // Find the engine's actual partial-intrinsic boundary. Allocator overhead
+    // differs between MSVC and GCC, so a fixed byte count is not portable.
+    std::size_t partialBudget=0;
+    for(std::size_t bytes=32*1024;bytes<256*1024&&!partialBudget;bytes+=256){
+        JSRuntime* probe=JS_NewRuntime();
+        PKE_REQUIRE(probe!=nullptr);
+        JS_SetMemoryLimit(probe,bytes);
+        JSContext* context=JS_NewContext(probe);
+        if(context){
+            if(JS_HasException(context)){
+                partialBudget=bytes;
+                const JSValue exception=JS_GetException(context);
+                JS_FreeValue(context,exception);
+            }
+            JS_FreeContext(context);
+        }
+        JS_FreeRuntime(probe);
+    }
+    PKE_REQUIRE(partialBudget!=0);
+    limits.memoryBytes=partialBudget;
     std::vector<pke::QuickJsDiagnostic> diagnostics;
     pke::QuickJsRuntime runtime(limits,[&](const auto& d){diagnostics.push_back(d);});
     PKE_REQUIRE(!runtime.Ready());
