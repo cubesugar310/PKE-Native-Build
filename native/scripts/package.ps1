@@ -21,6 +21,9 @@ Get-ChildItem -Path $build -Recurse -Filter *.dll | ForEach-Object {
 }
 Copy-Item (Join-Path $root "native/pke-native.example.json") (Join-Path $out "pke-native.example.json")
 Copy-Item (Join-Path $root "native/README.md") (Join-Path $out "README.md")
+$licenses = Join-Path $out "licenses"
+New-Item -ItemType Directory -Force $licenses | Out-Null
+Copy-Item (Join-Path $root "native/third_party/quickjs-ng/LICENSE") (Join-Path $licenses "quickjs-ng-LICENSE.txt")
 $forbidden = Get-ChildItem -Path $out -Recurse | Where-Object { $_.Name -match 'WebView2|Chromium|chrome_elf|msedgewebview' }
 if ($forbidden) { throw "Forbidden browser runtime file found in package: $($forbidden.FullName -join ', ')" }
 $zip = "$out.zip"

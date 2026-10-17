@@ -95,3 +95,15 @@ powershell -ExecutionPolicy Bypass -File native/scripts/package.ps1
 ```
 
 The package script copies the executable and built runtime DLLs, example config, and README, then refuses to package WebView2/Chromium-named runtime files.
+
+## Native compatibility runtime
+
+QuickJS-NG v0.17.0 is pinned at commit `6d46d07d04041b40f4f49eaa7fdebe44c314c699` in `native/third_party/quickjs-ng`. Initialize it before configuring a fresh checkout:
+
+```bash
+git submodule update --init native/third_party/quickjs-ng
+```
+
+Only the `qjs` library is linked. The standalone CLI and std/os libc helpers are not built into the compatibility runtime. `QuickJsRuntime` has a synchronous JSON call boundary, explicit memory/stack/execution limits, exception stack diagnostics, and explicit garbage collection. Context creation, calls and destruction belong to one thread. `RequestInterrupt()` is a thread-safe, permanent stop request for that instance.
+
+The offline-core mode still avoids fetching GUI/audio dependencies; it uses the already initialized pinned QuickJS submodule. A separate `quickjs_runtime` CTest entry covers the wrapper. The runtime is a Block 1 foundation; population and scene parity are separate implementation tasks.
