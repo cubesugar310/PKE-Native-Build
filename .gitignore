@@ -1,0 +1,5 @@
+.worktrees/
+.superpowers/
+
+native/build*/
+native/dist/

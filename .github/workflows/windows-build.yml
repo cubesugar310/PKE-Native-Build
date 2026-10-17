@@ -2,6 +2,8 @@ name: Build PKE Native Windows
 
 on:
   push:
+    branches: [ main, feat/v114-block1 ]
+  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
@@ -10,61 +12,14 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 45
     steps:
-      - name: Checkout
+      - name: Checkout tracked native source
         uses: actions/checkout@v4
-
-      - name: Reconstruct readable native source
-        shell: pwsh
-        run: |
-          @'
-          from pathlib import Path
-          import re
-
-          chunks = sorted(Path('source-bundles').glob('bundle*.part*.txt'))
-          if not chunks:
-              raise SystemExit('No readable source bundle chunks found')
-          bundle = ''.join(p.read_text(encoding='utf-8') for p in chunks)
-          pattern = re.compile(r'^=== FILE: (.+?) ===\n(.*?)^=== END FILE ===\n?', re.M | re.S)
-          matches = list(pattern.finditer(bundle))
-          if len(matches) != 32:
-              raise SystemExit(f'Expected 32 source files, reconstructed {len(matches)}')
-          for m in matches:
-              rel = m.group(1)
-              if not rel.startswith('native/') or '..' in Path(rel).parts:
-                  raise SystemExit(f'Unsafe source path: {rel}')
-              out = Path(rel)
-              out.parent.mkdir(parents=True, exist_ok=True)
-              out.write_text(m.group(2), encoding='utf-8', newline='')
-              print(f'wrote {rel}: {out.stat().st_size} bytes')
-
-          # One source-bundle boundary added one stray character to the save
-          # serializer. Match the unique serializer expression, not parser code.
-          legacy = Path('native/src/LegacySaveImporter.cpp')
-          lines = legacy.read_text(encoding='utf-8').splitlines(keepends=True)
-          fixed = False
-          for i, line in enumerate(lines):
-              if 's.progress.peakRp' in line and 'JsonEscape(s.progress.onlineSongRangeTier)' in line:
-                  lines[i] = '        << "    \\"peakRp\\":" << s.progress.peakRp << ",\\"onlineSongRangeTier\\":\\"" << JsonEscape(s.progress.onlineSongRangeTier) << "\\",\\"lastOpponentId\\":\\"" << JsonEscape(s.progress.lastOpponentId) << "\\"\\n"\n'
-                  fixed = True
-                  break
-          if not fixed:
-              raise SystemExit('Could not locate LegacySaveImporter serialization line to restore')
-          legacy.write_text(''.join(lines), encoding='utf-8', newline='')
-
-          Path('native/README.md').write_text(
-              'PKE Native Prototype 0.1\n\nWindows x64 native prototype.\n'
-              'Configure pke-native.json or place Songs and Characters beside the EXE.\n'
-              'F11: fullscreen, F3: diagnostics, Esc: back/quit.\n',
-              encoding='utf-8'
-          )
-          '@ | Set-Content -Encoding utf8 reconstruct.py
-          python reconstruct.py
 
       - name: Configure Release
         shell: pwsh
         run: |
           cmake -S native -B native/build -A x64 `
-            -DBUILD_TESTING=OFF `
+            -DBUILD_TESTING=ON `
             '-DCMAKE_CXX_FLAGS=/EHsc /DNOMINMAX' `
             -DSDL_TEST=OFF `
             -DSDL_TESTS=OFF `
@@ -77,6 +32,10 @@ jobs:
       - name: Build Release
         shell: pwsh
         run: cmake --build native/build --config Release --parallel 2
+
+      - name: Test Release before packaging
+        shell: pwsh
+        run: ctest --test-dir native/build -C Release --output-on-failure
 
       - name: Package
         shell: pwsh

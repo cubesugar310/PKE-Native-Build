@@ -1,0 +1,13 @@
+#include "TestHarness.hpp"
+#include "pke/GameSession.hpp"
+#include <filesystem>
+#include <fstream>
+namespace {
+class FakeClock2 : public pke::IAudioClock { public: double t{}; pke::AudioState st{pke::AudioState::Ready}; std::string err; bool Start()override{st=pke::AudioState::Playing;return true;} void Pause()override{st=pke::AudioState::Paused;} void Resume()override{st=pke::AudioState::Playing;} void Stop()override{st=pke::AudioState::Stopped;} double SongTimeMs()const override{return t;} pke::AudioState State()const override{return st;} std::string LastErrorCopy()const override{return err;} };
+std::filesystem::path base(const char* tag){auto r=std::filesystem::temp_directory_path()/tag;std::filesystem::remove_all(r);std::filesystem::create_directories(r/"Songs"/"demo");return r;}
+pke::Config cfg(){pke::Config c;c.songsRoot="Songs";c.charactersRoot="Characters";return c;}
+}
+PKE_TEST("GameSession missing Inst fails visibly instead of freezing") { auto r=base("pke-missing-inst"); std::ofstream(r/"Songs/demo/demo-hard.json")<<R"({"song":{"bpm":120,"notes":[]}})"; FakeClock2 c; pke::GameSession s(cfg(),r,&c); PKE_REQUIRE(!s.Load({"demo","hard"})); PKE_REQUIRE(s.State()==pke::SessionState::Failed); PKE_REQUIRE(s.FailureMessage().find("Inst.ogg")!=std::string::npos); }
+PKE_TEST("GameSession malformed chart fails visibly") { auto r=base("pke-bad-chart"); std::ofstream(r/"Songs/demo/Inst.ogg").put('x'); std::ofstream(r/"Songs/demo/demo-hard.json")<<"{bad"; FakeClock2 c; pke::GameSession s(cfg(),r,&c); PKE_REQUIRE(!s.Load({"demo","hard"})); PKE_REQUIRE(s.State()==pke::SessionState::Failed); PKE_REQUIRE(s.FailureMessage().find("demo-hard.json")!=std::string::npos); }
+PKE_TEST("GameSession optional Voices and missing characters recover with warnings") { auto r=base("pke-optional-voices"); auto f=r/"Songs/demo"; std::ofstream(f/"Inst.ogg").put('x'); std::ofstream(f/"demo-hard.json")<<R"({"song":{"bpm":120,"player1":"no-bf","player2":"no-dad","events":[[0,[["Unsupported",""," "]]]],"notes":[]}})"; FakeClock2 c; pke::GameSession s(cfg(),r,&c); PKE_REQUIRE(s.Load({"demo","hard"})); PKE_REQUIRE(!s.Warnings().empty()); }
+PKE_TEST("GameSession device loss stops rhythm and enters recoverable state") { auto r=base("pke-device-loss"); auto f=r/"Songs/demo"; std::ofstream(f/"Inst.ogg").put('x'); std::ofstream(f/"demo-hard.json")<<R"({"song":{"bpm":120,"notes":[]}})"; FakeClock2 c; pke::GameSession s(cfg(),r,&c); PKE_REQUIRE(s.Load({"demo","hard"})); s.Update();s.Update(); c.err="device removed";c.st=pke::AudioState::DeviceLost;s.Update();PKE_REQUIRE(s.State()==pke::SessionState::DeviceLost);PKE_REQUIRE(s.FailureMessage().find("device removed")!=std::string::npos); }

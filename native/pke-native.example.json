@@ -1,0 +1,9 @@
+{
+  "songsRoot": "D:/PKE/Songs",
+  "charactersRoot": "D:/PKE/Characters",
+  "playerKeys": ["LEFT", "DOWN", "UP", "RIGHT"],
+  "vsync": false,
+  "fpsCap": 240,
+  "inputOffsetMs": 0.0,
+  "audioLatencyCompensationMs": 0.0
+}
