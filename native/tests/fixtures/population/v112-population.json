@@ -1,0 +1,897 @@
+{
+  "source": "V1.12 embedded original async calculations, Native IO/catalog boundary only",
+  "referenceZipSha256": "29294463b238e10815c017ac2496567de24b91f4f1d6326f770d81f1125fac3c",
+  "clock": 1791989999000,
+  "seed": 123456789,
+  "transitions": [
+    {
+      "id": "00093",
+      "from": "ACTIVE",
+      "to": "REST"
+    },
+    {
+      "id": "02027",
+      "from": "ACTIVE",
+      "to": "REST"
+    },
+    {
+      "id": "02897",
+      "from": "ACTIVE",
+      "to": "SLEEP"
+    },
+    {
+      "id": "03116",
+      "from": "ACTIVE",
+      "to": "REST"
+    },
+    {
+      "id": "03706",
+      "from": "REST",
+      "to": "ACTIVE"
+    },
+    {
+      "id": "05211",
+      "from": "ACTIVE",
+      "to": "REST"
+    }
+  ],
+  "startup": {
+    "summary": {
+      "registered": 15000,
+      "cpuPlayers": 14999,
+      "now": 1791989999000,
+      "online": 5938,
+      "live": 2000,
+      "liveCap": 2000,
+      "waiting": 919,
+      "localPlayerState": "YOU",
+      "lastTick": 1791989999000
+    },
+    "profiles": [
+      {
+        "profile": {
+          "id": "00001",
+          "numericId": 1,
+          "name": "かなで",
+          "baseAccuracy": 95.1,
+          "skillCeiling": 96.9,
+          "accuracy": 95.1,
+          "rp": 2338,
+          "timingBiasMs": 3,
+          "rapidAffinity": -1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0.5,
+          "performanceStability": 0.13456638067368568,
+          "performanceUpside": 0.9211708698238178,
+          "performanceDownside": 0.108937528475406,
+          "playStyleTraits": [
+            "連打苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2717537853,
+          "characterId": "",
+          "careerWins": 389,
+          "careerLosses": 269,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "04242",
+          "numericId": 4242,
+          "name": "FLC_ゆの",
+          "baseAccuracy": 87.5,
+          "skillCeiling": 88.4,
+          "accuracy": 87.5,
+          "rp": 1275,
+          "timingBiasMs": -4,
+          "rapidAffinity": -1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.225916635996177,
+          "performanceUpside": 0.07453950822226225,
+          "performanceDownside": 0.4485819412974133,
+          "playStyleTraits": [
+            "連打苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2154996002,
+          "characterId": "",
+          "careerWins": 108,
+          "careerLosses": 193,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "SLEEP",
+        "status": "SLEEP"
+      },
+      {
+        "profile": {
+          "id": "10000",
+          "numericId": 10000,
+          "name": "ミスじゃない",
+          "baseAccuracy": 90.3,
+          "skillCeiling": 92.3,
+          "accuracy": 90.3,
+          "rp": 1810,
+          "timingBiasMs": 5,
+          "rapidAffinity": 1,
+          "fastSongAffinity": -0.5,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.8806144699642002,
+          "performanceUpside": 0.30601686781878046,
+          "performanceDownside": 0.06911304641261536,
+          "playStyleTraits": [
+            "連打得意",
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1693726253,
+          "characterId": "",
+          "careerWins": 400,
+          "careerLosses": 484,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "10001",
+          "numericId": 10001,
+          "name": "Kivi",
+          "baseAccuracy": 94.1,
+          "skillCeiling": 95.5,
+          "accuracy": 94.1,
+          "rp": 1500,
+          "timingBiasMs": -8,
+          "rapidAffinity": 0,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.7330078509945906,
+          "performanceUpside": 0.3915037751178033,
+          "performanceDownside": 0.4599749351525621,
+          "playStyleTraits": [
+            "速い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1676948634,
+          "characterId": "",
+          "careerWins": 0,
+          "careerLosses": 0,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "14999",
+          "numericId": 14999,
+          "name": "とわ",
+          "baseAccuracy": 96.8,
+          "skillCeiling": 98.2,
+          "accuracy": 96.8,
+          "rp": 1500,
+          "timingBiasMs": 8,
+          "rapidAffinity": 0.5,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.788000938898884,
+          "performanceUpside": 0.4975441285636146,
+          "performanceDownside": 0.274818401149199,
+          "playStyleTraits": [
+            "速い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 935597484,
+          "characterId": "",
+          "careerWins": 0,
+          "careerLosses": 0,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "00093",
+          "numericId": 93,
+          "name": "RuiJP",
+          "baseAccuracy": 94.4,
+          "skillCeiling": 95.5,
+          "accuracy": 94.4,
+          "rp": 2229,
+          "timingBiasMs": -6,
+          "rapidAffinity": 0,
+          "fastSongAffinity": -0.5,
+          "slowSongAffinity": 1,
+          "performanceStability": 0.08173498210537596,
+          "performanceUpside": 0.551940899005146,
+          "performanceDownside": 0.3313014133207736,
+          "playStyleTraits": [
+            "遅い曲得意"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2548628830,
+          "characterId": "",
+          "careerWins": 281,
+          "careerLosses": 200,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "02027",
+          "numericId": 2027,
+          "name": "いろは",
+          "baseAccuracy": 93.3,
+          "skillCeiling": 94.7,
+          "accuracy": 93.3,
+          "rp": 2163,
+          "timingBiasMs": 12,
+          "rapidAffinity": 0,
+          "fastSongAffinity": -0.5,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.46757007168316517,
+          "performanceUpside": 0.18340768133835114,
+          "performanceDownside": 0.9577489534760241,
+          "playStyleTraits": [
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1850306619,
+          "characterId": "",
+          "careerWins": 208,
+          "careerLosses": 211,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "02897",
+          "numericId": 2897,
+          "name": "Pixel",
+          "baseAccuracy": 89.2,
+          "skillCeiling": 90.1,
+          "accuracy": 89.2,
+          "rp": 1624,
+          "timingBiasMs": -9,
+          "rapidAffinity": 0,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.43587623663150615,
+          "performanceUpside": 0.3789237515020472,
+          "performanceDownside": 0.3093403497034079,
+          "playStyleTraits": [
+            "安定型"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 104262676,
+          "characterId": "",
+          "careerWins": 402,
+          "careerLosses": 518,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "03116",
+          "numericId": 3116,
+          "name": "あむ",
+          "baseAccuracy": 95.3,
+          "skillCeiling": 96.6,
+          "accuracy": 95.3,
+          "rp": 2435,
+          "timingBiasMs": 7,
+          "rapidAffinity": -0.5,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.9266924431842501,
+          "performanceUpside": 0.7857048985980696,
+          "performanceDownside": 0.12304663241911834,
+          "playStyleTraits": [
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 516424497,
+          "characterId": "",
+          "careerWins": 181,
+          "careerLosses": 105,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "03706",
+          "numericId": 3706,
+          "name": "かのん",
+          "baseAccuracy": 90.5,
+          "skillCeiling": 92.3,
+          "accuracy": 90.5,
+          "rp": 1690,
+          "timingBiasMs": -3,
+          "rapidAffinity": 1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": -0.5,
+          "performanceStability": 0.38764063347774574,
+          "performanceUpside": 0.696005366439001,
+          "performanceDownside": 0.16097253168955736,
+          "playStyleTraits": [
+            "連打得意"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 4141995966,
+          "characterId": "",
+          "careerWins": 179,
+          "careerLosses": 197,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "REST",
+        "status": "REST"
+      },
+      {
+        "profile": {
+          "id": "05211",
+          "numericId": 5211,
+          "name": "一旦休憩",
+          "baseAccuracy": 88.4,
+          "skillCeiling": 90.1,
+          "accuracy": 88.4,
+          "rp": 1409,
+          "timingBiasMs": -7,
+          "rapidAffinity": -1,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.14572412011812538,
+          "performanceUpside": 0.5655820531690452,
+          "performanceDownside": 0.5851228285080574,
+          "playStyleTraits": [
+            "連打苦手",
+            "速い曲苦手",
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1363448671,
+          "characterId": "",
+          "careerWins": 234,
+          "careerLosses": 404,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      }
+    ],
+    "recordsHash": "20a86a7b",
+    "randomState": 178221638,
+    "historyCount": 32
+  },
+  "oneMinute": {
+    "summary": {
+      "registered": 15000,
+      "cpuPlayers": 14999,
+      "now": 1791990059000,
+      "online": 7165,
+      "live": 2000,
+      "liveCap": 2000,
+      "waiting": 1775,
+      "localPlayerState": "YOU",
+      "lastTick": 1791990059000
+    },
+    "profiles": [
+      {
+        "profile": {
+          "id": "00001",
+          "numericId": 1,
+          "name": "かなで",
+          "baseAccuracy": 95.1,
+          "skillCeiling": 96.9,
+          "accuracy": 95.1,
+          "rp": 2338,
+          "timingBiasMs": 3,
+          "rapidAffinity": -1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0.5,
+          "performanceStability": 0.13456638067368568,
+          "performanceUpside": 0.9211708698238178,
+          "performanceDownside": 0.108937528475406,
+          "playStyleTraits": [
+            "連打苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2717537853,
+          "characterId": "",
+          "careerWins": 389,
+          "careerLosses": 269,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "04242",
+          "numericId": 4242,
+          "name": "FLC_ゆの",
+          "baseAccuracy": 87.5,
+          "skillCeiling": 88.4,
+          "accuracy": 87.5,
+          "rp": 1275,
+          "timingBiasMs": -4,
+          "rapidAffinity": -1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.225916635996177,
+          "performanceUpside": 0.07453950822226225,
+          "performanceDownside": 0.4485819412974133,
+          "playStyleTraits": [
+            "連打苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2154996002,
+          "characterId": "",
+          "careerWins": 108,
+          "careerLosses": 193,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "SLEEP",
+        "status": "SLEEP"
+      },
+      {
+        "profile": {
+          "id": "10000",
+          "numericId": 10000,
+          "name": "ミスじゃない",
+          "baseAccuracy": 90.3,
+          "skillCeiling": 92.3,
+          "accuracy": 90.3,
+          "rp": 1810,
+          "timingBiasMs": 5,
+          "rapidAffinity": 1,
+          "fastSongAffinity": -0.5,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.8806144699642002,
+          "performanceUpside": 0.30601686781878046,
+          "performanceDownside": 0.06911304641261536,
+          "playStyleTraits": [
+            "連打得意",
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1693726253,
+          "characterId": "",
+          "careerWins": 400,
+          "careerLosses": 484,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "10001",
+          "numericId": 10001,
+          "name": "Kivi",
+          "baseAccuracy": 94.1,
+          "skillCeiling": 95.5,
+          "accuracy": 94.1,
+          "rp": 1525,
+          "timingBiasMs": -8,
+          "rapidAffinity": 0,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.7330078509945906,
+          "performanceUpside": 0.3915037751178033,
+          "performanceDownside": 0.4599749351525621,
+          "playStyleTraits": [
+            "速い曲苦手"
+          ],
+          "baseWins": 1,
+          "baseLosses": 0,
+          "skinSeed": 1676948634,
+          "characterId": "",
+          "careerWins": 0,
+          "careerLosses": 0,
+          "draws": 0,
+          "dynamicMatches": 1,
+          "developmentMatches": 1
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "14999",
+          "numericId": 14999,
+          "name": "とわ",
+          "baseAccuracy": 96.8,
+          "skillCeiling": 98.2,
+          "accuracy": 96.8,
+          "rp": 1500,
+          "timingBiasMs": 8,
+          "rapidAffinity": 0.5,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.788000938898884,
+          "performanceUpside": 0.4975441285636146,
+          "performanceDownside": 0.274818401149199,
+          "playStyleTraits": [
+            "速い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 935597484,
+          "characterId": "",
+          "careerWins": 0,
+          "careerLosses": 0,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "00093",
+          "numericId": 93,
+          "name": "RuiJP",
+          "baseAccuracy": 94.4,
+          "skillCeiling": 95.5,
+          "accuracy": 94.4,
+          "rp": 2229,
+          "timingBiasMs": -6,
+          "rapidAffinity": 0,
+          "fastSongAffinity": -0.5,
+          "slowSongAffinity": 1,
+          "performanceStability": 0.08173498210537596,
+          "performanceUpside": 0.551940899005146,
+          "performanceDownside": 0.3313014133207736,
+          "playStyleTraits": [
+            "遅い曲得意"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 2548628830,
+          "characterId": "",
+          "careerWins": 281,
+          "careerLosses": 200,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "REST",
+        "status": "REST"
+      },
+      {
+        "profile": {
+          "id": "02027",
+          "numericId": 2027,
+          "name": "いろは",
+          "baseAccuracy": 93.3,
+          "skillCeiling": 94.7,
+          "accuracy": 93.3,
+          "rp": 2163,
+          "timingBiasMs": 12,
+          "rapidAffinity": 0,
+          "fastSongAffinity": -0.5,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.46757007168316517,
+          "performanceUpside": 0.18340768133835114,
+          "performanceDownside": 0.9577489534760241,
+          "playStyleTraits": [
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1850306619,
+          "characterId": "",
+          "careerWins": 208,
+          "careerLosses": 211,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "REST",
+        "status": "REST"
+      },
+      {
+        "profile": {
+          "id": "02897",
+          "numericId": 2897,
+          "name": "Pixel",
+          "baseAccuracy": 89.2,
+          "skillCeiling": 90.1,
+          "accuracy": 89.2,
+          "rp": 1624,
+          "timingBiasMs": -9,
+          "rapidAffinity": 0,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": 0,
+          "performanceStability": 0.43587623663150615,
+          "performanceUpside": 0.3789237515020472,
+          "performanceDownside": 0.3093403497034079,
+          "playStyleTraits": [
+            "安定型"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 104262676,
+          "characterId": "",
+          "careerWins": 402,
+          "careerLosses": 518,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "SLEEP",
+        "status": "SLEEP"
+      },
+      {
+        "profile": {
+          "id": "03116",
+          "numericId": 3116,
+          "name": "あむ",
+          "baseAccuracy": 95.3,
+          "skillCeiling": 96.6,
+          "accuracy": 95.3,
+          "rp": 2435,
+          "timingBiasMs": 7,
+          "rapidAffinity": -0.5,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.9266924431842501,
+          "performanceUpside": 0.7857048985980696,
+          "performanceDownside": 0.12304663241911834,
+          "playStyleTraits": [
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 516424497,
+          "characterId": "",
+          "careerWins": 181,
+          "careerLosses": 105,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "REST",
+        "status": "REST"
+      },
+      {
+        "profile": {
+          "id": "03706",
+          "numericId": 3706,
+          "name": "かのん",
+          "baseAccuracy": 90.5,
+          "skillCeiling": 92.3,
+          "accuracy": 90.5,
+          "rp": 1690,
+          "timingBiasMs": -3,
+          "rapidAffinity": 1,
+          "fastSongAffinity": 0,
+          "slowSongAffinity": -0.5,
+          "performanceStability": 0.38764063347774574,
+          "performanceUpside": 0.696005366439001,
+          "performanceDownside": 0.16097253168955736,
+          "playStyleTraits": [
+            "連打得意"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 4141995966,
+          "characterId": "",
+          "careerWins": 179,
+          "careerLosses": 197,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "ACTIVE",
+        "status": "ACTIVE"
+      },
+      {
+        "profile": {
+          "id": "05211",
+          "numericId": 5211,
+          "name": "一旦休憩",
+          "baseAccuracy": 88.4,
+          "skillCeiling": 90.1,
+          "accuracy": 88.4,
+          "rp": 1409,
+          "timingBiasMs": -7,
+          "rapidAffinity": -1,
+          "fastSongAffinity": -1,
+          "slowSongAffinity": -1,
+          "performanceStability": 0.14572412011812538,
+          "performanceUpside": 0.5655820531690452,
+          "performanceDownside": 0.5851228285080574,
+          "playStyleTraits": [
+            "連打苦手",
+            "速い曲苦手",
+            "遅い曲苦手"
+          ],
+          "baseWins": 0,
+          "baseLosses": 0,
+          "skinSeed": 1363448671,
+          "characterId": "",
+          "careerWins": 234,
+          "careerLosses": 404,
+          "draws": 0,
+          "dynamicMatches": 0,
+          "developmentMatches": 0
+        },
+        "baseStatus": "REST",
+        "status": "REST"
+      }
+    ],
+    "recordsHash": "50ce8c88",
+    "randomState": 898665482,
+    "historyCount": 416
+  },
+  "presence": [
+    {
+      "elapsed": 0,
+      "players": [
+        {
+          "id": "00001",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00002",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00003",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00004",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00005",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "04242",
+          "baseStatus": "SLEEP"
+        },
+        {
+          "id": "10001",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "14999",
+          "baseStatus": "ACTIVE"
+        }
+      ]
+    },
+    {
+      "elapsed": 480000,
+      "players": [
+        {
+          "id": "00001",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00002",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00003",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00004",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00005",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "04242",
+          "baseStatus": "SLEEP"
+        },
+        {
+          "id": "10001",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "14999",
+          "baseStatus": "ACTIVE"
+        }
+      ]
+    },
+    {
+      "elapsed": 1800000,
+      "players": [
+        {
+          "id": "00001",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00002",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00003",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00004",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "00005",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "04242",
+          "baseStatus": "SLEEP"
+        },
+        {
+          "id": "10001",
+          "baseStatus": "ACTIVE"
+        },
+        {
+          "id": "14999",
+          "baseStatus": "ACTIVE"
+        }
+      ]
+    }
+  ]
+}

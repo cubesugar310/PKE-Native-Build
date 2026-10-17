@@ -107,3 +107,7 @@ git submodule update --init native/third_party/quickjs-ng
 Only the `qjs` library is linked. The standalone CLI and std/os libc helpers are not built into the compatibility runtime. `QuickJsRuntime` has a synchronous JSON call boundary, explicit memory/stack/execution limits, exception stack diagnostics, and explicit garbage collection. Context creation, calls and destruction belong to one thread. `RequestInterrupt()` is a thread-safe, permanent stop request for that instance.
 
 The offline-core mode still avoids fetching GUI/audio dependencies; it uses the already initialized pinned QuickJS submodule. A separate `quickjs_runtime` CTest entry covers the wrapper. The runtime is a Block 1 foundation; population and scene parity are separate implementation tasks.
+
+The `compat/` directory contains the selected V1.12 calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. See `compat/README.md` for the exact import scope and adaptations. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player are retained in these tests. This component is not yet connected to the prototype's scenes; the dedicated Native worker and V1.14 Home/Practice integration are subsequent Block 1 tasks.
+
+Release packages include the seven runtime compatibility scripts and QuickJS license. Test-only reference code and fixtures are excluded.

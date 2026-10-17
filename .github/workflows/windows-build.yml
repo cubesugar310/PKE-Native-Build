@@ -76,6 +76,10 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path 'native/dist/PKE_Native_Prototype_0.1/PKE Native Prototype.exe')) { throw 'EXE missing from package' }
+          foreach ($script in @("cpu-timing.js", "title-system.js", "population-social-sessions.js", "boss-battle.js", "song-difficulty.js", "population-imports.js", "population.js")) {
+            if (-not (Test-Path "native/dist/PKE_Native_Prototype_0.1/compat/$script")) { throw "Compatibility script missing: $script" }
+          }
+          if ((Test-Path 'native/dist/PKE_Native_Prototype_0.1/tests') -or (Test-Path 'native/dist/PKE_Native_Prototype_0.1/reference')) { throw 'Test/reference sources unexpectedly packaged' }
           $bad = Get-ChildItem 'native/dist/PKE_Native_Prototype_0.1' -Recurse | Where-Object { $_.Name -match 'WebView2|Chromium|chrome_elf|msedgewebview' }
           if ($bad) { throw 'Browser runtime unexpectedly present' }
           Get-FileHash 'native/dist/PKE_Native_Prototype_0.1/PKE Native Prototype.exe' -Algorithm SHA256

@@ -1,0 +1,113 @@
+[
+  {
+    "input": {
+      "stats": {
+        "rank": 1
+      },
+      "earned": [
+        "win-1",
+        "rp-2000"
+      ]
+    },
+    "expected": [
+      {
+        "id": "rp-2000",
+        "minRp": 2000,
+        "name": "ここからが本番",
+        "category": "rp"
+      },
+      {
+        "id": "win-1",
+        "minWins": 1,
+        "name": "初勝利！",
+        "category": "wins"
+      },
+      {
+        "id": "rank-1000",
+        "maxRank": 1000,
+        "name": "TOP1000",
+        "category": "rank",
+        "dynamic": true
+      },
+      {
+        "id": "rank-100",
+        "maxRank": 100,
+        "name": "ランカー",
+        "category": "rank",
+        "dynamic": true
+      },
+      {
+        "id": "rank-10",
+        "maxRank": 10,
+        "name": "十傑",
+        "category": "rank",
+        "dynamic": true
+      },
+      {
+        "id": "rank-1",
+        "maxRank": 1,
+        "name": "頂点",
+        "category": "rank",
+        "dynamic": true
+      }
+    ]
+  },
+  {
+    "input": {
+      "stats": {
+        "rank": 20
+      },
+      "earned": [
+        "match-100",
+        "acc-99"
+      ]
+    },
+    "expected": [
+      {
+        "id": "match-100",
+        "minMatches": 100,
+        "name": "百戦錬磨",
+        "category": "matches"
+      },
+      {
+        "id": "acc-99",
+        "minAccuracy": 99,
+        "name": "ほぼ完璧",
+        "category": "accuracy"
+      },
+      {
+        "id": "rank-1000",
+        "maxRank": 1000,
+        "name": "TOP1000",
+        "category": "rank",
+        "dynamic": true
+      },
+      {
+        "id": "rank-100",
+        "maxRank": 100,
+        "name": "ランカー",
+        "category": "rank",
+        "dynamic": true
+      }
+    ]
+  },
+  {
+    "input": {
+      "stats": {
+        "rank": 0
+      },
+      "earned": [
+        "unknown",
+        "win-10"
+      ]
+    },
+    "expected": [
+      {
+        "id": "win-10",
+        "minWins": 10,
+        "name": "勝ち慣れてきた",
+        "category": "wins"
+      }
+    ]
+  }
+]

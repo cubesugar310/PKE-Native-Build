@@ -1,0 +1,2612 @@
+{
+  "referenceZipSha256": "29294463b238e10815c017ac2496567de24b91f4f1d6326f770d81f1125fac3c",
+  "appSha256": "a9400aa2620d338896486256ff995ca712647b74fe9313273399777481f1631a",
+  "entries": [
+    {
+      "name": "promoteAutomaticSongRange",
+      "sourceLines": [
+        207,
+        208
+      ],
+      "sourceSha256": "eb172b9168c14abe64fb31ce26f2a908155799e68d6a095f88afd359face99a9",
+      "adapted": false
+    },
+    {
+      "name": "cleanAssetBaseName",
+      "sourceLines": [
+        210,
+        249
+      ],
+      "sourceSha256": "8c98219d9628af036ef4c5858456d0cdb4288898032b2546831b0a03e385b6c3",
+      "adapted": true
+    },
+    {
+      "name": "fileBaseName",
+      "sourceLines": [
+        210,
+        249
+      ],
+      "sourceSha256": "8c98219d9628af036ef4c5858456d0cdb4288898032b2546831b0a03e385b6c3",
+      "adapted": true
+    },
+    {
+      "name": "getLastPathSegment",
+      "sourceLines": [
+        210,
+        249
+      ],
+      "sourceSha256": "8c98219d9628af036ef4c5858456d0cdb4288898032b2546831b0a03e385b6c3",
+      "adapted": true
+    },
+    {
+      "name": "onlineBattleQueueActive",
+      "sourceLines": [
+        590,
+        590
+      ],
+      "sourceSha256": "8770767e73791f7909c1ec0652f9f1ce9c30dcbfcb93a3cbb2af2b25dc5c269f",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleOnlineSongPools",
+      "sourceLines": [
+        592,
+        592
+      ],
+      "sourceSha256": "93ce4ee9bc8a030529d4621006c8b168043cd3419e94eef8e678176ea9424493",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleSongByFolderLookup",
+      "sourceLines": [
+        593,
+        593
+      ],
+      "sourceSha256": "5fb7f83942e08f3808163a2cdb4cee55e342b5dd5d7053d3a47dbb560b872210",
+      "adapted": false
+    },
+    {
+      "name": "PKE_HALLOWEEN_JST_OFFSET_MS",
+      "sourceLines": [
+        610,
+        610
+      ],
+      "sourceSha256": "484d1a44e004cf30eb145fe2e25cbaf4c5b6a666d14c1c83dec6c94bc59f0d9c",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleHalloweenEventWindow",
+      "sourceLines": [
+        612,
+        626
+      ],
+      "sourceSha256": "a69430a7e799dd35b2d859c519bf9e5f6d446cb4ebe36606d78952da2ec459cf",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBossTeamTarget",
+      "sourceLines": [
+        1088,
+        1090
+      ],
+      "sourceSha256": "27992404f2ba2517ebc31dde4934a7ec93d2369afd54ddcbceb61ad74f04931c",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleSpectatorMode",
+      "sourceLines": [
+        1533,
+        1533
+      ],
+      "sourceSha256": "3c370801c9a7516d3639cb942365b485c21d2fef2b798554e3a6eae14b61c7bb",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleSpectatorPlayerProfile",
+      "sourceLines": [
+        1535,
+        1535
+      ],
+      "sourceSha256": "6285a12e54067739babc42a331f2b5391d51e30007a2803d2787fdf3901fd686",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleSpectatorOpponentProfile",
+      "sourceLines": [
+        1536,
+        1536
+      ],
+      "sourceSha256": "04bba969fd045acdba09d5ba795685674933084d172d48e1de8d520c2003e79e",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleSpectatorResultHandled",
+      "sourceLines": [
+        1542,
+        1542
+      ],
+      "sourceSha256": "df2d939566f44bd222152458f5a27fef17d85a3dbec3a7f2c8af2491f816c4f9",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleSpectatorBackgroundMatchId",
+      "sourceLines": [
+        1544,
+        1544
+      ],
+      "sourceSha256": "d0219fa0ef36538fca06d8de00d106d20895376919e675bc0b676fdb5bf39dfd",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationReplayMode",
+      "sourceLines": [
+        1559,
+        1559
+      ],
+      "sourceSha256": "9451616065b195a30602200184e0d7305e5c9b7b5cbb632127954cabbc98fea0",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_TICK_MS",
+      "sourceLines": [
+        1564,
+        1564
+      ],
+      "sourceSha256": "54eddc0cd03b4c88d1d0abe81387ef04b4a6dabae9c2a4d2b516be7f759e0892",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_CAP_NORMAL",
+      "sourceLines": [
+        1569,
+        1569
+      ],
+      "sourceSha256": "5a81e38b32f30007ff41cf125f5cabbf3310f65ca8993da0ee26f8ef4f16d956",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_CAP_BUSY",
+      "sourceLines": [
+        1570,
+        1570
+      ],
+      "sourceSha256": "4c51d796758c458c39d8892c453052eebe97f31f1a93b95ac3ca4f5aa2b72844",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_CAP_PEAK",
+      "sourceLines": [
+        1571,
+        1571
+      ],
+      "sourceSha256": "8506968ffe8514b7209a038d26d191c8c90f8ba19d15e4b8cc13a9a4a5f7aeb0",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_WAIT_BUSY",
+      "sourceLines": [
+        1572,
+        1572
+      ],
+      "sourceSha256": "1ec5f8ee95a7474527382c2eacd476c674c1447ffad2d6c64653f7d29b1ddd88",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_WAIT_PEAK",
+      "sourceLines": [
+        1573,
+        1573
+      ],
+      "sourceSha256": "5320ce110a758cc63dbfcdd484c7c04e9567c288774f461d80333685e78cc333",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_DEMAND_BUSY",
+      "sourceLines": [
+        1574,
+        1574
+      ],
+      "sourceSha256": "d1e8acf062668f0e8f37b0cde02cde932e7da07706523be50bb6e211d59f9de1",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_DEMAND_PEAK",
+      "sourceLines": [
+        1575,
+        1575
+      ],
+      "sourceSha256": "1998a5a6660a9b5201099b94b9c050770c248150eb1aa7075b85a3bf126d37ab",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_BURST_MATCHES",
+      "sourceLines": [
+        1576,
+        1576
+      ],
+      "sourceSha256": "6ea1d515f6a4b51b8c6f522ee7cc022e16a8dda6074fe70d085d800f216de773",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePlayerLiveRoomActive",
+      "sourceLines": [
+        1578,
+        1578
+      ],
+      "sourceSha256": "da33c6ead5997bf8179a1f6b1b529902a47cb7803ada4d30a217e170708898b6",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePlayerRoomQueueReserved",
+      "sourceLines": [
+        1579,
+        1579
+      ],
+      "sourceSha256": "9bc15cdb3305d0847cac77531e6c368b7253c1b10050c32db890f451ca365718",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleLocalAudienceRoom",
+      "sourceLines": [
+        1580,
+        1580
+      ],
+      "sourceSha256": "efc92f67f3182fc3f935a869257e041a527ffd158dfffc8cdfe779a66c879846",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleViewerRooms",
+      "sourceLines": [
+        1582,
+        1582
+      ],
+      "sourceSha256": "f1774608a6cd448594d7870a970061f772e7128f6cb9cc8997ac268e36f8ebda",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleViewerIdsByRoom",
+      "sourceLines": [
+        1583,
+        1583
+      ],
+      "sourceSha256": "5c824341ab7bb47efd99efb26ae2e256bb32cb0e4e2f2dcfc580db3a641cbe05",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleViewerParticipantIds",
+      "sourceLines": [
+        1584,
+        1584
+      ],
+      "sourceSha256": "180b653923356f6d7436b975b87d712a9f31a2481e2829e5f50a8d983ef50833",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleViewerReservedParticipantIds",
+      "sourceLines": [
+        1585,
+        1585
+      ],
+      "sourceSha256": "ebfbf2928d4acd8161086bd337e64652bf82bdb0fb0c3044463df4c2f89d3dc1",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleViewerReleasedParticipantIds",
+      "sourceLines": [
+        1586,
+        1586
+      ],
+      "sourceSha256": "db0d7b552ccbd16302a3edcdf0581f2931937797eb236d08cf2b47e34b7c00c0",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleViewerIndexRevision",
+      "sourceLines": [
+        1587,
+        1587
+      ],
+      "sourceSha256": "f9914e2684130f3fb92384596f33fb0fe9f11105bae430d1a60d2fa8a398b9aa",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationPresenceCache",
+      "sourceLines": [
+        1588,
+        1588
+      ],
+      "sourceSha256": "65c054d92cb277071dca782d405581ffe458220792671db58334cbd880c89a10",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_SPECTATOR_SCAN_SIZE",
+      "sourceLines": [
+        1589,
+        1589
+      ],
+      "sourceSha256": "96c320831036861c58718fb50d2d0d881adea4aea26b517ec360c45821f47d5f",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_SLICE_SIZE_PLAYING",
+      "sourceLines": [
+        1593,
+        1593
+      ],
+      "sourceSha256": "515d21498975077905e568e256e908afa7f00d8baf293e6452ddd6064e433f76",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_SLICE_SIZE_IDLE",
+      "sourceLines": [
+        1594,
+        1594
+      ],
+      "sourceSha256": "2b3035020381f92ff1c8b76a516506f4f99f3e3bfa63fd769aaaaf664f1631b5",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleBackgroundProfilesReady",
+      "sourceLines": [
+        1600,
+        1600
+      ],
+      "sourceSha256": "689fcccc6e13ee9ed7b22cc36a566d6b8bfb8e29fe517459d5cceefe2a1d020b",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_NOTE_SIM_VERSION",
+      "sourceLines": [
+        1603,
+        1603
+      ],
+      "sourceSha256": "17d6f142b7e9f3fd39f41f191a3aa357b869ece60017d35311017ba034f03808",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_VERSION",
+      "sourceLines": [
+        1604,
+        1604
+      ],
+      "sourceSha256": "36b1c31bc0bf926a782ab24d3731174bb83aadddc7aa5e993458c0ef7dae6380",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_RUN_FORM_VERSION",
+      "sourceLines": [
+        1605,
+        1605
+      ],
+      "sourceSha256": "ae79af81f532af61260a72b038bb0975459dc49291906761999d9e01bb7241c3",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_NOTE_YIELD_BUDGET_PLAYING",
+      "sourceLines": [
+        1607,
+        1607
+      ],
+      "sourceSha256": "e13bae70b089b77b7c0c7a363eea947ba3b9e9e146c8bb710d1ff623db5ab820",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LIVE_NOTE_YIELD_BUDGET_IDLE",
+      "sourceLines": [
+        1608,
+        1608
+      ],
+      "sourceSha256": "7ebae5624e4b49edbd0e7bb16b4412e23b01b21d9c93ca735f8909c444898013",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_RAPID_TRAIT_MAX_ACC_DELTA",
+      "sourceLines": [
+        1612,
+        1612
+      ],
+      "sourceSha256": "36999088c9a6bd6fa1cbf097b5d67b363f7cbc7006e7ec81326596189c313253",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_TEMPO_TRAIT_MAX_ACC_DELTA",
+      "sourceLines": [
+        1613,
+        1613
+      ],
+      "sourceSha256": "7a02f9e2394bb40720f5ad5206798f2a05cf22411a4a7109121a8d122e2962ba",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_TARGET_ACC_CAP",
+      "sourceLines": [
+        1615,
+        1615
+      ],
+      "sourceSha256": "4a89c84aacb5b5c4d9fba2936471afa91a3dc3efae87bba2e5478394dd190a00",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_FULL_SICK_CONDITION_MIN",
+      "sourceLines": [
+        1616,
+        1616
+      ],
+      "sourceSha256": "c41e7fb05f0ca4ed13d593b01f5e3963d8753f9c5fd6436e238ee614746b2208",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_FULL_SICK_AFFINITY_MIN",
+      "sourceLines": [
+        1617,
+        1617
+      ],
+      "sourceSha256": "1573a210ab55cbf37b840533dae64e5fc31d6e9366ceb6d3e6283d86547fac7b",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_DENSITY_WINDOW_MS",
+      "sourceLines": [
+        1618,
+        1618
+      ],
+      "sourceSha256": "c387d13d35d36a33bc85c5333b1f2edc35f73049e8805f1eaa8db9b2e11c708a",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_STRAIN_DECAY_MS",
+      "sourceLines": [
+        1619,
+        1619
+      ],
+      "sourceSha256": "f9614224bf3a8eabd772ea06be2a891ea0c5813f9ceb0bea3dc88034049fe9b5",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_DUPLICATE_EPSILON_MS",
+      "sourceLines": [
+        1620,
+        1620
+      ],
+      "sourceSha256": "e3c2194d6d870e4f8421c3b4bf01836582291a6541e61e1a7e7f81b4cdc7dc6f",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_DRIFT_BUCKET_MS",
+      "sourceLines": [
+        1622,
+        1622
+      ],
+      "sourceSha256": "32629af5654cf8693ab914a6561fb4837f93de8b78558075219e12fa7e619c37",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_PHRASE_BUCKET_MS",
+      "sourceLines": [
+        1623,
+        1623
+      ],
+      "sourceSha256": "d757edf898bdaa07181ab053df04dfb687d089a005fbf3b45062ff6e8e02cf8f",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_FOCUS_BUCKET_MS",
+      "sourceLines": [
+        1624,
+        1624
+      ],
+      "sourceSha256": "0489faa0fe33cc016997e808f3a7c4936a73c3392c3d12fe39f0f6db9c867719",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_SQRT6",
+      "sourceLines": [
+        1625,
+        1625
+      ],
+      "sourceSha256": "2d4cda91a1699f65c7698a7a0551a8f25d4a309ca4676bc13aa8ce1f276f41dc",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_PROFILE_BIAS_WEIGHT",
+      "sourceLines": [
+        1626,
+        1626
+      ],
+      "sourceSha256": "458fea87fc300c6f7adf29697401087ec25fbefdccf304e8834443d6f2376f01",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_JITTER_WEIGHT",
+      "sourceLines": [
+        1627,
+        1627
+      ],
+      "sourceSha256": "6fab00fc38343af67b2696d1c5a59425ceedc5a3a504a31beca7ef692be5fe91",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_HUMAN_TIMING_SIGMA_TABLE",
+      "sourceLines": [
+        1628,
+        1643
+      ],
+      "sourceSha256": "c78ec1186ebed9a372e41ec7d56bcdf811abeb445a91b54353974280653bbfa1",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleHumanTimingProfileStyleCache",
+      "sourceLines": [
+        1644,
+        1644
+      ],
+      "sourceSha256": "19f0182d9ee91bb81fa72aca4d067ae217d4828ba164751cf2bac7bb1ff0baff",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_STARTUP_RECOVERY_MS",
+      "sourceLines": [
+        1647,
+        1647
+      ],
+      "sourceSha256": "ce97b1110421ec0f1995085a427751f97b61b40b711a2530bffc5f6763a92dcf",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_STARTUP_SLICE_SIZE",
+      "sourceLines": [
+        1648,
+        1648
+      ],
+      "sourceSha256": "f839d11b68d4841d78ed7bb034aade8277ca7701c22d1a68088ef4b77d8170c8",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_STARTUP_NOTE_YIELD_BUDGET",
+      "sourceLines": [
+        1649,
+        1649
+      ],
+      "sourceSha256": "6be634684b3e73283149ca989840abec42299ee8e511f14ac404302db3507521",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_STARTUP_MAX_NOTES_PER_MATCH",
+      "sourceLines": [
+        1650,
+        1650
+      ],
+      "sourceSha256": "76a7aa753b60485d0d73dc9829a5b0092f7ad034746d0f3a8caaa1c99e4be798",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_MAX_NOTES_PER_MATCH",
+      "sourceLines": [
+        1651,
+        1651
+      ],
+      "sourceSha256": "7b60529c09f5b7f0c62c681840c6f68c66f0f966dd53f4b6a74407c99d7a1dd9",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_STARTUP_AGGREGATE_BURST",
+      "sourceLines": [
+        1652,
+        1652
+      ],
+      "sourceSha256": "c149866a753a5b03017e4cebe305c2e77bae947730bb9d0daaf8e26ba759d657",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleRuntimeStartedAt",
+      "sourceLines": [
+        1653,
+        1656
+      ],
+      "sourceSha256": "83d82b7074b08253b00d07bad63bafa35d60f8dfcf6fc7936e00bfa1ab6327f1",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleLiveRandomContextCache",
+      "sourceLines": [
+        1658,
+        1658
+      ],
+      "sourceSha256": "4ba3f19648e3ef2ef9e07cd61b4694bd8b42fedebc728e872cb8c74f727e3bca",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleLiveNoteArrayOwnership",
+      "sourceLines": [
+        1660,
+        1660
+      ],
+      "sourceSha256": "47cff5f411b47e226cca23f6996def597c245f6f7c248d9b277ab05c9c30ba4e",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleLiveNoteNormalizedSideStates",
+      "sourceLines": [
+        1661,
+        1661
+      ],
+      "sourceSha256": "7997f39e4d7d563890cff107c5ea34338214bce9f9b9daeb5330e20eb459fdba",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_PLAYER_ID",
+      "sourceLines": [
+        1665,
+        1665
+      ],
+      "sourceSha256": "e36c725549c3e09f154ba76dd787e74daf99e8cd8df3e26355946f604578b595",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_SLEEP_PROBABILITY",
+      "sourceLines": [
+        1666,
+        1666
+      ],
+      "sourceSha256": "419ce9048ca458c034464fa4ac83de0764f8179b80cc7aae41899260ba55b4c3",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_REST_PROBABILITY",
+      "sourceLines": [
+        1667,
+        1667
+      ],
+      "sourceSha256": "63cb4f28f8258a9eb9c978c43e8ff83a14913a4fb4b3099a48eab67d62dec508",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_SLEEP_BUCKET_MS",
+      "sourceLines": [
+        1668,
+        1668
+      ],
+      "sourceSha256": "b52776037f219a7f68d0e53bf9917af17ef86e05f6caabfe5480bfcaff9b7415",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_REST_BUCKET_MS",
+      "sourceLines": [
+        1669,
+        1669
+      ],
+      "sourceSha256": "412955971a564dbf674943651f5960e79b90b14f7b01953508bf67e09b09522e",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_BOSS_MATCH_TARGET",
+      "sourceLines": [
+        1670,
+        1670
+      ],
+      "sourceSha256": "a2103374a3a4407cfef770946be288a22efee0c252559bce04b7c879ee32abe8",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_BACKGROUND_PRIVATE_MATCH_TARGET",
+      "sourceLines": [
+        1671,
+        1671
+      ],
+      "sourceSha256": "f805aa789cdc01dd0f97b61846333e7c74303c1adc3c9f569f6f5703cba9b210",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleRankingCacheDirty",
+      "sourceLines": [
+        1677,
+        1677
+      ],
+      "sourceSha256": "d1a31e460d9d4161a7a524e153e27ae7a95a02c3b710b580e6c46eafdbb2dcf4",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleRankingRevision",
+      "sourceLines": [
+        1678,
+        1678
+      ],
+      "sourceSha256": "13cb5a1d2524065bd6034ef0382d5359f7a4e067097f0d9cf8c54d7f3c730979",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePlayerRankCache",
+      "sourceLines": [
+        1693,
+        1693
+      ],
+      "sourceSha256": "f126a4933edcf2c2cfd7d656ad91fc0d6de4dd6d9e8f5914157ce92c62ab84e8",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationSocial",
+      "sourceLines": [
+        1701,
+        1701
+      ],
+      "sourceSha256": "d75e73c4b13353b28e866f97bc6cb3564e0b5b0f614ecdf0a681b66b5e6edaf4",
+      "adapted": true
+    },
+    {
+      "name": "beatBattlePopulationSocialLookupCache",
+      "sourceLines": [
+        1702,
+        1702
+      ],
+      "sourceSha256": "926ef8d083fb07da59906b0ff8fb0513b62285d65be2c49cb859d281b73061ec",
+      "adapted": false
+    },
+    {
+      "name": "invalidateBeatBattlePlayerRankCache",
+      "sourceLines": [
+        2424,
+        2427
+      ],
+      "sourceSha256": "dd0ba1eeb84b1a75fafc5d7cd77aee99c5ce14ac781a82c4868ff92aa70dabb7",
+      "adapted": false
+    },
+    {
+      "name": "updateBeatBattleLiveRoomCountLabel",
+      "sourceLines": [
+        2616,
+        2622
+      ],
+      "sourceSha256": "4e7e11b94ff929aaecf5b8301d45c5029349d177e0eea1a0141b43d15a50b270",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattleSongPoolForRange",
+      "sourceLines": [
+        2843,
+        2851
+      ],
+      "sourceSha256": "2d11750c91977f92b23f762be43786a94016da1b1eeb9e8938528e27e365b107",
+      "adapted": false
+    },
+    {
+      "name": "chooseBeatBattleSongForRange",
+      "sourceLines": [
+        2853,
+        2858
+      ],
+      "sourceSha256": "45261a94d32fc54ea16b8f7b1429b40d219c797f82e04debcc9a78de8c0234ab",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleSongGlobalSlot",
+      "sourceLines": [
+        2860,
+        2864
+      ],
+      "sourceSha256": "3388d5baaf2764802c96f42ee3d0116212c9d12e14ba8d5250f41cef6d1bd72c",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundMatchSong",
+      "sourceLines": [
+        2866,
+        2875
+      ],
+      "sourceSha256": "7e577d8cf953faf075a7a2cfe4f2f1970f15aa54f724192f9518afb94135ee49",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleSongStars",
+      "sourceLines": [
+        2883,
+        2891
+      ],
+      "sourceSha256": "e3966b66e03623926b5d7a4232380290d457d555bbe256b23246ff42cbf0cdc1",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBossSongDescriptors",
+      "sourceLines": [
+        2909,
+        2918
+      ],
+      "sourceSha256": "6a6e938a8583bcc4eb1f5011a1b26aea8c4a0f2d4f959f5c4a48fd1046709e31",
+      "adapted": false
+    },
+    {
+      "name": "findBeatBattleDiscoveredSongByFolder",
+      "sourceLines": [
+        3805,
+        3811
+      ],
+      "sourceSha256": "4ee9be7a0a427956023e8bbea3a8c4076672f3779026b67081d44f7075cb91e4",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleSpectatorSeed",
+      "sourceLines": [
+        3878,
+        3884
+      ],
+      "sourceSha256": "1cc674bf873c47ea60af096701d21437efeea0c0e9d6587a59a8db94d72b5d03",
+      "adapted": false
+    },
+    {
+      "name": "hitWindows",
+      "sourceLines": [
+        7146,
+        7151
+      ],
+      "sourceSha256": "a15950f2872e22b186cc4aa4f813de7f9de5d6a9085d63f26e2e27db29713399",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationHashUnit",
+      "sourceLines": [
+        7153,
+        7190
+      ],
+      "sourceSha256": "9c716d44ab178e9e669b48a2d31780dd35e67380beb8f419b3d46e036396da92",
+      "adapted": false
+    },
+    {
+      "name": "instBuffer",
+      "sourceLines": [
+        7428,
+        7428
+      ],
+      "sourceSha256": "956685015af63e1b9dc8e8bfb44e6e77c1a1009349c259ea33353ba6f5a7f488",
+      "adapted": false
+    },
+    {
+      "name": "currentFreeplayFolderName",
+      "sourceLines": [
+        8106,
+        8106
+      ],
+      "sourceSha256": "fa1d1ead088ad97bc8f5143642ed644f7a0273f2a9f73808cabf96a72d630fb1",
+      "adapted": false
+    },
+    {
+      "name": "discoveredFreeplaySongs",
+      "sourceLines": [
+        8108,
+        8108
+      ],
+      "sourceSha256": "5edcb15f1cfbd5911822829e8c16131519c149df72d1d317e6aad3e8e4bfd6e5",
+      "adapted": true
+    },
+    {
+      "name": "held",
+      "sourceLines": [
+        8823,
+        8823
+      ],
+      "sourceSha256": "e5929f6eb96dfa0976ebcf7dc4853b36be2bd4fd3f4cc4d5683131a13132d0d6",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_LEGACY_POPULATION_SIZE",
+      "sourceLines": [
+        8868,
+        8868
+      ],
+      "sourceSha256": "81ec75a33b492921a2229bacd729fad34adbf033f67181c2202e097ae06bac4e",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NEW_REGISTRATION_COUNT",
+      "sourceLines": [
+        8869,
+        8869
+      ],
+      "sourceSha256": "6cf027e8a46b8ead12617a766ff662ff9c4ba2c2c9aee5a8b228f4af22d99f4d",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_SIZE",
+      "sourceLines": [
+        8870,
+        8870
+      ],
+      "sourceSha256": "5714910d648747685903f16aa7cadadc289e460c4b2536ebc1ca999435857b10",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_REGISTERED_TOTAL",
+      "sourceLines": [
+        8871,
+        8871
+      ],
+      "sourceSha256": "d93ebc002ba8c09f829d27cc9f54dd506475837955a842465c8ab1c8218960c1",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_SKILL_CAP",
+      "sourceLines": [
+        8894,
+        8894
+      ],
+      "sourceSha256": "2c0abd2a480214c470132b0013c72d2518c8cadacf9b6bcb865b15da2471620d",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_MIN_POTENTIAL_GAIN",
+      "sourceLines": [
+        8895,
+        8895
+      ],
+      "sourceSha256": "fd0837bc1aa7aeb0f9ae6eeafda38d2af25ddc1f5c99a948d67701f18a43a0e4",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_MAX_POTENTIAL_GAIN",
+      "sourceLines": [
+        8896,
+        8896
+      ],
+      "sourceSha256": "b745d84c4d2c49c7e40366a7b207d91bc765b9b8067c8e2bcac2d0e5bc2fc8ec",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_MIN_GROWTH_CURVE_MATCHES",
+      "sourceLines": [
+        8897,
+        8897
+      ],
+      "sourceSha256": "d429acd4575e69ee5146455dd822bb24a207adeda54c5d4e01ab051171525f46",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_MAX_GROWTH_CURVE_MATCHES",
+      "sourceLines": [
+        8898,
+        8898
+      ],
+      "sourceSha256": "eb63128425a7b7d3fd17fd3b3aeef9d7a315f0a458cd62244c9a9d30244d24a1",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_PLAYER_START_RP",
+      "sourceLines": [
+        8914,
+        8914
+      ],
+      "sourceSha256": "1b8e271e804f5673c59cf1da5662bcde6b9ec30c8957031cf8509906992b0612",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_PLAYER_START_ACCURACY",
+      "sourceLines": [
+        8915,
+        8915
+      ],
+      "sourceSha256": "e45920ef1ec3dd3e3dc226a98764ab1025867eabd84c09ef65419842d48549f9",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleBackgroundComputePopulationRevision",
+      "sourceLines": [
+        8919,
+        8919
+      ],
+      "sourceSha256": "2e834e85caed139fc44bcb9ff5a967f2d6bd65b0dd2ffb6b28b94d79065cc34b",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationRevision",
+      "sourceLines": [
+        8937,
+        8939
+      ],
+      "sourceSha256": "c361004538d969421770106218cd28af3374a17751c93a2804d077cb820f721f",
+      "adapted": false
+    },
+    {
+      "name": "markBeatBattlePopulationDerivedStateDirty",
+      "sourceLines": [
+        8941,
+        8944
+      ],
+      "sourceSha256": "fb9b24621fff54a5060d0c9be8e632d2897ab95e26d3109a8feddc12710efb22",
+      "adapted": false
+    },
+    {
+      "name": "requestBeatBattleBackgroundCompute",
+      "sourceLines": [
+        9065,
+        9098
+      ],
+      "sourceSha256": "6d2429cea92ce0cb9b610afcf0fd3113e692f8cb429bb743ccad65ee62c51dff",
+      "adapted": true
+    },
+    {
+      "name": "BEAT_BATTLE_BEGINNER_OPPONENT_MAX_ACCURACY",
+      "sourceLines": [
+        9101,
+        9101
+      ],
+      "sourceSha256": "0036fd6c94d18208ffc33cd8afdbc7a578a38ee3539fa7aa2d8f77d255965a7a",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_RP_K_FACTOR",
+      "sourceLines": [
+        9102,
+        9102
+      ],
+      "sourceSha256": "96e97cbd4a29ecd7d7e0fa538505e2352afeca72996f3a5a7187cf6e1f4e608f",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_RP_MAX_DELTA",
+      "sourceLines": [
+        9103,
+        9103
+      ],
+      "sourceSha256": "9080408443d3e65cb8e67ffcf07d2130e4d7df12eff746176ecd44e3daa70367",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_RP_DRAW_BONUS",
+      "sourceLines": [
+        9104,
+        9104
+      ],
+      "sourceSha256": "beeffca2e0ab0b9482c6b5aa7b10303d4b170a5aa46447067914ac874223d522",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationOpponent",
+      "sourceLines": [
+        9105,
+        9105
+      ],
+      "sourceSha256": "5a5a5890e59903d8b1ad2f45fff18e8ae9ee383be94a76eb9bf380afa1520f04",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationMatchLockedForCurrentChart",
+      "sourceLines": [
+        9107,
+        9107
+      ],
+      "sourceSha256": "6dfd361a43a2354a14e7b3938445d5a4f81c6d1c11df98e3f4b1ebfaf8b51a1f",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationRecords",
+      "sourceLines": [
+        9109,
+        9109
+      ],
+      "sourceSha256": "3b2158a04bcd791e9da442fd52e3bc0f3e5acccf45125ba827474a59755c6198",
+      "adapted": true
+    },
+    {
+      "name": "beatBattleBackgroundMatchmakingPool",
+      "sourceLines": [
+        9125,
+        9125
+      ],
+      "sourceSha256": "d382d3dafb94187360ae979646408864addea1fb7157aaacc6e0881489f7e467",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePriorityLiveRefillDepth",
+      "sourceLines": [
+        9126,
+        9126
+      ],
+      "sourceSha256": "ae610ba8f307596cb68940b00d7033aa3e9beeada39e69fe95cf0b91c1a0df0f",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationBaseProfileCache",
+      "sourceLines": [
+        9131,
+        9131
+      ],
+      "sourceSha256": "b68cb7cd1b1d68d32b1422e131b41f1a759b383dedefd36ab17f83bbb0d2ab4d",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleScoreWindowEndMs",
+      "sourceLines": [
+        9138,
+        9141
+      ],
+      "sourceSha256": "7aca85c61a83035586e9aae540761d2d9696b6c6c42efa0dd1e87b927ed4bbef",
+      "adapted": false
+    },
+    {
+      "name": "isBeatBattleNoteScoreEligible",
+      "sourceLines": [
+        9180,
+        9185
+      ],
+      "sourceSha256": "fc8f7712b0bf1481b5d263f41b184ee30ce31b1a45ea612e272a46045a2d2a85",
+      "adapted": false
+    },
+    {
+      "name": "isBeatBattleChartNoteScoreEligible",
+      "sourceLines": [
+        9187,
+        9191
+      ],
+      "sourceSha256": "7beca4daee271b9c1d3015eca92ea343188b3d5cf11ca241528020a36365813b",
+      "adapted": false
+    },
+    {
+      "name": "beatBattleScoreableChartCountsCache",
+      "sourceLines": [
+        9193,
+        9193
+      ],
+      "sourceSha256": "b4606f831aef8be91868593cab3b4b773d79af7f018bd666b4f55aef0f154610",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleScoreableChartNoteCounts",
+      "sourceLines": [
+        9195,
+        9222
+      ],
+      "sourceSha256": "69b83a545825835372a60f392bd1aae79c58323db426fd687ebe2c6e51a926a9",
+      "adapted": false
+    },
+    {
+      "name": "buildBeatBattleHumanChartContext",
+      "sourceLines": [
+        9268,
+        9273
+      ],
+      "sourceSha256": "089fd66d1e40c8607680370bebb27c4b21bdf503187774ad1727ef2cc8fe35f3",
+      "adapted": false
+    },
+    {
+      "name": "iterateBeatBattleHumanChartContext",
+      "sourceLines": [
+        9275,
+        9350
+      ],
+      "sourceSha256": "7c3127c286cc6c0df19dde35e94e26e7a683eaae50131c1bcf3f7b2ec4b5414c",
+      "adapted": false
+    },
+    {
+      "name": "prepareBeatBattleBackgroundHumanChartContext",
+      "sourceLines": [
+        9352,
+        9357
+      ],
+      "sourceSha256": "5af9c6cf679a8062d0b2d7abcdb1fcb11ef564cb232a7e37015c8d28c56bf853",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_POPULATION_HISTORY_KEEP",
+      "sourceLines": [
+        10014,
+        10014
+      ],
+      "sourceSha256": "026124bff10f9cb11dd551cf22943e392684a2cc844a84e0b7c7c924304a2588",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationHistoryMemory",
+      "sourceLines": [
+        10015,
+        10015
+      ],
+      "sourceSha256": "628670516dda196852e9767e9c04376224d2df95bc30c52f8d830b228ac0daf8",
+      "adapted": false
+    },
+    {
+      "name": "isBeatBattleCorruptZeroScoreHistoryRecord",
+      "sourceLines": [
+        10048,
+        10060
+      ],
+      "sourceSha256": "d6a3853045ecbeebbf08db87e4d48cfae9c5b494ed5167da48778a1af1f5e600",
+      "adapted": false
+    },
+    {
+      "name": "normalizeBeatBattlePopulationHistoryRecord",
+      "sourceLines": [
+        10062,
+        10092
+      ],
+      "sourceSha256": "0a1e0cf155f1e998827da103f57bb041896fc55a751ee4032e90ffde1421194e",
+      "adapted": false
+    },
+    {
+      "name": "cacheBeatBattlePopulationHistoryRecord",
+      "sourceLines": [
+        10094,
+        10107
+      ],
+      "sourceSha256": "f93838e9e4319aa7fade22e9e719a25b92d1a91354a9253577ed8234bbe42b5f",
+      "adapted": false
+    },
+    {
+      "name": "queueBeatBattlePopulationHistoryRecord",
+      "sourceLines": [
+        10120,
+        10126
+      ],
+      "sourceSha256": "4d951fa5225e349844348ee5a637f4950bfa12f1354435bae4dcf57ddce6cc4c",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattlePopulationHistorySongFields",
+      "sourceLines": [
+        10224,
+        10230
+      ],
+      "sourceSha256": "49155f92f2d5355bcf02eb3f4439810b8a4935426c9d7b9bbc3885ad3790dbf4",
+      "adapted": false
+    },
+    {
+      "name": "replayMode",
+      "sourceLines": [
+        10432,
+        10432
+      ],
+      "sourceSha256": "dac5febf5b475a907f6262fa518a6e21de04f35bd7a1f8a132662839b6ff4a1b",
+      "adapted": false
+    },
+    {
+      "name": "replayHashString",
+      "sourceLines": [
+        10744,
+        10752
+      ],
+      "sourceSha256": "4471142b3b52741fc156be80e5b9dbdb0ed1ca8f80f46c19c75ca905f054017a",
+      "adapted": false
+    },
+    {
+      "name": "appendReplayHashUint32",
+      "sourceLines": [
+        10756,
+        10762
+      ],
+      "sourceSha256": "3c6e082cf110d85928bf751ccb6a8bfe9265ec0ff2af8d5b8dc6ec83a6ad1e66",
+      "adapted": false
+    },
+    {
+      "name": "createBeatBattleRandomPrefixContext",
+      "sourceLines": [
+        10764,
+        10771
+      ],
+      "sourceSha256": "33797d49979be36f750c3769d767efb889c0365972c0dfa2b3421aa2bb5554b5",
+      "adapted": false
+    },
+    {
+      "name": "currentBFSkin",
+      "sourceLines": [
+        12432,
+        12432
+      ],
+      "sourceSha256": "32e753ac7af8b8060265dc027686ef4fff5572bf75b605235704bcfa7d5000d8",
+      "adapted": true
+    },
+    {
+      "name": "detectedBfSkins",
+      "sourceLines": [
+        12450,
+        12450
+      ],
+      "sourceSha256": "907b11eaa040666b319071306f9200e44b05e9238f5dd042015ecd6431f550c3",
+      "adapted": false
+    },
+    {
+      "name": "detectedBfSkinOrder",
+      "sourceLines": [
+        12457,
+        12457
+      ],
+      "sourceSha256": "0e30a666fb16d3137e3281cabb9eec9c8619160f92f9f49401e194224bf3adbb",
+      "adapted": false
+    },
+    {
+      "name": "detectedBfSkinNameIndex",
+      "sourceLines": [
+        12458,
+        12458
+      ],
+      "sourceSha256": "67f36aa611b48e538a1eef0eed47e0f70e08767e1209f27e8aafff44d9c0b884",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePopulationSkinAvailability",
+      "sourceLines": [
+        12460,
+        12460
+      ],
+      "sourceSha256": "8686b6150dd6029d91d03bc0046971b47ab5480499690ec814ad1915f49c3d0b",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattleFixedSkinId",
+      "sourceLines": [
+        13169,
+        13201
+      ],
+      "sourceSha256": "86e04be89dcc32e6c8790c60a6b7e93a0b4a1ac7c2aaac352cf58bb4c0c159f6",
+      "adapted": true
+    },
+    {
+      "name": "isPsychCharacterIdBanned",
+      "sourceLines": [
+        16633,
+        16639
+      ],
+      "sourceSha256": "e77cd72fed213545b1b90ac48f45cfe5512931b540928ea714e1fd2adab8b1a0",
+      "adapted": true
+    },
+    {
+      "name": "findDetectedBFSkinForPsychCharacter",
+      "sourceLines": [
+        16776,
+        16808
+      ],
+      "sourceSha256": "e1f0bf8db24a7f0f67be44544c76c7d3333aca50853d911c0bb870b83909fe50",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_JP_SHORT",
+      "sourceLines": [
+        19148,
+        19155
+      ],
+      "sourceSha256": "47969e0b8839e11a01d6b13df870b0c96ceff217500c08dd350465462fc0df55",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_JP_NOUN",
+      "sourceLines": [
+        19157,
+        19164
+      ],
+      "sourceSha256": "cffd886bea6df28b0ab62189e33b25132fac4717e2bf576de5c4089da69b03e2",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_LATIN",
+      "sourceLines": [
+        19166,
+        19173
+      ],
+      "sourceSha256": "5ce38898e7a8b9a42725e405cc5e1d37713c07f5706b90f12e1fcd05e277e9ec",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_PHRASE",
+      "sourceLines": [
+        19175,
+        19182
+      ],
+      "sourceSha256": "b1a67770b2dff85df6607beb46ae3bb0ba653c228dea56c4ccf2bb1b9a65aee8",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_CLAN",
+      "sourceLines": [
+        19184,
+        19186
+      ],
+      "sourceSha256": "3a8bdf3b19075c6cdd1f0f543fe1c7164616f403dc2960da8b73c907d5ef8d31",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_WEIRD",
+      "sourceLines": [
+        19188,
+        19190
+      ],
+      "sourceSha256": "7f7612b7333d03e0ddec526724c406196ebbe814090bd4929acdbf8d61088139",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_JP_DECOR",
+      "sourceLines": [
+        19192,
+        19192
+      ],
+      "sourceSha256": "f6d6448f0e070b86598afbe4444603f9d5642b9c0a849368a553dac87b16d533",
+      "adapted": false
+    },
+    {
+      "name": "BEAT_BATTLE_NAME_LATIN_DECOR",
+      "sourceLines": [
+        19193,
+        19193
+      ],
+      "sourceSha256": "d1cbb6f8b4a9ba1a24b2860eb8a67e32e9933b0d5d0eac825b65efa009ba05d1",
+      "adapted": false
+    },
+    {
+      "name": "chooseBeatBattlePopulationNameItem",
+      "sourceLines": [
+        19195,
+        19199
+      ],
+      "sourceSha256": "e68b84a64011a8ceb2961a7e72c3b487ac2ed68b9aee0684b79871d95d6120fb",
+      "adapted": false
+    },
+    {
+      "name": "createBeatBattlePopulationName",
+      "sourceLines": [
+        19201,
+        19268
+      ],
+      "sourceSha256": "f9f2c8bd75ad8904d7c3408a60dd8f1deec1c16c5a51f1098416e56642b66c22",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationSkillCeiling",
+      "sourceLines": [
+        19274,
+        19284
+      ],
+      "sourceSha256": "bbd1d76e3deadc85cdfad7a08345c1cd54eb0c59889d93d12e357b10de385a8b",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationGrowthCurveMatches",
+      "sourceLines": [
+        19286,
+        19290
+      ],
+      "sourceSha256": "d1a2de1789510729734bac546b60c98d9c6c3064c43e9163d242abe5c467d831",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationDevelopedAccuracy",
+      "sourceLines": [
+        19292,
+        19309
+      ],
+      "sourceSha256": "e6776c537ad1d481dc7dce54fe40769ecf3cf71c1570c3726947c0ec81a2bec6",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationTraitAffinity",
+      "sourceLines": [
+        19311,
+        19323
+      ],
+      "sourceSha256": "a24c8b519b681a633a9856cc7faf13f71c6230fc478dac967efde62145eac97a",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationTraitLabels",
+      "sourceLines": [
+        19325,
+        19341
+      ],
+      "sourceSha256": "47bba3da5d2a77f13ed0d6d2d2699cdb8bfbd08855e9ac52001e90f5970e2fee",
+      "adapted": false
+    },
+    {
+      "name": "getCurrentBeatBattleLightweightChartData",
+      "sourceLines": [
+        19361,
+        19366
+      ],
+      "sourceSha256": "48a59f92ef73d4d05095beca31b6f8eb9a609e84b31c0f5c9c29fedd15e895cc",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationBasePresenceStatus",
+      "sourceLines": [
+        19405,
+        19438
+      ],
+      "sourceSha256": "a848422554b211a42d92f33033a43e193184fffa4891c6139bcf2f1b4a10772b",
+      "adapted": false
+    },
+    {
+      "name": "normalizeBeatBattlePopulationSocialSessions",
+      "sourceLines": [
+        19440,
+        19452
+      ],
+      "sourceSha256": "2bd299df222c0e97d38927faa3e6b4c7481055e6e192926972f5c312607a958a",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationSocialSessionStatus",
+      "sourceLines": [
+        19474,
+        19512
+      ],
+      "sourceSha256": "987ce29c4ac8cda9e3186cccb30ede0a8d550db1375eea1327cdda0f2a389be1",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationPresenceStatus",
+      "sourceLines": [
+        19514,
+        19523
+      ],
+      "sourceSha256": "29c6cf8c1395696d8b485337d5d62e043de50af19e1219a244b2e13aef6e23bf",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationPracticeSession",
+      "sourceLines": [
+        19525,
+        19533
+      ],
+      "sourceSha256": "b33f6cb466abf4f8c902a38aba2a7c48fba6a665c77b8c9296448860b8c0695e",
+      "adapted": false
+    },
+    {
+      "name": "normalizeBeatBattlePopulationPractice",
+      "sourceLines": [
+        19535,
+        19548
+      ],
+      "sourceSha256": "093d03bea594530dfee76756ed470e247503736ce0cc747c62beb924d3dd7801",
+      "adapted": false
+    },
+    {
+      "name": "beginBeatBattlePopulationPractice",
+      "sourceLines": [
+        19550,
+        19561
+      ],
+      "sourceSha256": "f6d8af6eb5f71f9f03ad5c8ba7c7422c77c8fd90b8f18c603de2f148734be6bb",
+      "adapted": false
+    },
+    {
+      "name": "isBeatBattlePopulationAvailableForMatch",
+      "sourceLines": [
+        19563,
+        19572
+      ],
+      "sourceSha256": "de758d8e677b620669342305f3851320d695820b65319785d9d72805fd8c51c9",
+      "adapted": false
+    },
+    {
+      "name": "iterateBeatBattleAvailablePopulationProfiles",
+      "sourceLines": [
+        19581,
+        19642
+      ],
+      "sourceSha256": "c19228a2892dba96e7f2da2670738e9c8f0cbabc621d4ea6b39f60ef9ab93b5c",
+      "adapted": false
+    },
+    {
+      "name": "runBeatBattleBackgroundProfileSearch",
+      "sourceLines": [
+        19644,
+        19654
+      ],
+      "sourceSha256": "a69f59b030f4a5558c1da9e077b5badcc237e5e430dc6e653aaf2cd41d8e9959",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundAvailableProfile",
+      "sourceLines": [
+        19656,
+        19658
+      ],
+      "sourceSha256": "e9f954fecc854dedf105379be01ec2b09df8b3f3d537df1acc82f1c2e6df44af",
+      "adapted": false
+    },
+    {
+      "name": "prepareBeatBattleBackgroundPopulationProfiles",
+      "sourceLines": [
+        19660,
+        19673
+      ],
+      "sourceSha256": "cba987d194b5cf40ea3a529897e8bd89eefcdd08bae233bc21e54c4a93564630",
+      "adapted": false
+    },
+    {
+      "name": "createBeatBattlePopulationProfile",
+      "sourceLines": [
+        19675,
+        19761
+      ],
+      "sourceSha256": "3a5c18ee0aaf771ec756370fd25a9da1cc4b6960b8612e449d848a6bcc4e0a89",
+      "adapted": false
+    },
+    {
+      "name": "queueBeatBattlePopulationRankingJournalSnapshot",
+      "sourceLines": [
+        20019,
+        20059
+      ],
+      "sourceSha256": "3f4afdc4b48b2af72f9a4d02e358cab862e32a619801856c950d40cb30f7c3e8",
+      "adapted": true
+    },
+    {
+      "name": "loadBeatBattlePopulationRecords",
+      "sourceLines": [
+        20500,
+        20589
+      ],
+      "sourceSha256": "18c887efc8dab649ed44b77f9285198ebdd65d0c917869864cbfed61ef727a88",
+      "adapted": true
+    },
+    {
+      "name": "collectBeatBattlePopulationSkinCandidateIds",
+      "sourceLines": [
+        20702,
+        20720
+      ],
+      "sourceSha256": "e1587d424bcbb39146c8eb5a9beb1c98e6a9c2dcb505e2639d65246f017383a2",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattlePopulationSkinChangeInterval",
+      "sourceLines": [
+        20722,
+        20727
+      ],
+      "sourceSha256": "4b817c0ca4ef74755feb9240d8f9561e0a81bbfe430be03a5ff906ab67d064a2",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationSkinMood",
+      "sourceLines": [
+        20729,
+        20745
+      ],
+      "sourceSha256": "542e2e1335055967d9a1c30bc2f8fd84ef1abba84110041d2c11d48f00c420b8",
+      "adapted": false
+    },
+    {
+      "name": "recordBeatBattlePopulationSkinMoodResult",
+      "sourceLines": [
+        20747,
+        20762
+      ],
+      "sourceSha256": "6a2f5903a90889527b053a4da31074b083237fbfabc99933fa72e6783cb4fb08",
+      "adapted": false
+    },
+    {
+      "name": "maybeChangeBeatBattlePopulationSkin",
+      "sourceLines": [
+        20764,
+        20805
+      ],
+      "sourceSha256": "ae02da63257775320a199f1daddd07d240aeedeaffaadb1d8588e0a08fbd35d1",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationSocialSongDuration",
+      "sourceLines": [
+        20807,
+        20811
+      ],
+      "sourceSha256": "1610f44b2620d88261559c0958e93bd3897c89b181fa5aaf84c1f5b5bc0bf112",
+      "adapted": false
+    },
+    {
+      "name": "iterateBeatBattlePopulationSocialPlayerIds",
+      "sourceLines": [
+        20813,
+        20834
+      ],
+      "sourceSha256": "62d1f54113e658413fd20096a743de3e8713e2139e8c2aaef0e1511071a2f984",
+      "adapted": false
+    },
+    {
+      "name": "pickBeatBattlePopulationSocialPlayerIds",
+      "sourceLines": [
+        20836,
+        20838
+      ],
+      "sourceSha256": "89d76247c3c24410fc8a7753165301172d1d9735b6a54f0855b72f28dd93b62b",
+      "adapted": false
+    },
+    {
+      "name": "updateBeatBattlePopulationSocialSessions",
+      "sourceLines": [
+        20840,
+        20936
+      ],
+      "sourceSha256": "12f8ecbc4e4782af5cbb09c300156e625b9cf482f97624d54e8682278a0c160f",
+      "adapted": false
+    },
+    {
+      "name": "normalizeBeatBattlePopulationSpectators",
+      "sourceLines": [
+        20938,
+        20952
+      ],
+      "sourceSha256": "29ff1c2b31dfdfa107fcc6748e5d305ecebac8dbb6f24cb796e8d786f992a53b",
+      "adapted": false
+    },
+    {
+      "name": "reserveBeatBattleViewerParticipants",
+      "sourceLines": [
+        20954,
+        20963
+      ],
+      "sourceSha256": "01bbb82dc9f093eb55903b9958720a2089b2efa4d51f1ee3be09e911310efa7d",
+      "adapted": false
+    },
+    {
+      "name": "releaseBeatBattleViewerParticipants",
+      "sourceLines": [
+        20965,
+        20974
+      ],
+      "sourceSha256": "f5074612a4ff0e6c758334578ab070ae208250f5d8a5768f334e369c1e627df3",
+      "adapted": false
+    },
+    {
+      "name": "iterateBeatBattleViewerIndex",
+      "sourceLines": [
+        20978,
+        21038
+      ],
+      "sourceSha256": "360543ae12f12ab91c9d002a06da0d519e990aa186a42e86f80145d8ac4c0643",
+      "adapted": false
+    },
+    {
+      "name": "rebuildBeatBattleViewerIndex",
+      "sourceLines": [
+        21040,
+        21045
+      ],
+      "sourceSha256": "c797c63440841f80b1dc5cc0627c68876cd8f07e5dcbe91899ed89efacc51ab7",
+      "adapted": false
+    },
+    {
+      "name": "rebuildBeatBattleViewerIndexInBackground",
+      "sourceLines": [
+        21047,
+        21064
+      ],
+      "sourceSha256": "898ef8117573d4ccfc05581979a90019807115d1ace70f1aada9fe3348e07ddd",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationWatchedMatch",
+      "sourceLines": [
+        21066,
+        21072
+      ],
+      "sourceSha256": "079282905b159e27bd1a50d1401494b1a02483f1a755a89192495f21572301dc",
+      "adapted": false
+    },
+    {
+      "name": "setBeatBattlePopulationWatchedMatch",
+      "sourceLines": [
+        21074,
+        21095
+      ],
+      "sourceSha256": "a7b19956bb7c9910e9ea80cbe3cc2111a93eab72cafd690cd288413d3ba1e9cb",
+      "adapted": false
+    },
+    {
+      "name": "releaseBeatBattleLiveViewers",
+      "sourceLines": [
+        21097,
+        21107
+      ],
+      "sourceSha256": "019402c288516f5413fe2d19e193fdcdb5d86f1bb908c6432bb2c6b443ef7c59",
+      "adapted": false
+    },
+    {
+      "name": "chooseBeatBattleSpectatorRoom",
+      "sourceLines": [
+        21109,
+        21122
+      ],
+      "sourceSha256": "08e4f6c3c80bdb89b15691cac2cab83a80e563e5574f1176256c0f21987de5e7",
+      "adapted": false
+    },
+    {
+      "name": "updateBeatBattlePopulationSpectators",
+      "sourceLines": [
+        21124,
+        21240
+      ],
+      "sourceSha256": "3166d50c4eaeaba3961ff9292ccb4d37df993c8ef49b0b210344364507cddc26",
+      "adapted": false
+    },
+    {
+      "name": "refreshBeatBattleViewerCountLabels",
+      "sourceLines": [
+        21308,
+        21314
+      ],
+      "sourceSha256": "6ba033c8f915f229b99e88b607f4f4749fbd870194e6dd59fb5ac1ba2d037b1c",
+      "adapted": true
+    },
+    {
+      "name": "saveBeatBattlePopulationRecordsFromBackground",
+      "sourceLines": [
+        21381,
+        21388
+      ],
+      "sourceSha256": "024dee568e6b7f73995685153ff117cf4ebfd851d047dc7a891cd4b4f2ab4381",
+      "adapted": true
+    },
+    {
+      "name": "ensureBeatBattleTitleState",
+      "sourceLines": [
+        21390,
+        21397
+      ],
+      "sourceSha256": "80f7ee64ca295639fcde2a7e85a7f519d489c5761e0f83402db28249372a7757",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleTitlePeakRp",
+      "sourceLines": [
+        21399,
+        21404
+      ],
+      "sourceSha256": "299ac654cf477de22327228e933290326cac9ad72f48d51ec363ca1151fd4bf1",
+      "adapted": false
+    },
+    {
+      "name": "recordBeatBattleTitlePeakRp",
+      "sourceLines": [
+        21406,
+        21415
+      ],
+      "sourceSha256": "805f29650b75ef157c76ac8c9050cceba744b9ea0580cd70689ce29735bf24b7",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleTitleStats",
+      "sourceLines": [
+        21417,
+        21430
+      ],
+      "sourceSha256": "536c871aec27ee1eb7499ce97fca891966a168acb82d83f722e4c20a3af21a96",
+      "adapted": false
+    },
+    {
+      "name": "recordBeatBattlePermanentTitleUnlocks",
+      "sourceLines": [
+        21432,
+        21442
+      ],
+      "sourceSha256": "5c9d4e726e3bf47d2f199cc263aef2800eefd89df895e7b38c6d9fbba6949e7f",
+      "adapted": false
+    },
+    {
+      "name": "isBeatBattleBackgroundGameplayActive",
+      "sourceLines": [
+        21655,
+        21664
+      ],
+      "sourceSha256": "c5b727cc1101c2426b5e7d9e13fcf63e82f00c82ff658d73d5fc96f31d54ef82",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattleBackgroundWorkDeadline",
+      "sourceLines": [
+        21696,
+        21706
+      ],
+      "sourceSha256": "2077212bec5ddd123cf718052d0a9e4fe7943f2c27baa0f6d2131c6f9c5e3c3c",
+      "adapted": true
+    },
+    {
+      "name": "yieldBeatBattleBackgroundWork",
+      "sourceLines": [
+        21721,
+        21746
+      ],
+      "sourceSha256": "547642e1fe3169eb033b9470ead258ad79dafca4981755635a33021073142428",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattlePopulationIndexFromId",
+      "sourceLines": [
+        21750,
+        21754
+      ],
+      "sourceSha256": "9283f1c3ba66e8cf6cffaf940a32da3e52ae7d24a070f476c8685566d61e9a1e",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationLeagueEntry",
+      "sourceLines": [
+        21756,
+        21773
+      ],
+      "sourceSha256": "9b25c71d5ab922bf8c83b5c868e2e8b0082475b27365f0a465f26c509dc51364",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationDevelopmentMatches",
+      "sourceLines": [
+        21775,
+        21779
+      ],
+      "sourceSha256": "d1a8cbc660d73bc6a25584ede48b939bb6ef73ecdfd62186d3bcddd09866ca1c",
+      "adapted": false
+    },
+    {
+      "name": "recordBeatBattlePopulationDevelopmentMatch",
+      "sourceLines": [
+        21781,
+        21787
+      ],
+      "sourceSha256": "e6d0e8cbc3a279dbb0c44edad8c44804e71ef0e889ee0b94121144c08ef5e03c",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePopulationOnlineSongRange",
+      "sourceLines": [
+        21789,
+        21804
+      ],
+      "sourceSha256": "6fe19be9ec0efca64c85d87d722d875006ae35a4563d4369f910cc6df945a5af",
+      "adapted": false
+    },
+    {
+      "name": "applyBeatBattlePopulationLeagueState",
+      "sourceLines": [
+        21806,
+        21840
+      ],
+      "sourceSha256": "38695cad046e8e82f69be9f9a868a19f8a125a6bede5e9597dffdb5631b27e54",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattlePlayerDisplayName",
+      "sourceLines": [
+        21851,
+        21859
+      ],
+      "sourceSha256": "fae729090c7362b5674080fec232a18c0b91d5c923de4ddfd08809e6c01a0bce",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattlePlayerProfile",
+      "sourceLines": [
+        21892,
+        21911
+      ],
+      "sourceSha256": "cf81f8abd832bbb222fab52a3d512bb3bb9490bc9ea978b3c6e68d89abda4c07",
+      "adapted": false
+    },
+    {
+      "name": "iterateBeatBattlePopulationOpponentsNear",
+      "sourceLines": [
+        21958,
+        22053
+      ],
+      "sourceSha256": "fd1cde9614bcd7fe5ec2951511e08b94cb5d9ef6f05f6e7a954c9e5bc8ee76cf",
+      "adapted": false
+    },
+    {
+      "name": "collectBeatBattleBackgroundMatchmakingPool",
+      "sourceLines": [
+        22055,
+        22073
+      ],
+      "sourceSha256": "884eae262424c85e5b3a3e6952066d5d252bf84a5b149123e29c1cd8a53c9945",
+      "adapted": false
+    },
+    {
+      "name": "collectBeatBattleBackgroundAvailableIds",
+      "sourceLines": [
+        22075,
+        22091
+      ],
+      "sourceSha256": "235e36188f19c40051b218f736be9e8d5a97e74d0e779385028de019b3965565",
+      "adapted": false
+    },
+    {
+      "name": "collectBeatBattleBackgroundAvailableIdsWithWorker",
+      "sourceLines": [
+        22113,
+        22115
+      ],
+      "sourceSha256": "e2297abc9aff0031a3ab14390f5bd271f0b8cddc57c0d567c4c836ced2a816ee",
+      "adapted": false
+    },
+    {
+      "name": "refreshBeatBattleBackgroundMatchmakingPoolProfile",
+      "sourceLines": [
+        22118,
+        22125
+      ],
+      "sourceSha256": "c94edaf5c9627149ad380387056600e2a26ffc585783c75d57ee1aa3c22c76f5",
+      "adapted": false
+    },
+    {
+      "name": "iterateBeatBattleStableSort",
+      "sourceLines": [
+        22127,
+        22150
+      ],
+      "sourceSha256": "bc8f620074ee60e5650431f4c976bc2cca82453de93967fa3ade65be7dbb9932",
+      "adapted": false
+    },
+    {
+      "name": "sortBeatBattleBackgroundProfiles",
+      "sourceLines": [
+        22152,
+        22154
+      ],
+      "sourceSha256": "32bc5700d13bfd73f834c8b8fe468dbb20655b77151f1fdbbc2abace5224c2b0",
+      "adapted": false
+    },
+    {
+      "name": "buildBeatBattleBackgroundMatchmakingIndex",
+      "sourceLines": [
+        22156,
+        22188
+      ],
+      "sourceSha256": "3fb58d80bab8b04a9a6253137e2efeaa064246c91ae7955d951d9cb8662fdcab",
+      "adapted": false
+    },
+    {
+      "name": "buildBeatBattleBackgroundMatchmakingIndexWithWorker",
+      "sourceLines": [
+        22223,
+        22238
+      ],
+      "sourceSha256": "95c0f21b49a42c6327e98afc27126b3acfd4b291e2073f57862d5700953db4ab",
+      "adapted": true
+    },
+    {
+      "name": "lowerBoundBeatBattleBackground",
+      "sourceLines": [
+        22241,
+        22250
+      ],
+      "sourceSha256": "757ee16cd99aa4aed5e4944c2c22a188d4984552b52c639fd1d0b0c67cdb883c",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundMatchRanges",
+      "sourceLines": [
+        22252,
+        22256
+      ],
+      "sourceSha256": "1a620e2f9dfb60298344740c99d75ace6fa317562cd3cd91ec56beaa00f6f9be",
+      "adapted": false
+    },
+    {
+      "name": "pushBeatBattleBackgroundTopCandidate",
+      "sourceLines": [
+        22258,
+        22268
+      ],
+      "sourceSha256": "f09c208b10774adb383845ee2c906e12de943a6849c7bb2e708abc252666c62e",
+      "adapted": false
+    },
+    {
+      "name": "findBeatBattleBackgroundOpponentNearFromIndex",
+      "sourceLines": [
+        22270,
+        22375
+      ],
+      "sourceSha256": "fedaa932d11c2de30fb78b7cd742f7ec0f7875575c1a06960aea45c5ea580557",
+      "adapted": false
+    },
+    {
+      "name": "findBeatBattleBackgroundOpponentNearFromPool",
+      "sourceLines": [
+        22377,
+        22469
+      ],
+      "sourceSha256": "8554a6bb174a1d5652dd085373b75bd8fd1afca2d04959158c2ad011d405c709",
+      "adapted": false
+    },
+    {
+      "name": "findBeatBattleBackgroundOpponentNear",
+      "sourceLines": [
+        22471,
+        22482
+      ],
+      "sourceSha256": "197bbb93a917dd615c7b57a8484e248e2e6ae2532a5d109d8796382a6f8c9a4b",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleEffectivePopulationProfileByIndex",
+      "sourceLines": [
+        22484,
+        22486
+      ],
+      "sourceSha256": "4be09e50508fc4346e09210e5cae64aa5fdf25a7d9ab2a64b876a19638a73b5d",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleEffectivePopulationProfileById",
+      "sourceLines": [
+        22488,
+        22496
+      ],
+      "sourceSha256": "e0957613d0f59ec5ca5c2a1d42d171adcea2979aa5454a5ade6f879e309fa1ee",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundSimulationProfileById",
+      "sourceLines": [
+        22498,
+        22506
+      ],
+      "sourceSha256": "de5c3dd2c47a1189bcb795b5d5fd3cbd5d1bd1a62a11fc0a1f29f6a4fb282ea7",
+      "adapted": false
+    },
+    {
+      "name": "applyBeatBattlePopulationLeagueResult",
+      "sourceLines": [
+        22508,
+        22609
+      ],
+      "sourceSha256": "499e005d3ac741b9342722076ca54083c9299eaa48a431835bbce38e4ae67af1",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundResultScores",
+      "sourceLines": [
+        22611,
+        22656
+      ],
+      "sourceSha256": "2a18f56506679f4faed1ca337be55ef91f0f8d6f1fbedbe52b63c6cb7697b21d",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundResultScoresWithWorker",
+      "sourceLines": [
+        22684,
+        22703
+      ],
+      "sourceSha256": "b0d3c4e6cdcc1e22605b519a4a551eb52aa68d00d441652db2a89adbc368ebce",
+      "adapted": true
+    },
+    {
+      "name": "createBeatBattleLiveNoteSideState",
+      "sourceLines": [
+        22705,
+        22719
+      ],
+      "sourceSha256": "bcbf92511e4af800ecf5074820c3e7d2f961d69453f87ef73544a91ea9c22960",
+      "adapted": false
+    },
+    {
+      "name": "normalizeBeatBattleLiveNoteSideState",
+      "sourceLines": [
+        22721,
+        22760
+      ],
+      "sourceSha256": "3b78e8cb8243388191ae95f10b7ce7368520268504c2ab2ef6f7a4397ad9bb2a",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleLiveNoteNormalizedScore",
+      "sourceLines": [
+        22762,
+        22767
+      ],
+      "sourceSha256": "1c7615989cb17acb3009211b86f00b31b994087a6eea3f7fb835fe4f77b81187",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleLiveRandomContext",
+      "sourceLines": [
+        22769,
+        22794
+      ],
+      "sourceSha256": "63c74d681d4dbd5e4aa71d52b3c07138aed5e28cb40b9a7851775c8f24ea987b",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleLiveNoteStyleRandomUnit",
+      "sourceLines": [
+        22803,
+        22810
+      ],
+      "sourceSha256": "fb82bcbee956fafce699a9d77764816923ab772933bccd4c2ea81f543dcee743",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleMatchRunFormVersion",
+      "sourceLines": [
+        22812,
+        22814
+      ],
+      "sourceSha256": "78c4a943cf77c2ca9685c5bf139bc79925126c19310ab2ce5bc041196fa64df4",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleLiveRunAccuracyTarget",
+      "sourceLines": [
+        22816,
+        22825
+      ],
+      "sourceSha256": "db0165d66992f24ce2e879ba1f9198d4eca872d69bb332b0001a508f322d60f5",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleLiveNoteOutcome",
+      "sourceLines": [
+        22827,
+        22895
+      ],
+      "sourceSha256": "0ac05b01cb4b47c03b0eb67a044d72aff19e784bc7d7e2681b5c825e8a559527",
+      "adapted": false
+    },
+    {
+      "name": "chooseBeatBattleLiveNoteRating",
+      "sourceLines": [
+        22897,
+        22902
+      ],
+      "sourceSha256": "5cec0878ee75c7a2981d6364b5f532cda443e45f5482b109d6b35832003a57eb",
+      "adapted": false
+    },
+    {
+      "name": "applyBeatBattleLiveNoteRating",
+      "sourceLines": [
+        22904,
+        22930
+      ],
+      "sourceSha256": "24254e217e8ec23726b21f10bd7ed2b604dea85c55c9a0a3694cde47f59c06c5",
+      "adapted": false
+    },
+    {
+      "name": "ensureBeatBattleBackgroundLiveNoteSim",
+      "sourceLines": [
+        22932,
+        22983
+      ],
+      "sourceSha256": "c2b2e9b9c59652618be05ea5f55c9c40369074f1fa02c564427fc78fe572a767",
+      "adapted": false
+    },
+    {
+      "name": "updateBeatBattleLiveNoteSimTotals",
+      "sourceLines": [
+        22985,
+        22992
+      ],
+      "sourceSha256": "cd5bd56b15f0365f5c53d25d7dd27fdf22912234b9b2ef0312ee874f83c62fab",
+      "adapted": false
+    },
+    {
+      "name": "advanceBeatBattleBackgroundLiveNoteSim",
+      "sourceLines": [
+        22994,
+        23081
+      ],
+      "sourceSha256": "85dccf304a81c8564ce099b54d90d2f72a40cc6c79ab32490ae4ad25c5f9782f",
+      "adapted": false
+    },
+    {
+      "name": "finishBeatBattleBackgroundLiveNoteSim",
+      "sourceLines": [
+        23088,
+        23104
+      ],
+      "sourceSha256": "ed08ffe25d993bed28b7bf7b7e4ebf9bbc5beb8cb66cea45dc915eac55748424",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundLiveNoteScores",
+      "sourceLines": [
+        23106,
+        23122
+      ],
+      "sourceSha256": "4e334715035ac3e3b57c7fb738a980d1d1e53bb5d2419374371020efea676e13",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveGeneration",
+      "sourceLines": [
+        23237,
+        23237
+      ],
+      "sourceSha256": "13f992930e4986958cc9a351ba06a47375f4b7056168adfce2c74fa435a243aa",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveTrusted",
+      "sourceLines": [
+        23238,
+        23238
+      ],
+      "sourceSha256": "aca0dc4d99062e0b08cd3a232c1a6efbb3c95909cca719739f8129816d511313",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveNeedsFullSync",
+      "sourceLines": [
+        23239,
+        23239
+      ],
+      "sourceSha256": "abc2708aaff1abc680f1cd898f8996155330a9c45cd922a560ff6524ce8208f0",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveSyncedMatchIds",
+      "sourceLines": [
+        23240,
+        23240
+      ],
+      "sourceSha256": "f618e3827cd4e8e667e8a41398bc1e7ff1fb066467653b197e4daec0631efd87",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveProfileFingerprints",
+      "sourceLines": [
+        23241,
+        23241
+      ],
+      "sourceSha256": "e77d4eef2fb8c34758c4882df453321d2e48a92446d98b954938e0d20633cfc6",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveSongFingerprints",
+      "sourceLines": [
+        23242,
+        23242
+      ],
+      "sourceSha256": "da9057f6ba5a476e08146d16786b102a6f04b94e8f9908a8b40b083b71e519b6",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveDirtyMatchIds",
+      "sourceLines": [
+        23243,
+        23243
+      ],
+      "sourceSha256": "2fe82495296d0525013e5e7d9aeab12b239f0355e8559409ecadfcca58c2b4a6",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveRemovedMatchIds",
+      "sourceLines": [
+        23244,
+        23244
+      ],
+      "sourceSha256": "862a919d3adb93d03bddce2532d8a27da34233b320fb6eb7b3c330918ed27d54",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveDirtyProfileIds",
+      "sourceLines": [
+        23245,
+        23245
+      ],
+      "sourceSha256": "44a60ec0a2c0c2feaef830965d4676795dc726fa0f20a5c9de2e58d5f402e65a",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveDirtySongKeys",
+      "sourceLines": [
+        23246,
+        23246
+      ],
+      "sourceSha256": "efe305e22491a493e03d05b7481011f59611e588e0c92a02049b4485634d2615",
+      "adapted": false
+    },
+    {
+      "name": "beatBattlePersistentLiveStats",
+      "sourceLines": [
+        23247,
+        23253
+      ],
+      "sourceSha256": "c200245707cac8779973fc93b2f0be6f89710cdf361d80adc6006b3cefcf1c4e",
+      "adapted": false
+    },
+    {
+      "name": "recordBeatBattlePersistentSpectatorProposalTiming",
+      "sourceLines": [
+        23300,
+        23303
+      ],
+      "sourceSha256": "3a57c7de07134d2f1762b12c6f89637406bdd11d4078b3f754b074f7755a0cdc",
+      "adapted": true
+    },
+    {
+      "name": "invalidateBeatBattlePersistentLiveMirror",
+      "sourceLines": [
+        23305,
+        23321
+      ],
+      "sourceSha256": "ca104f7ef9d51dbb05f1594c3b37b8acfc6219bcc8cec374881c7af249e23502",
+      "adapted": false
+    },
+    {
+      "name": "markBeatBattlePersistentLiveMatchDirty",
+      "sourceLines": [
+        23323,
+        23326
+      ],
+      "sourceSha256": "3795f03a122f30589b595f499bb3d6d0e9f9dea385be38baa3f41b03fed799c7",
+      "adapted": true
+    },
+    {
+      "name": "markBeatBattlePersistentLiveMatchRemoved",
+      "sourceLines": [
+        23328,
+        23333
+      ],
+      "sourceSha256": "8c2b6c4b30de48585e9c4ccf73666dc329a3ae0c40d7b4e6075db974fa8833f1",
+      "adapted": true
+    },
+    {
+      "name": "applyBeatBattlePersistentLiveExportedMatch",
+      "sourceLines": [
+        23554,
+        23570
+      ],
+      "sourceSha256": "3ceb1d376c335fbc338a8a43a6edef4fdfad26b04bcd7668ed5534ce66d9ad64",
+      "adapted": false
+    },
+    {
+      "name": "exportBeatBattlePersistentLiveMatches",
+      "sourceLines": [
+        23572,
+        23588
+      ],
+      "sourceSha256": "7752487b4949c8b58c7b376ee803e4bb158609425471811500419cbf50e68cd6",
+      "adapted": false
+    },
+    {
+      "name": "advanceBeatBattleBackgroundLiveNoteBatchWithWorker",
+      "sourceLines": [
+        23660,
+        23664
+      ],
+      "sourceSha256": "209695ec21648ed408bfa08f4d9f3c5c676f5f9fc1516f8236c1d718cf27d3ba",
+      "adapted": true
+    },
+    {
+      "name": "invalidateBeatBattleRankingCache",
+      "sourceLines": [
+        23666,
+        23670
+      ],
+      "sourceSha256": "e8ff710c29d3a688508513f75fb1fe5c79771e4dd9bbaede933b7b18d5c0fdfc",
+      "adapted": false
+    },
+    {
+      "name": "createBeatBattleBackgroundLiveMatch",
+      "sourceLines": [
+        23672,
+        23768
+      ],
+      "sourceSha256": "43daff250dea1caf72b179c2259eb1e14be78327b0a8c8a53851e93d7cc6f423",
+      "adapted": false
+    },
+    {
+      "name": "finalizeBeatBattleBackgroundLiveMatch",
+      "sourceLines": [
+        23770,
+        23852
+      ],
+      "sourceSha256": "abe30a700ad66679f691b15442cbf43aa50949d7cf90a72294831e4464becaba",
+      "adapted": false
+    },
+    {
+      "name": "simulateBeatBattleBackgroundCompletedMatch",
+      "sourceLines": [
+        23864,
+        23958
+      ],
+      "sourceSha256": "2e583e0709172c506290f05f1184be1b1d58656e9a8c470f120d77f64f310d53",
+      "adapted": false
+    },
+    {
+      "name": "isBeatBattleStartupRecoveryActive",
+      "sourceLines": [
+        23960,
+        23966
+      ],
+      "sourceSha256": "4de09102e3f4c15ea5950a7bf863ef28d45d0826026f9c30d8528df3c4a6d6ad",
+      "adapted": false
+    },
+    {
+      "name": "refillBeatBattleBackgroundLiveRoomsPriority",
+      "sourceLines": [
+        23968,
+        23992
+      ],
+      "sourceSha256": "0cb417b7316cff67fa0aef19d4184de9e00fcacc0a2e8df7de103a27e289f6d6",
+      "adapted": false
+    },
+    {
+      "name": "tickBeatBattleBackgroundPopulation",
+      "sourceLines": [
+        23994,
+        24190
+      ],
+      "sourceSha256": "b2c1975cf7d5b018e9c546aeffab9f2c12732e148b71612e99ab14662f487bc3",
+      "adapted": true
+    },
+    {
+      "name": "getBeatBattlePopulationOnlineCount",
+      "sourceLines": [
+        25376,
+        25380
+      ],
+      "sourceSha256": "46cd2894821833b4710be28452777d5d4cc56f1bb2ec5edd74bfbef75e4fc126",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleRoomCapForOccupancy",
+      "sourceLines": [
+        25382,
+        25390
+      ],
+      "sourceSha256": "fbc6f0656b3d2b7a468e9a2c122dbb2765fa8d8909a3b95662135da2d5389ba1",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleHeldRoomCap",
+      "sourceLines": [
+        25392,
+        25417
+      ],
+      "sourceSha256": "a0e0ddeab21d937bb28c9e4c33c6702ea8836ac748781027784dfa55e067f444",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleRoomDemandSnapshot",
+      "sourceLines": [
+        25419,
+        25448
+      ],
+      "sourceSha256": "fb88b85d949fe531e80bc1eb6f44b958ce6e84e768166d5c770d81e77ea51708",
+      "adapted": false
+    },
+    {
+      "name": "getBeatBattleBackgroundLiveTarget",
+      "sourceLines": [
+        25450,
+        25457
+      ],
+      "sourceSha256": "8e871a68e30494089068838f405e5e65972c3f59699b4f561df55692bb52a598",
+      "adapted": false
+    },
+    {
+      "name": "collectRandomOpponentCandidateIds",
+      "sourceLines": [
+        26094,
+        26140
+      ],
+      "sourceSha256": "42772499faf4e7efd3dd4a2de3d1a2aaf495faff753e56327641377502c01961",
+      "adapted": true
+    }
+  ],
+  "files": [
+    {
+      "source": "js/cpu-timing.js",
+      "sourceSha256": "cf852617cc0179c03d6de1a9d0acc45a75dca76097607d9ea55a6b6a68a65c1a",
+      "mode": "verbatim"
+    },
+    {
+      "source": "js/title-system.js",
+      "sourceSha256": "61f5c96c1f76d840643605346a480d495f38b2d28e8e5777c60d683847003748",
+      "mode": "verbatim"
+    },
+    {
+      "source": "js/population-social-sessions.js",
+      "sourceSha256": "223b800a20b125c139e517a9eb5a2f540446844936ecfee9ce882d3354d1554e",
+      "mode": "verbatim"
+    },
+    {
+      "source": "js/boss-battle.js",
+      "sourceSha256": "2c48bb4b0f6a8022db6ab4be8c088b1c21be88f471983c4eeae97126574974c6",
+      "mode": "verbatim"
+    },
+    {
+      "source": "js/song-difficulty.js",
+      "sourceSha256": "75b8edfb1a6536aeef3925c698aeab0660389fa1f18e347403a666a90a5871f8",
+      "mode": "pure helpers and Native scheduling adaptation"
+    },
+    {
+      "source": "js/character-utils.js",
+      "sourceSha256": "a5c185f7add91b6184f23cbf630cfd0147a2e0a38c372a3968bab231e8bd6178",
+      "mode": "pure helpers and Native scheduling adaptation"
+    }
+  ]
+}
