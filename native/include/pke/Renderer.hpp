@@ -33,6 +33,7 @@ bool NeedsDiagnosticFallback(const CharacterRenderView& view,bool textureAvailab
 struct RenderState {
     double songTimeMs{0.0};
     double scrollSpeed{1.0};
+    bool downScroll{},cornerJudgement{};
     const Chart* chart{nullptr};
     const std::vector<RuntimeNoteState>* notes{nullptr};
     CharacterRenderView bf;

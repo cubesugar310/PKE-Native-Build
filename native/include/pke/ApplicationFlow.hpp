@@ -2,9 +2,12 @@
 #include "pke/AssetService.hpp"
 #include "pke/LegacySaveImporter.hpp"
 #include "pke/RhythmEngine.hpp"
+#include <functional>
 
 namespace pke {
-enum class AppScreen {Home,Practice,Gameplay,Result,Halloween};
+enum class AppScreen {Home,Practice,Gameplay,Result,Halloween,Settings,Developer};
+struct HalloweenWindow {bool active{};int year{};std::int64_t remainingMs{};};
+struct HalloweenShopEntry {std::size_t slotIndex{};std::string skinId;int price{};const CharacterAsset* character{};};
 struct PracticeResult {std::string songName;PlayStats stats;Side side{Side::Player};};
 class ApplicationFlow {
 public:
@@ -20,6 +23,18 @@ public:
     const std::string& Search() const noexcept{return search_;}
     void OpenPractice();
     void OpenHalloween();
+    void OpenSettings(){if(screen_==AppScreen::Home)screen_=AppScreen::Settings;}
+    void OpenDeveloper(){if(screen_==AppScreen::Home)screen_=AppScreen::Developer;}
+    HalloweenWindow Halloween(std::int64_t nowMs) const;
+    std::vector<HalloweenShopEntry> HalloweenShop() const;
+    bool SkinAvailable(std::string_view) const;
+    bool EnableDeveloper(std::string_view code,std::string_view pin);
+    bool DeveloperEnabled() const noexcept{return developerEnabled_;}
+    using PersistPlayer=std::function<bool(const NativeSaveSummary&)>;
+    std::string PurchaseHalloweenTitle(std::int64_t,const PersistPlayer&);
+    std::string PurchaseHalloweenSkin(std::size_t,std::int64_t,const PersistPlayer&);
+    bool SavePreferences(double,std::string,std::string,const PersistPlayer&);
+    bool SaveEventOverride(std::string,const PersistPlayer&);
     void Back();
     void SetSearch(std::string);
     void SetStars(int);
@@ -42,5 +57,6 @@ private:
     std::vector<std::size_t> visible_;
     std::optional<std::size_t> selected_;
     PracticeResult result_;
+    bool developerEnabled_{};
 };
 }

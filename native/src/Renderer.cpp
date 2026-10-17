@@ -130,7 +130,9 @@ void Renderer::Draw(const RenderState& state,bool present){
     SDL_SetRenderDrawColor(impl_->renderer,20,20,28,255);SDL_Rect canvas{0,0,kLogicalWidth,kLogicalHeight};SDL_RenderFillRect(impl_->renderer,&canvas);
     drawCharacter(state.dad); drawCharacter(state.bf);
     // Original 1280x720 field centers and note-sprites vector geometry.
-    constexpr int receptorY=94,playerX[4]={776,888,1000,1112},oppX[4]={98,210,322,434};
+    const int receptorY=state.downScroll?kLogicalHeight-94:94;
+    const double scroll=state.downScroll?-state.scrollSpeed:state.scrollSpeed;
+    constexpr int playerX[4]={776,888,1000,1112},oppX[4]={98,210,322,434};
     constexpr SDL_Color laneColors[4]={{184,74,152,255},{80,240,240,255},{80,240,0,255},{240,48,64,255}};
     const auto arrow=[&](int lane,double x,double y,SDL_Color color){
         constexpr double points[7][2]={{-.18,.50},{.18,.50},{.18,-.08},{.48,-.08},{0,-.52},{-.48,-.08},{-.18,-.08}};
@@ -144,13 +146,14 @@ void Renderer::Draw(const RenderState& state,bool present){
     for(int lane=0;lane<4;++lane){arrow(lane,playerX[lane],receptorY,{100,100,110,255});arrow(lane,oppX[lane],receptorY,{100,100,110,255});}
     const auto drawNote=[&](const Note& note,NoteStatus status){
         if(note.lane<0||note.lane>3)return;
-        const double y=ComputeNoteY(note.timeMs,state.songTimeMs,state.scrollSpeed,receptorY);
-        const double endY=ComputeNoteY(note.timeMs+note.sustainMs,state.songTimeMs,state.scrollSpeed,receptorY);
+        const double y=ComputeNoteY(note.timeMs,state.songTimeMs,scroll,receptorY);
+        const double endY=ComputeNoteY(note.timeMs+note.sustainMs,state.songTimeMs,scroll,receptorY);
         const int x=(note.side==Side::Player?playerX[note.lane]:oppX[note.lane]);const auto color=laneColors[note.lane];
         const bool holding=status==NoteStatus::Holding||status==NoteStatus::SustainBroken;
-        if(note.sustainMs>0&&endY>=-100&&y<=820){
-            const int start=std::max(-100,int(std::lround(holding?std::max(double(receptorY),y):y)));
-            const int end=std::min(820,int(std::lround(endY)));
+        const double head=holding?(state.downScroll?std::min(double(receptorY),y):std::max(double(receptorY),y)):y;
+        if(note.sustainMs>0&&std::max(head,endY)>=-100&&std::min(head,endY)<=820){
+            const int start=std::max(-100,int(std::lround(std::min(head,endY))));
+            const int end=std::min(820,int(std::lround(std::max(head,endY))));
             SDL_SetRenderDrawColor(impl_->renderer,color.r,color.g,color.b,255);SDL_Rect body{x-9,start,18,std::max(0,end-start)};
             SDL_RenderFillRect(impl_->renderer,&body);
         }
@@ -158,9 +161,14 @@ void Renderer::Draw(const RenderState& state,bool present){
     };
     if(state.chart)for(const auto& note:state.chart->notes)if(note.side==Side::Opponent)drawNote(note,NoteStatus::Pending);
     if(state.notes)for(const auto& note:*state.notes)if(note.status==NoteStatus::Pending||note.status==NoteStatus::Holding||note.status==NoteStatus::SustainBroken)drawNote(note.note,note.status);
-    SDL_SetRenderDrawColor(impl_->renderer,60,60,60,255); SDL_Rect hb{373,653,534,16}; SDL_RenderFillRect(impl_->renderer,&hb); SDL_SetRenderDrawColor(impl_->renderer,80,220,120,255); SDL_Rect hp{373,653,int(std::clamp(state.stats.health/2.0,0.0,1.0)*534),16}; SDL_RenderFillRect(impl_->renderer,&hp);
+    const int healthY=state.downScroll?66:653;
+    SDL_SetRenderDrawColor(impl_->renderer,60,60,60,255); SDL_Rect hb{373,healthY,534,16}; SDL_RenderFillRect(impl_->renderer,&hb); SDL_SetRenderDrawColor(impl_->renderer,80,220,120,255); SDL_Rect hp{373,healthY,int(std::clamp(state.stats.health/2.0,0.0,1.0)*534),16}; SDL_RenderFillRect(impl_->renderer,&hp);
     char stats[160]{}; std::snprintf(stats,sizeof(stats),"Score %d  Acc %.2f%%  Combo %d",state.stats.rawScore,state.stats.accuracyPercent,state.stats.combo);
-    drawSlot(impl_->songText,state.songName,20,20); drawSlot(impl_->statsText,stats,20,47); drawSlot(impl_->judgementText,state.judgementText,600,480);
+    drawSlot(impl_->songText,state.songName,20,state.downScroll?660:20); drawSlot(impl_->statsText,stats,20,state.downScroll?108:47);
+    updateTextTexture(impl_->renderer,impl_->font,state.judgementText,impl_->judgementText.text,impl_->judgementText.texture,impl_->judgementText.w,impl_->judgementText.h,impl_->counters);
+    const int judgementX=state.cornerJudgement?kLogicalWidth-190:kLogicalWidth/2;
+    const int judgementY=state.cornerJudgement&&state.downScroll?kLogicalHeight-135:118;
+    drawSlot(impl_->judgementText,state.judgementText,judgementX-impl_->judgementText.w/2,judgementY);
     if(state.diagnosticsVisible){ char diag[256]{}; const auto& d=state.diagnostics; const double fps=d.latestFrame.intervalMs>0.0?1000.0/d.latestFrame.intervalMs:0.0; std::snprintf(diag,sizeof(diag),"FPS %.1f  update %.3fms  render %.3fms  audio %llu (+%u)  input %+.2fms",fps,d.latestFrame.updateMs,d.latestFrame.renderMs,static_cast<unsigned long long>(d.latestAudio.songFrame),d.latestAudio.callbackFrames,d.latestInputOffsetMs); drawSlot(impl_->diagText,diag,20,73); }
     SDL_RenderSetScale(impl_->renderer,1,1); SDL_RenderSetViewport(impl_->renderer,nullptr); if(present)SDL_RenderPresent(impl_->renderer);
 #else

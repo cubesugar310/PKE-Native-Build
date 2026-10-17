@@ -27,10 +27,11 @@ void ApplicationView::Button(std::string_view id,std::string_view label,SDL_Rect
     ui_.Text(std::string(id)+"-text",label,rect,size,ink,true);
 }
 void ApplicationView::Prepare(const ApplicationFlow& flow){
-    const auto catalog=flow.Catalog();std::string id=flow.Player().selectedSkin;const auto colon=id.find_last_of(':');if(colon!=std::string::npos)id.erase(0,colon+1);
-    const CharacterAsset* chosen=nullptr;
-    for(const auto& c:catalog->characters)if(c.id==id){chosen=&c;break;}
-    if(!chosen&&!catalog->characters.empty())chosen=&catalog->characters.front();
+    if(flow.Screen()==AppScreen::Halloween){shop_=flow.HalloweenShop();for(const auto& e:shop_)
+        ui_.PreloadImage("event-skin-"+Number(int(e.slotIndex)),e.character->definition->imagePath);}
+    const auto catalog=flow.Catalog();const auto* selected=FindCharacterAsset(*catalog,flow.Player().selectedSkin);
+    const CharacterAsset* chosen=selected&&flow.SkinAvailable(flow.Player().selectedSkin)?selected:nullptr;
+    if(!chosen)for(const auto& c:catalog->characters)if(flow.SkinAvailable(c.id)){chosen=&c;break;}
     if(chosen&&(chosen->id!=previewId_||chosen->definition.get()!=preview_)){
         previewId_=chosen->id;preview_=chosen->definition.get();animator_.SetCharacter(preview_);ui_.PreloadImage("home-skin",preview_->imagePath);
     }else if(!chosen){preview_=nullptr;previewId_.clear();}
@@ -57,6 +58,8 @@ void ApplicationView::Home(const ApplicationFlow& flow,const PopulationSummary* 
     std::string count=population?"REGISTERED "+Number(population->registered)+" / ONLINE "+Number(population->online):"REGISTERED ---- / ONLINE ----";
     ui_.Text("network-count",count,{858,50,386,25},18,white);
     ui_.Text("network-live",population?"LIVE "+Number(population->live)+" / "+Number(population->liveCap)+"  WAIT "+Number(population->waiting):"CHECKING...",{858,79,386,20},13,white);
+    Button("developer-entry","Developer",{1140,79,104,24},{41,32,54,255},{41,32,54,255},10);
+    if(flow.Halloween(now_).active)Button("event-entry","HALLOWEEN EVENT",{18,110,184,28},{255,156,34,255},{192,71,31,255},10);
     ui_.Card("hero",{160,140,620,356},{109,40,251,250},{92,28,223,250},22,3);
     ui_.Text("ready",flow.Catalog()->songs.empty()?"NOT READY":"READY!",{320,112,300,36},24,gold,true);
     if(preview_){animator_.Update(time);ui_.Character("home-skin",*preview_,animator_.CurrentFrame(),{190,157,560,220});}
@@ -134,25 +137,106 @@ void ApplicationView::Result(const ApplicationFlow& flow){
     Button("result-back","曲選択に戻る",{645,485,247,43},lavender,lavender,16);
     if(!status.empty())ui_.Text("result-status",status,{360,570,560,60},14,gold,true);
 }
+void ApplicationView::Halloween(const ApplicationFlow& flow){
+    ui_.Begin({10,7,18,255});ui_.Card("event-card",{24,24,1232,656},{46,16,10,255},{23,12,22,255},18,2);
+    ui_.Text("event-heading","HALLOWEEN EVENT",{48,42,850,46},30,gold);
+    Button("event-close","CLOSE / Esc",back,lavender,lavender,16);
+    const auto window=flow.Halloween(now_);const auto seconds=window.remainingMs/1000;
+    ui_.Text("event-candy","Candy: "+std::to_string(flow.Player().halloweenCandy),{48,94,600,30},20,gold);
+    const std::string timer=window.active?"残り "+std::to_string(seconds/86400)+"d "+std::to_string((seconds/3600)%24)+"h "+std::to_string((seconds/60)%60)+"m "+std::to_string(seconds%60)+"s":"Halloween Event is inactive";
+    ui_.Text("event-timer",timer,{660,94,550,30},17,lavender);
+    Button("shop-tab","SHOP",{48,145,190,42},historyTab?UiColor{41,32,54,255}:UiColor{230,145,45,255},{92,43,38,255},16);
+    Button("history-tab","HISTORY / OLD INFO",{250,145,260,42},historyTab?UiColor{230,145,45,255}:UiColor{41,32,54,255},{92,43,38,255},16);
+    Button("halloween-boss","HALLOWEEN BOSS",{986,145,224,42},{41,32,54,255},{41,32,54,255},15);
+    if(historyTab){
+        if(flow.Player().halloweenHistory.empty())ui_.Text("empty-history","No Halloween history yet.",{48,222,1162,70},22,lavender);
+        int row=0;for(auto it=flow.Player().halloweenHistory.rbegin();it!=flow.Player().halloweenHistory.rend()&&row<4;++it,++row){
+            const auto& h=it->second;const int y=218+row*96;ui_.Panel("history-row-"+Number(row),{48,y,1162,84},{41,24,42,255},{32,18,33,255},12);
+            ui_.Text("history-year-"+Number(row),it->first+"  Candy earned: "+std::to_string(h.candyEarned),{64,y+9,1128,24},18,gold);
+            ui_.Text("history-counts-"+Number(row),"ONLINE "+std::to_string(h.onlineCompleted)+" / WIN "+std::to_string(h.onlineWins)+"  •  Halloween Boss WIN "+std::to_string(h.halloweenBossWins),{64,y+36,1128,20},13,white);
+            std::string purchases="Purchases: ";for(const auto& id:h.purchases){if(purchases.size()>11)purchases+=", ";purchases+=id;}
+            ui_.Text("history-purchases-"+Number(row),purchases,{64,y+60,1128,18},12,lavender);
+        }
+    }else{
+        ui_.Text("shop-heading","Halloween Shop",{48,207,1162,32},20,gold);
+        const auto drawCard=[&](int column,const HalloweenShopEntry* e){
+            const std::string id="shop-card-"+Number(column);const int x=48+column*234;const int price=e?e->price:5000;
+            const auto& ownedIds=e?flow.Player().purchasedSkinIds:flow.Player().unlockedTitleIds;const std::string skin=e?e->skinId:"trick-or-beat";
+            const bool owned=std::find(ownedIds.begin(),ownedIds.end(),skin)!=ownedIds.end();
+            ui_.Card(id,{x,250,222,320},{46,16,10,255},{23,12,22,255},16,1);
+            if(e){const auto& def=*e->character->definition;CharacterAnimator idle;idle.SetCharacter(&def);
+                ui_.Character("event-skin-"+Number(int(e->slotIndex)),def,idle.CurrentFrame(),{x+23,262,176,156});}
+            else {ui_.Text("title-preview-1","TRICK OR",{x+12,280,198,50},28,{240,213,255,255},true);ui_.Text("title-preview-2","BEAT!",{x+12,330,198,50},28,white,true);}
+            ui_.Text(id+"-name",e?e->character->displayName:"トリックオアビート!",{x+12,428,198,40},18,white,true);
+            ui_.Text(id+"-price",std::to_string(price)+" Candy",{x+12,476,198,25},13,gold,true);
+            const bool enabled=!owned&&window.active&&flow.Player().halloweenCandy>=static_cast<std::uint64_t>(price);
+            Button(id+"-buy",owned?"OWNED":"BUY",{x+12,516,198,38},enabled?UiColor{230,145,45,255}:UiColor{57,41,50,255},{57,41,50,255},16);
+        };
+        int column=0;for(const auto& e:shop_)drawCard(column++,&e);drawCard(column,nullptr);
+    }
+    if(!status.empty())ui_.Text("event-status",status,{48,616,1162,38},16,gold);
+}
+void ApplicationView::Settings(const ApplicationFlow& flow){
+    ui_.Begin({21,17,34,255});ui_.Text("settings-heading","設定",{48,40,800,50},32,white);Button("back","タイトルへ / Esc",back,lavender,lavender,16);
+    ui_.Text("volume-label","マスター音量: "+Number(int(std::lround(flow.Player().masterVolume*100)))+"%",{96,180,700,42},24,white);
+    Button("volume-minus","−",{824,180,100,42},lavender,lavender,24);Button("volume-plus","+",{940,180,100,42},lavender,lavender,24);
+    ui_.Text("scroll-label","スクロール方向",{96,284,500,42},24,white);
+    Button("scroll-direction",flow.Player().scrollDirection=="down"?"DOWN":"UP",{700,284,340,42},lavender,lavender,20);
+    ui_.Text("judgement-label","判定表示位置",{96,388,500,42},24,white);
+    Button("judgement-position",flow.Player().judgementPosition=="corner"?"CORNER":"CENTER",{700,388,340,42},lavender,lavender,20);
+    ui_.Text("settings-status",status,{96,536,1100,70},18,gold);
+}
+void ApplicationView::Developer(const ApplicationFlow& flow){
+    ui_.Begin({21,17,34,255});ui_.Text("dev-heading","Developer",{48,40,800,50},32,white);Button("back","タイトルへ / Esc",back,lavender,lavender,16);
+    if(!flow.DeveloperEnabled()){
+        ui_.Text("dev-prompt",developerPinStage?"PIN":"Developer code",{180,230,920,50},24,gold);
+        ui_.Panel("dev-input-background",{180,300,920,54},{41,32,54,255},{41,32,54,255},10);
+        ui_.Text("dev-input",developerPinStage?std::string(developerInput.size(),'*'):developerInput,{194,309,892,36},22,white);
+        Button("dev-auth","Enter",{780,384,320,44},lavender,lavender,18);
+    }else{
+        ui_.Text("dev-event","Halloween Event override",{96,170,1000,46},24,gold);
+        for(int i=0;i<3;++i){const std::array<const char*,3> values{"auto","force-on","force-off"};
+            Button("override-"+Number(i),values[i],{96+i*350,240,330,48},flow.Player().halloweenDev.eventOverride==values[i]?UiColor{230,145,45,255}:lavender,lavender,18);}
+        for(int i=0;i<4;++i){const auto& slot=flow.Player().halloweenDev.skinSlots[i];ui_.Text("dev-slot-"+Number(i),"Shop Skin "+Number(i+1)+": "+(slot.skinId.empty()?"None":slot.skinId)+"  /  "+Number(slot.price)+" Candy",{96,350+i*50,1100,36},18,white);}
+    }
+    ui_.Text("dev-status",status,{96,590,1100,40},18,gold);
+}
 void ApplicationView::Draw(const ApplicationFlow& flow,const PopulationSummary* population,const PopulationStatus* state,double animationMs){
     if(flow.Screen()==AppScreen::Home)Home(flow,population,state,animationMs);
     else if(flow.Screen()==AppScreen::Practice)Practice(flow);
     else if(flow.Screen()==AppScreen::Result)Result(flow);
-    else {ui_.Begin({21,17,34,255});Button("back","タイトルへ / Esc",back,lavender,lavender,16);ui_.Text("event","HALLOWEEN",{80,64,800,60},40,gold);}
+    else if(flow.Screen()==AppScreen::Halloween)Halloween(flow);
+    else if(flow.Screen()==AppScreen::Settings)Settings(flow);
+    else if(flow.Screen()==AppScreen::Developer)Developer(flow);
     if(!persistenceError.empty()){
         ui_.Panel("persistence-error-background",{14,691,1252,29},{21,17,34,255},{21,17,34,255});
         ui_.Text("persistence-error",persistenceError,{18,695,1244,22},12,gold);
     }
     ui_.End();
 }
-void ApplicationView::GameplayOverlay(){ui_.BeginOverlay();Button("game-back","曲選択に戻る / Esc",{14,672,220,34},lavender,lavender,14);ui_.End();}
+void ApplicationView::GameplayOverlay(bool downScroll){ui_.BeginOverlay();Button("game-back","曲選択に戻る / Esc",downScroll?SDL_Rect{518,14,200,34}:SDL_Rect{14,672,220,34},lavender,lavender,12);ui_.End();}
 UiHit ApplicationView::Hit(const ApplicationFlow& flow,double x,double y) const{
     if(flow.Screen()==AppScreen::Home){const auto rects=HomeRects();if(Contains(rects[1],x,y))return {UiAction::Practice};
+        if(Contains(rects[10],x,y))return {UiAction::Settings};
+        if(Contains({1140,79,104,24},x,y))return {UiAction::Developer};
+        if(flow.Halloween(now_).active&&Contains({18,110,184,28},x,y))return {UiAction::Halloween};
         if(Contains({960,386,82,32},x,y))return {UiAction::SkinPrevious};if(Contains({1162,386,82,32},x,y))return {UiAction::SkinNext};
         if(Contains(nameBox,x,y))return {UiAction::Name};if(Contains(saveName,x,y))return {UiAction::SaveName};return {};}
-    if(flow.Screen()==AppScreen::Gameplay)return Contains({14,672,220,34},x,y)?UiHit{UiAction::Back}:UiHit{};
+    if(flow.Screen()==AppScreen::Gameplay)return Contains(flow.Player().scrollDirection=="down"?SDL_Rect{518,14,200,34}:SDL_Rect{14,672,220,34},x,y)?UiHit{UiAction::Back}:UiHit{};
     if(flow.Screen()==AppScreen::Result){if(Contains({645,485,247,43},x,y))return {UiAction::Back};if(!replaySaved&&Contains({388,485,247,43},x,y))return {UiAction::SaveReplay};return {};}
     if(Contains(back,x,y))return {UiAction::Back};
+    if(flow.Screen()==AppScreen::Halloween){
+        if(Contains({48,145,190,42},x,y))return {UiAction::ShopTab};if(Contains({250,145,260,42},x,y))return {UiAction::HistoryTab};
+        if(!historyTab&&flow.Halloween(now_).active){for(std::size_t column=0;column<=shop_.size();++column){
+            if(!Contains({48+int(column)*234+12,516,198,38},x,y))continue;
+            if(column==shop_.size()){if(flow.Player().halloweenCandy>=5000&&std::find(flow.Player().unlockedTitleIds.begin(),flow.Player().unlockedTitleIds.end(),"trick-or-beat")==flow.Player().unlockedTitleIds.end())return {UiAction::BuyTitle};}
+            else {const auto& e=shop_[column];if(flow.Player().halloweenCandy>=static_cast<std::uint64_t>(e.price)&&std::find(flow.Player().purchasedSkinIds.begin(),flow.Player().purchasedSkinIds.end(),e.skinId)==flow.Player().purchasedSkinIds.end())return {UiAction::BuySkin,e.slotIndex};}
+        }}return {};
+    }
+    if(flow.Screen()==AppScreen::Settings){if(Contains({824,180,100,42},x,y))return {UiAction::VolumeDown};if(Contains({940,180,100,42},x,y))return {UiAction::VolumeUp};
+        if(Contains({700,284,340,42},x,y))return {UiAction::ScrollDirection};if(Contains({700,388,340,42},x,y))return {UiAction::JudgementPosition};return {};}
+    if(flow.Screen()==AppScreen::Developer){if(!flow.DeveloperEnabled())return Contains({780,384,320,44},x,y)?UiHit{UiAction::DeveloperAuthenticate}:UiHit{};
+        for(int i=0;i<3;++i)if(Contains({96+i*350,240,330,48},x,y))return {UiAction::EventOverride,std::size_t(i)};return {};}
     if(flow.Screen()!=AppScreen::Practice)return {};
     if(sideMenu)for(int i=0;i<2;++i)if(Contains({side.x,side.y+44+i*40,side.w,40},x,y))return {UiAction::Side,std::size_t(i+1)};
     if(starMenu)for(int i=0;i<8;++i)if(Contains({stars.x,stars.y+44+i*40,stars.w,40},x,y))return {UiAction::Stars,std::size_t(i+1)};

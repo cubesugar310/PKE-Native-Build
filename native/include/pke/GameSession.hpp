@@ -7,6 +7,7 @@
 #include "pke/ChartParser.hpp"
 #include "pke/Config.hpp"
 #include "pke/Diagnostics.hpp"
+#include "pke/LegacySaveImporter.hpp"
 #include "pke/Renderer.hpp"
 #include "pke/RhythmEngine.hpp"
 #include <filesystem>
@@ -23,7 +24,8 @@ public:
     GameSession(Config config,std::filesystem::path executableDir,IAudioClock* injectedClock=nullptr);
     ~GameSession();
     bool Load(const SongSelection& selection);
-    bool LoadPractice(const SongAsset&,const AssetCatalog&,Side,std::string_view skin);
+    bool LoadPractice(const SongAsset&,const AssetCatalog&,Side,std::string_view skin,bool allowChartSkinFallback=true);
+    void ApplyPreferences(const NativeSaveSummary&);
     void HandleKeyDown(SDL_Scancode key);
     void HandleKeyUp(SDL_Scancode key);
     void Update();
@@ -72,5 +74,6 @@ private:
     struct ReplayInput {double time;int lane;bool up;};
     std::vector<ReplayInput> replayInputs_;
     bool diagnosticsVisible_{false};
+    bool downScroll_{},cornerJudgement_{};
 };
 }

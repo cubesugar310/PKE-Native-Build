@@ -71,7 +71,7 @@ int App::Run(int argc,char** argv){
             json+=",\"now\":"+std::to_string(UtcNow())+",\"playerName\":"+JsonString(player.playerName)+",\"playerSkin\":"+JsonString(player.selectedSkin)+'}';
             catalogReady.set_value(std::move(json));
         }catch(...){catalogReady.set_exception(std::current_exception());throw;}
-        ApplicationFlow flow(assets,std::move(player));ApplicationView view(ui);view.Prepare(flow);
+        ApplicationFlow flow(assets,std::move(player));ApplicationView view(ui);view.SetWallClock(UtcNow());view.Prepare(flow);
         if(!playerWritable)view.persistenceError="Player save preserved; writes disabled: "+loaded.error;
         if(!populationWritable)view.persistenceError+=" Population save preserved; writes disabled: "+populationSave.error;
         std::unique_ptr<GameSession> session;
@@ -81,20 +81,32 @@ int App::Run(int argc,char** argv){
         std::jthread clockPump([&](std::stop_token stop){while(!stop.stop_requested()){
             population.AdvanceTo(UtcNow());std::this_thread::sleep_for(std::chrono::milliseconds(100));}});
         const auto savePlayer=[&]{if(!playerWritable)return;const auto result=saves.SavePlayer(flow.Player());if(!result.ok)view.status=result.error;};
+        const auto persistPlayer=[&](const NativeSaveSummary& candidate){
+            if(!playerWritable){view.status="Player save is preserved; writes disabled.";return false;}
+            const auto result=saves.SavePlayer(candidate);if(!result.ok)view.persistenceError=result.error;return result.ok;
+        };
         const auto requestCheckpoint=[&]{if(populationWritable&&!pendingCheckpoint.valid())pendingCheckpoint=population.RequestCheckpoint();};
         const auto back=[&]{if(session){session->RequestStop();session.reset();}flow.Back();view.sideMenu=view.starMenu=view.searchFocus=view.nameFocus=false;
-            view.composition.clear();SDL_StopTextInput();view.status.clear();view.EnsureSelected(flow);requestCheckpoint();};
+            view.composition.clear();view.developerInput.clear();view.developerCode.clear();view.developerPinStage=false;
+            SDL_StopTextInput();view.status.clear();view.EnsureSelected(flow);requestCheckpoint();};
         const auto launch=[&]{if(!flow.SelectedSong())return;
             auto candidate=std::make_unique<GameSession>(config,exeDir);candidate->SetRenderer(&gameplay);
-            if(!candidate->LoadPractice(flow.Catalog()->songs.at(*flow.SelectedSong()),*flow.Catalog(),flow.PracticeSide(),flow.Player().selectedSkin)){
+            candidate->ApplyPreferences(flow.Player());
+            if(!candidate->LoadPractice(flow.Catalog()->songs.at(*flow.SelectedSong()),*flow.Catalog(),flow.PracticeSide(),flow.Player().selectedSkin,false)){
                 view.status=candidate->FailureMessage();return;}
             if(!flow.BeginGameplay())return;session=std::move(candidate);view.replaySaved=false;view.searchFocus=view.nameFocus=false;view.sideMenu=view.starMenu=false;
             view.status.clear();view.composition.clear();SDL_StopTextInput();};
         const auto commitName=[&]{flow.SetPlayerName(view.nameEdit);savePlayer();view.nameFocus=false;view.composition.clear();SDL_StopTextInput();};
-        const auto changeSkin=[&](int direction){const auto& characters=flow.Catalog()->characters;if(characters.empty())return;
-            auto found=std::find_if(characters.begin(),characters.end(),[&](const auto& c){return c.id==flow.Player().selectedSkin;});
+        const auto changeSkin=[&](int direction){std::vector<std::string> characters;
+            for(const auto& c:flow.Catalog()->characters)if(flow.SkinAvailable(c.id))characters.push_back(c.sourceSkinId.empty()?c.id:c.sourceSkinId);if(characters.empty())return;
+            auto found=std::find(characters.begin(),characters.end(),flow.Player().selectedSkin);
             int position=found==characters.end()?0:int(std::distance(characters.begin(),found));
-            position=(position+direction+int(characters.size()))%int(characters.size());flow.SetSkin(characters[position].id);savePlayer();view.Prepare(flow);};
+            position=(position+direction+int(characters.size()))%int(characters.size());flow.SetSkin(characters[position]);savePlayer();view.Prepare(flow);};
+        const auto authenticate=[&]{
+            if(!view.developerPinStage){view.developerCode=std::move(view.developerInput);view.developerInput.clear();view.developerPinStage=true;return;}
+            const bool enabled=flow.EnableDeveloper(view.developerCode,view.developerInput);view.developerInput.clear();view.developerCode.clear();view.developerPinStage=false;
+            view.status=enabled?"Developer mode enabled":"Invalid code or PIN";if(enabled)SDL_StopTextInput();
+        };
         bool running=true,fullscreen=false;auto previous=std::chrono::steady_clock::now();const auto opened=previous;
         while(running){
             const auto frameStart=std::chrono::steady_clock::now();const double interval=std::chrono::duration<double,std::milli>(frameStart-previous).count();previous=frameStart;
@@ -105,17 +117,33 @@ int App::Run(int argc,char** argv){
                     for(auto key:config.playerKeys)session->HandleKeyUp(key);
                 if(event.type==SDL_TEXTEDITING){view.composition=event.edit.text;continue;}
                 if(event.type==SDL_TEXTINPUT){view.composition.clear();if(view.searchFocus){flow.SetSearch(flow.Search()+event.text.text);view.EnsureSelected(flow);}
-                    else if(view.nameFocus)view.nameEdit+=event.text.text;continue;}
+                    else if(view.nameFocus)view.nameEdit+=event.text.text;
+                    else if(flow.Screen()==AppScreen::Developer&&!flow.DeveloperEnabled()&&view.developerInput.size()<128)view.developerInput+=event.text.text;continue;}
                 if(event.type==SDL_MOUSEWHEEL&&flow.Screen()==AppScreen::Practice){view.Scroll(flow,-event.wheel.y);continue;}
                 if(event.type==SDL_MOUSEBUTTONDOWN&&event.button.button==SDL_BUTTON_LEFT){
                     int ww,wh,ow,oh;SDL_GetWindowSize(window,&ww,&wh);SDL_GetRendererOutputSize(sdl,&ow,&oh);
                     const auto point=WindowToLogical(event.button.x,event.button.y,ww,wh,ow,oh);if(!point)continue;
-                    const auto hit=view.Hit(flow,point->x,point->y);
+                    view.SetWallClock(UtcNow());const auto hit=view.Hit(flow,point->x,point->y);
                     if(hit.action!=UiAction::Name&&hit.action!=UiAction::SaveName&&view.nameFocus)commitName();
-                    if(hit.action!=UiAction::Search){view.searchFocus=false;view.composition.clear();if(!view.nameFocus)SDL_StopTextInput();}
+                    if(hit.action!=UiAction::Search){view.searchFocus=false;view.composition.clear();if(!view.nameFocus&&!(flow.Screen()==AppScreen::Developer&&!flow.DeveloperEnabled()))SDL_StopTextInput();}
                     switch(hit.action){
                         case UiAction::Practice:flow.OpenPractice();view.status.clear();view.EnsureSelected(flow);break;
                         case UiAction::Back:back();break;
+                        case UiAction::Halloween:flow.OpenHalloween();view.historyTab=false;view.status.clear();view.Prepare(flow);break;
+                        case UiAction::ShopTab:view.historyTab=false;break;
+                        case UiAction::HistoryTab:view.historyTab=true;break;
+                        case UiAction::BuyTitle:view.status="Purchase: "+flow.PurchaseHalloweenTitle(UtcNow(),persistPlayer);break;
+                        case UiAction::BuySkin:view.status="Purchase: "+flow.PurchaseHalloweenSkin(hit.index,UtcNow(),persistPlayer);break;
+                        case UiAction::Settings:flow.OpenSettings();view.status.clear();break;
+                        case UiAction::VolumeDown:case UiAction::VolumeUp:case UiAction::ScrollDirection:case UiAction::JudgementPosition:{
+                            const auto& p=flow.Player();const double volume=std::clamp(p.masterVolume+(hit.action==UiAction::VolumeDown?-0.1:hit.action==UiAction::VolumeUp?0.1:0.0),0.0,1.0);
+                            const auto scroll=hit.action==UiAction::ScrollDirection?(p.scrollDirection=="up"?"down":"up"):p.scrollDirection;
+                            const auto judgement=hit.action==UiAction::JudgementPosition?(p.judgementPosition=="center"?"corner":"center"):p.judgementPosition;
+                            view.status=flow.SavePreferences(volume,scroll,judgement,persistPlayer)?"Saved":"Save failed";break;}
+                        case UiAction::Developer:flow.OpenDeveloper();view.status.clear();view.developerInput.clear();view.developerCode.clear();view.developerPinStage=false;if(!flow.DeveloperEnabled())SDL_StartTextInput();break;
+                        case UiAction::DeveloperAuthenticate:authenticate();break;
+                        case UiAction::EventOverride:{const std::array<const char*,3> modes{"auto","force-on","force-off"};
+                            view.status=flow.SaveEventOverride(modes.at(hit.index),persistPlayer)?"Saved":"Save failed";break;}
                         case UiAction::Song:flow.SelectSong(hit.index);launch();break;
                         case UiAction::Search:view.searchFocus=true;view.nameFocus=false;SDL_StartTextInput();break;
                         case UiAction::Name:view.nameEdit=flow.Player().playerName;view.nameFocus=true;SDL_StartTextInput();break;
@@ -136,6 +164,8 @@ int App::Run(int argc,char** argv){
                 }
                 if(event.type==SDL_KEYDOWN){const auto key=event.key.keysym.scancode;
                     if(key==SDL_SCANCODE_F11&&!event.key.repeat){fullscreen=!fullscreen;SDL_SetWindowFullscreen(window,fullscreen?SDL_WINDOW_FULLSCREEN_DESKTOP:0);continue;}
+                    if(flow.Screen()==AppScreen::Developer&&!flow.DeveloperEnabled()){
+                        if(key==SDL_SCANCODE_ESCAPE)back();else if(key==SDL_SCANCODE_RETURN&&!event.key.repeat)authenticate();else if(key==SDL_SCANCODE_BACKSPACE)EraseLast(view.developerInput);continue;}
                     if(view.nameFocus){if(key==SDL_SCANCODE_RETURN)commitName();else if(key==SDL_SCANCODE_ESCAPE){view.nameFocus=false;SDL_StopTextInput();}
                         else if(key==SDL_SCANCODE_BACKSPACE)EraseLast(view.nameEdit);continue;}
                     if(view.searchFocus){if(key==SDL_SCANCODE_BACKSPACE){auto text=flow.Search();EraseLast(text);flow.SetSearch(std::move(text));view.EnsureSelected(flow);}
@@ -152,7 +182,7 @@ int App::Run(int argc,char** argv){
             }
             if(!running)break;
             if(flow.Screen()==AppScreen::Gameplay&&session){const auto updateStart=std::chrono::steady_clock::now();session->Update();const auto drawStart=std::chrono::steady_clock::now();
-                session->Render(false);view.GameplayOverlay();const auto drawEnd=std::chrono::steady_clock::now();
+                session->Render(false);view.GameplayOverlay(flow.Player().scrollDirection=="down");const auto drawEnd=std::chrono::steady_clock::now();
                 session->RecordFrameTiming(interval,std::chrono::duration<double,std::milli>(drawStart-updateStart).count(),std::chrono::duration<double,std::milli>(drawEnd-drawStart).count());
                 if(session->State()==SessionState::Completed){flow.FinishGameplay(session->Stats());view.status.clear();requestCheckpoint();}
                 else if(session->State()==SessionState::Failed||session->State()==SessionState::DeviceLost){const auto error=session->FailureMessage();back();view.status=error;}
@@ -162,7 +192,7 @@ int App::Run(int argc,char** argv){
                         if(result.ok)lastCheckpoint=std::move(checkpoint);else view.status=result.error;}else view.status=checkpoint.error;}
                 const auto now=UtcNow();if(now>=nextCheckpoint){requestCheckpoint();nextCheckpoint=now+30000;}
                 const auto snapshot=population.Snapshot();const auto state=population.Status();
-                view.Draw(flow,snapshot.get(),state.get(),std::chrono::duration<double,std::milli>(frameStart-opened).count());
+                view.SetWallClock(now);view.Draw(flow,snapshot.get(),state.get(),std::chrono::duration<double,std::milli>(frameStart-opened).count());
             }
             if(!config.vsync&&config.fpsCap>0){const auto remaining=std::chrono::duration<double>(1.0/config.fpsCap)-(std::chrono::steady_clock::now()-frameStart);
                 if(remaining.count()>0)std::this_thread::sleep_for(remaining);}

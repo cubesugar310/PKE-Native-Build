@@ -74,6 +74,15 @@ PKE_TEST("Gameplay uses source lane centers and colored directional notes at the
     output.Color(776,94,100,100,110);output.Color(98,94,100,100,110);
     output.Color(776,544,184,74,152);
 }
+PKE_TEST("Downscroll mirrors receptor and sustain geometry while preserving lane ownership") {
+    SurfaceRenderer output(1280,720);pke::Renderer renderer;PKE_REQUIRE(renderer.Initialize(output.renderer));
+    pke::Chart chart;chart.notes.push_back({1000,0,200,pke::Side::Player});pke::RhythmEngine rhythm;rhythm.Reset(chart);
+    pke::RenderState state;state.chart=&chart;state.notes=&rhythm.NoteStates();state.downScroll=true;renderer.Draw(state);
+    output.Color(776,626,100,100,110);output.Color(98,626,100,100,110);
+    output.Color(776,176,184,74,152);output.Color(776,120,184,74,152);
+    output.Color(776,544,20,20,28);
+    output.Color(400,70,80,220,120);output.Color(400,660,20,20,28);
+}
 
 PKE_TEST("UI text uses preloaded font bytes and unchanged labels reuse their textures") {
     SurfaceRenderer output(1280,720);pke::UiRenderer ui;
@@ -122,4 +131,12 @@ PKE_TEST("Native scene pixels and hit targets traverse the complete Practice rou
     view.replaySaved=true;PKE_REQUIRE(view.Hit(flow,500,500).action==pke::UiAction::None);
     PKE_REQUIRE(view.Hit(flow,750,500).action==pke::UiAction::Back);flow.Back();flow.Back();
     PKE_REQUIRE(flow.Screen()==pke::AppScreen::Home);PKE_REQUIRE(flow.Player().progress.rp==1500);PKE_REQUIRE(flow.Player().progress.wins==12);
+    view.SetWallClock(1792000000000LL);view.Draw(flow,nullptr,nullptr,0);capture("home-halloween");
+    PKE_REQUIRE(view.Hit(flow,100,124).action==pke::UiAction::Halloween);flow.OpenHalloween();view.Prepare(flow);
+    view.Draw(flow,nullptr,nullptr,0);capture("halloween-shop");
+    PKE_REQUIRE(view.Hit(flow,100,532).action==pke::UiAction::None);
+    PKE_REQUIRE(view.Hit(flow,320,160).action==pke::UiAction::HistoryTab);view.historyTab=true;
+    view.Draw(flow,nullptr,nullptr,0);capture("halloween-history");flow.Back();flow.OpenSettings();
+    view.Draw(flow,nullptr,nullptr,0);capture("settings");PKE_REQUIRE(view.Hit(flow,750,300).action==pke::UiAction::ScrollDirection);
+    flow.Back();flow.OpenDeveloper();view.Draw(flow,nullptr,nullptr,0);capture("developer");
 }

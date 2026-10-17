@@ -9,3 +9,9 @@ PKE_TEST("AudioEngine converts to one format and mixes Inst Voices from same cur
 PKE_TEST("AudioEngine optional Voices remains valid") {
     pke::test::ManualAudioOutput output; pke::AudioEngine a(&output); a.LoadDecodedForTest(pcm(48000,2,4,0.2f),std::nullopt); a.Start(); float out[4]{}; a.MixFrames(out,2); PKE_REQUIRE_NEAR(out[0],0.2,1e-6); PKE_REQUIRE(a.SongFrame()==2);
 }
+PKE_TEST("Master volume scales both stems without changing the audio clock") {
+    pke::test::ManualAudioOutput output;pke::AudioEngine a(&output);
+    a.LoadDecodedForTest(pcm(48000,2,8,0.25f),pcm(48000,2,8,0.5f));a.SetMasterVolume(0.4);a.Start();
+    float out[4]{};a.MixFrames(out,2);for(float value:out)PKE_REQUIRE_NEAR(value,0.3,1e-6);
+    a.SetMasterVolume(0);a.MixFrames(out,2);for(float value:out)PKE_REQUIRE(value==0);PKE_REQUIRE(a.SongFrame()==4);
+}

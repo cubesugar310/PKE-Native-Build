@@ -3,6 +3,7 @@
 #include "pke/QuickJsRuntime.hpp"
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 
 namespace {
 class FakeClock : public pke::IAudioClock {
@@ -25,6 +26,14 @@ PKE_TEST("GameSession lifecycle completes with fake audio clock") {
     auto root=makeSong("pke-session-life"); pke::Config cfg; cfg.songsRoot="Songs"; cfg.charactersRoot="Characters"; FakeClock clock; pke::GameSession s(cfg,root,&clock);
     PKE_REQUIRE(s.Load({"demo","hard"})); PKE_REQUIRE(s.State()==pke::SessionState::Ready); s.Update(); PKE_REQUIRE(s.State()==pke::SessionState::Countdown); s.Update(); PKE_REQUIRE(s.State()==pke::SessionState::Playing);
     clock.t=1000; s.HandleKeyDown(SDL_SCANCODE_LEFT); clock.t=1500; s.HandleKeyDown(SDL_SCANCODE_DOWN); clock.state=pke::AudioState::Finished; s.Update(); PKE_REQUIRE(s.State()==pke::SessionState::Completed); PKE_REQUIRE(s.Stats().sick==2);
+}
+PKE_TEST("An explicit unavailable player skin cannot fall back to an unpurchased chart character") {
+    auto root=makeSong("pke-session-entitlement");pke::Config cfg;FakeClock clock;pke::GameSession session(cfg,root,&clock);
+    pke::SongAsset song;song.displayName="Gated";song.charts.emplace_back();song.charts[0].chart.player1="bf";
+    pke::AssetCatalog catalog;pke::CharacterAsset gated;gated.id="bf";gated.sourceSkinId="sparrow:holiday";
+    gated.definition=std::make_shared<pke::CharacterDefinition>();catalog.characters.push_back(gated);
+    PKE_REQUIRE(session.LoadPractice(song,catalog,pke::Side::Player,"",false));
+    PKE_REQUIRE(std::find(session.Warnings().begin(),session.Warnings().end(),"No unlocked player skin available; using diagnostic fallback")!=session.Warnings().end());
 }
 PKE_TEST("GameSession judgement state is same under 60 and 240 Hz updates") {
     auto run=[](double dt){ auto root=makeSong(dt<5?"pke-session-240":"pke-session-60"); pke::Config cfg; cfg.songsRoot="Songs"; cfg.charactersRoot="Characters"; FakeClock c; pke::GameSession s(cfg,root,&c); PKE_REQUIRE(s.Load({"demo","hard"})); s.Update(); s.Update(); double nextHit1=1000,nextHit2=1500; bool h1=false,h2=false; for(double t=0;t<1900;t+=dt){ c.t=t; s.Update(); if(!h1 && t>=nextHit1){ c.t=nextHit1; s.HandleKeyDown(SDL_SCANCODE_LEFT); h1=true; } if(!h2&&t>=nextHit2){ c.t=nextHit2; s.HandleKeyDown(SDL_SCANCODE_DOWN); h2=true; }} return s.Stats(); };

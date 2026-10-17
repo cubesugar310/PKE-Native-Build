@@ -118,14 +118,18 @@ void AudioEngine::NotifyDeviceLostFromAudioThread() noexcept {
     const auto current=State();
     if(current!=AudioState::Stopped && current!=AudioState::Finished && current!=AudioState::Error) state_.store(AudioState::DeviceLost,std::memory_order_relaxed);
 }
+void AudioEngine::SetMasterVolume(double volume) noexcept {
+    masterVolume_.store(std::isfinite(volume)?static_cast<float>(std::clamp(volume,0.0,1.0)):0.0f,std::memory_order_relaxed);
+}
 void AudioEngine::MixFrames(float* out,uint32_t frames) noexcept {
     if(!out||outputChannels_==0) return;
     const size_t total=size_t(frames)*outputChannels_;
     std::fill_n(out,total,0.0f);
     if(State()!=AudioState::Playing) return;
     uint64_t cursor=songFrame_.load(std::memory_order_relaxed);
+    const auto gain=masterVolume_.load(std::memory_order_relaxed);
     for(uint32_t f=0;f<frames;++f){ if(cursor>=inst_.frameCount){ state_.store(AudioState::Finished,std::memory_order_relaxed); break; }
-        for(uint32_t c=0;c<outputChannels_;++c){ float v=inst_.pcm[cursor*outputChannels_+c]; if(voices_&&cursor<voices_->frameCount)v+=voices_->pcm[cursor*outputChannels_+c]; out[size_t(f)*outputChannels_+c]=v; }
+        for(uint32_t c=0;c<outputChannels_;++c){ float v=inst_.pcm[cursor*outputChannels_+c]; if(voices_&&cursor<voices_->frameCount)v+=voices_->pcm[cursor*outputChannels_+c]; out[size_t(f)*outputChannels_+c]=v*gain; }
         ++cursor;
     }
     songFrame_.store(cursor,std::memory_order_relaxed);

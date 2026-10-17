@@ -14,6 +14,9 @@ GameSession::~GameSession(){
     if(clock_) clock_->Stop();
     ownedAudio_.SetDiagnostics(nullptr);
 }
+void GameSession::ApplyPreferences(const NativeSaveSummary& player){
+    ownedAudio_.SetMasterVolume(player.masterVolume);downScroll_=player.scrollDirection=="down";cornerJudgement_=player.judgementPosition=="corner";
+}
 
 void GameSession::Fail(std::string m){ failureMessage_=std::move(m); state_=SessionState::Failed; if(clock_) clock_->Stop(); }
 CharacterDefinition GameSession::FallbackCharacter(const std::string& label) const {
@@ -41,7 +44,7 @@ bool GameSession::Load(const SongSelection& selection){
         state_=SessionState::Ready; return true;
     } catch(const std::exception& e){ Fail(e.what()); return false; }
 }
-bool GameSession::LoadPractice(const SongAsset& song,const AssetCatalog& catalog,Side side,std::string_view skin){
+bool GameSession::LoadPractice(const SongAsset& song,const AssetCatalog& catalog,Side side,std::string_view skin,bool allowChartSkinFallback){
     state_=SessionState::Loading;failureMessage_.clear();warnings_.clear();nextOpponentNote_=0;
     songName_=song.displayName;judgementText_.clear();lastJudgementAt_=-1000;
     songFolder_=song.folderName;instName_=song.instPath.filename().string();
@@ -53,11 +56,11 @@ bool GameSession::LoadPractice(const SongAsset& song,const AssetCatalog& catalog
         if(side==Side::Opponent)for(auto& note:chart_.notes)note.side=note.side==Side::Player?Side::Opponent:Side::Player;
         rhythm_.Reset(chart_);
         auto character=[&](std::string id){
-            const auto colon=id.find_last_of(':');if(colon!=std::string::npos)id.erase(0,colon+1);
-            for(const auto& c:catalog.characters)if(c.id==id)return *c.definition;
+            if(const auto* c=FindCharacterAsset(catalog,id))return *c->definition;
             return FallbackCharacter(id);
         };
-        const auto playerId=skin.empty()?(chart_.player1.empty()?"bf":chart_.player1):std::string(skin);
+        const auto playerId=skin.empty()?(allowChartSkinFallback?(chart_.player1.empty()?"bf":chart_.player1):""):std::string(skin);
+        if(playerId.empty())warnings_.push_back("No unlocked player skin available; using diagnostic fallback");
         bfDef_=character(playerId);dadDef_=character(song.opponentCharacterId.empty()?chart_.player2:song.opponentCharacterId);
         bfAnimator_.SetCharacter(&bfDef_);dadAnimator_.SetCharacter(&dadDef_);
         if(!injectedClock_){ownedAudio_.SetLatencyCompensationMs(config_.audioLatencyCompensationMs);
@@ -111,6 +114,7 @@ void GameSession::Render(bool present){
     RenderState rs;
     rs.songTimeMs=clock_?clock_->SongTimeMs():0;
     rs.scrollSpeed=chart_.scrollSpeed;
+    rs.downScroll=downScroll_;rs.cornerJudgement=cornerJudgement_;
     rs.chart=&chart_;
     rs.notes=&rhythm_.NoteStates();
     rs.bf={"bf",&bfDef_,bfAnimator_.CurrentFrame(),{800,320},2.0/3.0};

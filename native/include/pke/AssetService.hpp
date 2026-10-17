@@ -30,6 +30,7 @@ struct CharacterAsset {
     std::string id,displayName;
     std::filesystem::path jsonPath;
     std::shared_ptr<const CharacterDefinition> definition;
+    std::string sourceSkinId;
 };
 struct AssetCatalog {
     std::uint64_t generation{};
@@ -37,6 +38,7 @@ struct AssetCatalog {
     std::vector<CharacterAsset> characters;
     std::vector<AssetIssue> issues;
 };
+const CharacterAsset* FindCharacterAsset(const AssetCatalog&,std::string_view);
 
 // Owner-thread service. Refresh is an explicit cold-path scan; all later
 // queries use immutable catalog data and cached, normalized search metadata.

@@ -210,26 +210,26 @@ void FillSettings(LegacyFullSaveData& out, const std::string& raw) {
 }
 
 void FillHalloween(LegacyFullSaveData& out, const std::string& raw) {
-    if (raw.empty()) return;
-    const auto j = ParseJson(raw);
-#ifdef PKE_NATIVE_USE_NLOHMANN
-    out.halloweenCandy=ClampInt(j.value("candy",0LL));
-#else
-    out.halloweenCandy=ClampInt(j.get<long long>("candy",0));
-#endif
-    out.purchasedSkinIds=StringVector(j,"purchasedSkinIds");
-    out.unlockedTitleIds=StringVector(j,"unlockedTitleIds");
+    ImportHalloweenState(out,raw);
 }
 
 NativeSaveSummary ToNative(const LegacyFullSaveData& legacy) {
     NativeSaveSummary out;
     out.valid=true; out.version=kNativeVersion; out.importedAt=NowIsoUtc(); out.legacyExportedAt=legacy.exportedAt; out.legacySourcePath=legacy.sourcePath.string(); out.progress=legacy.progress;
     out.playerName=legacy.playerName; out.equippedTitle=legacy.equippedTitle; out.selectedSkin=legacy.selectedSkin; out.masterVolume=legacy.masterVolume; out.scrollDirection=legacy.scrollDirection; out.judgementPosition=legacy.judgementPosition;
-    out.halloweenCandy=legacy.halloweenCandy; out.purchasedSkinIds=legacy.purchasedSkinIds; out.unlockedTitleIds=legacy.unlockedTitleIds; out.earnedTitleIds=legacy.earnedTitleIds;
+    static_cast<HalloweenData&>(out)=legacy;out.earnedTitleIds=legacy.earnedTitleIds;
     return out;
 }
 
 std::string SerializeNative(const NativeSaveSummary& s) {
+    std::ostringstream history,config;history<<'{';bool first=true;
+    for(const auto& [year,h]:s.halloweenHistory){if(!first)history<<',';first=false;
+        history<<'"'<<JsonEscape(year)<<"\":{\"candyEarned\":"<<h.candyEarned<<",\"onlineCompleted\":"<<h.onlineCompleted
+            <<",\"onlineWins\":"<<h.onlineWins<<",\"halloweenBossWins\":"<<h.halloweenBossWins<<",\"purchases\":"<<StringArrayJson(h.purchases)<<'}';}history<<'}';
+    config<<"{\"version\":2,\"eventOverride\":\""<<JsonEscape(s.halloweenDev.eventOverride)<<"\",\"bossSongRefs\":[";
+    for(std::size_t i=0;i<3;++i){if(i)config<<',';config<<'"'<<JsonEscape(s.halloweenDev.bossSongRefs[i])<<'"';}config<<"],\"skinSlots\":[";
+    for(std::size_t i=0;i<4;++i){if(i)config<<',';const auto& slot=s.halloweenDev.skinSlots[i];
+        config<<"{\"skinId\":\""<<JsonEscape(slot.skinId)<<"\",\"price\":"<<slot.price<<'}';}config<<"]}";
     std::ostringstream out;
     out << "{\n"
         << "  \"format\":\"" << kNativeFormat << "\",\n"
@@ -247,7 +247,9 @@ std::string SerializeNative(const NativeSaveSummary& s) {
         << "  \"equippedTitle\":\"" << JsonEscape(s.equippedTitle) << "\",\n"
         << "  \"selectedSkin\":\"" << JsonEscape(s.selectedSkin) << "\",\n"
         << "  \"settings\":{\"masterVolume\":" << s.masterVolume << ",\"scrollDirection\":\"" << JsonEscape(s.scrollDirection) << "\",\"judgementPosition\":\"" << JsonEscape(s.judgementPosition) << "\"},\n"
-        << "  \"halloween\":{\"candy\":" << s.halloweenCandy << ",\"purchasedSkinIds\":" << StringArrayJson(s.purchasedSkinIds) << ",\"unlockedTitleIds\":" << StringArrayJson(s.unlockedTitleIds) << "},\n"
+        << "  \"halloween\":{\"candy\":" << s.halloweenCandy << ",\"purchasedSkinIds\":" << StringArrayJson(s.purchasedSkinIds) << ",\"unlockedTitleIds\":" << StringArrayJson(s.unlockedTitleIds)
+        << ",\"claimedRewardIds\":"<<StringArrayJson(s.claimedRewardIds)<<",\"historyByYear\":"<<history.str()<<"},\n"
+        << "  \"halloweenDev\":"<<config.str()<<",\n"
         << "  \"earnedTitleIds\":" << StringArrayJson(s.earnedTitleIds) << "\n"
         << "}\n";
     return out.str();
@@ -298,6 +300,7 @@ LegacyFullSaveData ReadLegacyFullSave(const std::filesystem::path& path) {
         if(!progressRecovered) { try { progressRecovered=FillProgressFromRankingJournal(out,StorageString(root,kRankingJournalKey)); } catch(...) {} }
         try { FillSettings(out,StorageString(root,kSettingsKey)); } catch(...) {}
         try { FillHalloween(out,StorageString(root,kHalloweenKey)); } catch(...) {}
+        try { ImportHalloweenConfig(out,StorageString(root,"pke-beat-battle-halloween-dev-v1")); } catch(...) {}
         out.playerName=StorageString(root,kPlayerNameKey); out.equippedTitle=StorageString(root,kPlayerTitleKey); out.selectedSkin=StorageString(root,kTitleSkinKey);
         out.valid=true;
     } catch(...) { out.valid=false; }

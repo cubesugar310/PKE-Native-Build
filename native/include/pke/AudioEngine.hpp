@@ -63,6 +63,7 @@ public:
     void NotifyDeviceLostFromAudioThread() noexcept;
     void SetDiagnostics(Diagnostics* diagnostics) noexcept { diagnostics_=diagnostics; }
     void MixFrames(float* output,uint32_t frameCount) noexcept;
+    void SetMasterVolume(double) noexcept;
 private:
     struct DeviceImpl;
     std::unique_ptr<DeviceImpl> device_;
@@ -77,6 +78,7 @@ private:
     uint32_t outputChannels_{0};
     std::atomic<uint64_t> songFrame_{0};
     std::atomic<AudioState> state_{AudioState::Stopped};
+    std::atomic<float> masterVolume_{1.0f};
     double latencyCompensationMs_{0.0};
     std::string lastError_;
     Diagnostics* diagnostics_{nullptr};

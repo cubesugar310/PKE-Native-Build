@@ -1,5 +1,7 @@
 #include "pke/SaveService.hpp"
 #include <cmath>
+#include <algorithm>
+#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -35,6 +37,8 @@ template<class F>void EachObject(const Json& value,F visit){
 template<class F>void EachArray(const Json& value,F visit){for(const auto& item:value)visit(item);}
 std::size_t Size(const Json& value){return value.size();}
 Json Parse(std::string_view text){return Json::parse(text);}
+bool Null(const Json& v){return v.is_null();}
+std::string Encode(const Json& v){return v.dump();}
 #else
 using Json=boost::json::value;
 bool Object(const Json& value){return value.is_object();}
@@ -59,6 +63,8 @@ template<class F>void EachObject(const Json& value,F visit){
 template<class F>void EachArray(const Json& value,F visit){for(const auto& item:value.as_array())visit(item);}
 std::size_t Size(const Json& value){return Array(value)?value.as_array().size():value.as_object().size();}
 Json Parse(std::string_view text){return boost::json::parse(Key(text));}
+bool Null(const Json& v){return v.is_null();}
+std::string Encode(const Json& v){return boost::json::serialize(v);}
 #endif
 
 Json ParseBounded(std::string_view text){
@@ -103,6 +109,37 @@ void SongRange(const Json& value){
 void Strings(const Json& value){
     RequireArray(value,15000);EachArray(value,[](const auto& item){String(item);});
 }
+const Json* Optional(const Json& value,std::string_view key){return Has(value,key)?&At(value,key):nullptr;}
+std::string TextOr(const Json* value,std::string fallback={}){
+    if(!value||Null(*value))return fallback;
+    try{return std::string(String(*value));}catch(...){return Encode(*value);}
+}
+std::string Trim(std::string text){
+    const auto first=text.find_first_not_of(" \t\n\r");if(first==std::string::npos)return {};
+    return text.substr(first,text.find_last_not_of(" \t\n\r")-first+1);
+}
+std::uint64_t SafeOr(const Json* value,std::uint64_t fallback=0,std::uint64_t max=9007199254740991ULL){
+    if(!value)return fallback;
+    double number{};
+    try{number=Number(*value);}catch(...){
+        const auto text=Trim(TextOr(value));if(text.empty())number=0;
+        else {char* end{};number=std::strtod(text.c_str(),&end);if(end==text.c_str()||*end)return fallback;}
+    }
+    if(!std::isfinite(number))return fallback;
+    return static_cast<std::uint64_t>(std::clamp(std::floor(number),0.0,static_cast<double>(max)));
+}
+std::vector<std::string> IdList(const Json* value){
+    std::vector<std::string> result;if(!value||!Array(*value))return result;
+    EachArray(*value,[&](const auto& item){if(Null(item))return;auto id=Trim(TextOr(&item));
+        if(!id.empty()&&std::find(result.begin(),result.end(),id)==result.end())result.push_back(std::move(id));});return result;
+}
+bool Year(std::string_view year){return year.size()==4&&std::all_of(year.begin(),year.end(),[](char c){return c>='0'&&c<='9';});}
+std::map<std::string,HalloweenHistory> History(const Json* value){
+    std::map<std::string,HalloweenHistory> result;if(!value||!Object(*value))return result;
+    EachObject(*value,[&](auto year,const auto& entry){if(!Year(year)||!Object(entry))return;
+        result.emplace(std::string(year),HalloweenHistory{SafeOr(Optional(entry,"candyEarned")),SafeOr(Optional(entry,"onlineCompleted")),
+            SafeOr(Optional(entry,"onlineWins")),SafeOr(Optional(entry,"halloweenBossWins")),IdList(Optional(entry,"purchases"))});});return result;
+}
 template<class F>void PlayerMap(const Json& value,F visit){
     RequireObject(value);if(Size(value)>15000)Invalid("Native population map is too large");
     EachObject(value,[&](auto key,const auto& item){
@@ -131,6 +168,24 @@ void ProtectLegacyDestination(const std::filesystem::path& path,const std::share
 }
 }
 
+void ImportHalloweenState(HalloweenData& out,std::string_view text){
+    if(text.empty())return;const auto value=ParseBounded(text);if(!Object(value))return;
+    out.halloweenCandy=SafeOr(Optional(value,"candy"));out.purchasedSkinIds=IdList(Optional(value,"purchasedSkinIds"));
+    out.unlockedTitleIds=IdList(Optional(value,"unlockedTitleIds"));out.claimedRewardIds=IdList(Optional(value,"claimedRewardIds"));
+    out.halloweenHistory=History(Optional(value,"historyByYear"));
+}
+void ImportHalloweenConfig(HalloweenData& out,std::string_view text){
+    if(text.empty())return;const auto value=ParseBounded(text);if(!Object(value))return;
+    HalloweenDevConfig config;const auto* slots=Optional(value,"skinSlots");std::size_t index=0;
+    if(slots&&Array(*slots))EachArray(*slots,[&](const auto& slot){if(index>=4)return;
+        config.skinSlots[index++]={Trim(TextOr(Optional(slot,"skinId"))),static_cast<int>(SafeOr(Optional(slot,"price"),3000,999999))};});
+    const auto* refs=Optional(value,"bossSongRefs");index=0;
+    if(refs&&Array(*refs))EachArray(*refs,[&](const auto& ref){if(index<3)config.bossSongRefs[index++]=Trim(TextOr(&ref));});
+    else config.bossSongRefs[0]=Trim(TextOr(Optional(value,"bossSongRef")));
+    const auto mode=TextOr(Optional(value,"eventOverride"));if(mode=="force-on"||mode=="force-off")config.eventOverride=mode;
+    out.halloweenDev=std::move(config);
+}
+
 static void ValidatePlayerDocument(const Json& root){
     RequireObject(root);
     if(String(At(root,"format"))!="pke-native-save")Invalid("Invalid Native player save format");
@@ -149,8 +204,19 @@ static void ValidatePlayerDocument(const Json& root){
     if(scroll!="up"&&scroll!="down")Invalid("Invalid Native scroll direction");
     if(judgement!="center"&&judgement!="corner")Invalid("Invalid Native judgement position");
     const auto& halloween=At(root,"halloween");RequireObject(halloween);
-    Integer(At(halloween,"candy"),0,std::numeric_limits<int>::max());
+    Integer(At(halloween,"candy"));
     Strings(At(halloween,"purchasedSkinIds"));Strings(At(halloween,"unlockedTitleIds"));Strings(At(root,"earnedTitleIds"));
+    if(Has(halloween,"claimedRewardIds"))Strings(At(halloween,"claimedRewardIds"));
+    if(Has(halloween,"historyByYear")){const auto& history=At(halloween,"historyByYear");RequireObject(history);
+        EachObject(history,[](auto year,const auto& entry){if(!Year(year))Invalid("Invalid Halloween year");RequireObject(entry);
+            for(const auto* key:{"candyEarned","onlineCompleted","onlineWins","halloweenBossWins"})Integer(At(entry,key));
+            Strings(At(entry,"purchases"));});}
+    if(Has(root,"halloweenDev")){const auto& dev=At(root,"halloweenDev");RequireObject(dev);
+        const auto mode=String(At(dev,"eventOverride"));if(mode!="auto"&&mode!="force-on"&&mode!="force-off")Invalid("Invalid event override");
+        const auto& slots=At(dev,"skinSlots");RequireArray(slots,4);if(Size(slots)!=4)Invalid("Expected four shop slots");
+        EachArray(slots,[](const auto& slot){RequireObject(slot);String(At(slot,"skinId"));Integer(At(slot,"price"),0,999999);});
+        const auto& refs=At(dev,"bossSongRefs");Strings(refs);if(Size(refs)!=3)Invalid("Expected three Boss references");
+    }
 }
 void ValidateNativePlayerSave(std::string_view text){ValidatePlayerDocument(ParseBounded(text));}
 NativeSaveSummary DecodeNativePlayerSave(std::string_view text){
@@ -174,12 +240,15 @@ NativeSaveSummary DecodeNativePlayerSave(std::string_view text){
     out.progress.lastOpponentId=String(At(player,"lastOpponentId"));
     const auto& settings=At(root,"settings");out.masterVolume=Number(At(settings,"masterVolume"));
     out.scrollDirection=String(At(settings,"scrollDirection"));out.judgementPosition=String(At(settings,"judgementPosition"));
-    const auto& halloween=At(root,"halloween");out.halloweenCandy=static_cast<int>(Integer(At(halloween,"candy")));
+    const auto& halloween=At(root,"halloween");out.halloweenCandy=static_cast<std::uint64_t>(Integer(At(halloween,"candy")));
     const auto strings=[](const Json& array){
         std::vector<std::string> result;EachArray(array,[&](const auto& item){result.emplace_back(String(item));});return result;
     };
     out.purchasedSkinIds=strings(At(halloween,"purchasedSkinIds"));
     out.unlockedTitleIds=strings(At(halloween,"unlockedTitleIds"));out.earnedTitleIds=strings(At(root,"earnedTitleIds"));
+    if(Has(halloween,"claimedRewardIds"))out.claimedRewardIds=strings(At(halloween,"claimedRewardIds"));
+    out.halloweenHistory=History(Optional(halloween,"historyByYear"));
+    if(Has(root,"halloweenDev"))ImportHalloweenConfig(out,Encode(At(root,"halloweenDev")));
     return out;
 }
 
@@ -255,6 +324,15 @@ PlayerSaveLoad SaveService::LoadPlayer() const{
     try{
         auto player=DecodeNativePlayerSave(text);
         if(!player.valid)Invalid("Native player save could not be normalized");
+        const auto root=ParseBounded(text);const auto& event=At(root,"halloween");
+        if(!Has(root,"halloweenDev")||!Has(event,"historyByYear")||!Has(event,"claimedRewardIds")){
+            // Enrich only fields that the earlier Native summary did not store.
+            // The preserved full backup never replaces current Candy/progress.
+            const auto legacy=ReadLegacyFullSave(root_/"legacy-full-save-v1.json");
+            if(legacy.valid){if(!Has(root,"halloweenDev"))player.halloweenDev=legacy.halloweenDev;
+                if(!Has(event,"historyByYear"))player.halloweenHistory=legacy.halloweenHistory;
+                if(!Has(event,"claimedRewardIds"))player.claimedRewardIds=legacy.claimedRewardIds;}
+        }
         return {SaveLoadStatus::Loaded,std::move(player),{}};
     }catch(const std::exception& e){return {SaveLoadStatus::Invalid,{},e.what()};}
 }

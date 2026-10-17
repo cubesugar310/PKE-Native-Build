@@ -76,6 +76,34 @@ PKE_TEST("Save service distinguishes missing files and preserves malformed saves
     PKE_REQUIRE(Read(root/"native-save-v1.json")=="{broken-player");
     PKE_REQUIRE(Read(root/"population-state-v1.json")=="{broken-population");
 }
+PKE_TEST("V114 Halloween state and configured slots survive Native save reload without truncating Candy") {
+    auto player=Player();
+    pke::ImportHalloweenState(player,R"({"candy":8000000000,"purchasedSkinIds":[" bf ","bf"],"unlockedTitleIds":["trick-or-beat"],"claimedRewardIds":["online|123"],"historyByYear":{"2025":{"candyEarned":9000,"onlineCompleted":12,"onlineWins":10,"halloweenBossWins":2,"purchases":["bf"]},"bad":{}}})");
+    pke::ImportHalloweenConfig(player,R"({"skinSlots":[{"skinId":" bf ","price":1234},{"skinId":"missing","price":-1}],"eventOverride":"force-off","bossSongRef":"songs/test"})");
+    PKE_REQUIRE(player.halloweenCandy==8000000000ULL);PKE_REQUIRE(player.purchasedSkinIds==std::vector<std::string>{"bf"});
+    PKE_REQUIRE(player.halloweenDev.skinSlots[0].price==1234);PKE_REQUIRE(player.halloweenDev.skinSlots[1].price==0);
+    PKE_REQUIRE(player.halloweenDev.skinSlots[2].price==3000);PKE_REQUIRE(player.halloweenHistory.size()==1);
+    const auto root=Temp("v114-event");pke::SaveService saves(root);PKE_REQUIRE(saves.SavePlayer(player).ok);
+    const auto loaded=saves.LoadPlayer();PKE_REQUIRE(loaded.status==pke::SaveLoadStatus::Loaded);
+    PKE_REQUIRE(loaded.player.halloweenCandy==8000000000ULL);PKE_REQUIRE(loaded.player.claimedRewardIds==player.claimedRewardIds);
+    PKE_REQUIRE(loaded.player.halloweenHistory.at("2025").onlineWins==10);
+    PKE_REQUIRE(loaded.player.halloweenDev.skinSlots[0].skinId=="bf");
+    PKE_REQUIRE(loaded.player.halloweenDev.bossSongRefs[0]=="songs/test");
+    PKE_REQUIRE(loaded.player.halloweenDev.eventOverride=="force-off");
+}
+PKE_TEST("Upgrading an older Native summary recovers missing event history from the preserved full backup") {
+    const auto root=Temp("event-upgrade");auto player=Player();auto old=SerializeNativeSaveSummary(player);
+    const auto optional=old.find(",\"claimedRewardIds\"");old.erase(optional,old.find("},\n",optional)-optional);
+    const auto dev=old.find("  \"halloweenDev\":");old.erase(dev,old.find('\n',dev)-dev+1);
+    Write(root/"native-save-v1.json",old);
+    const std::string backup=R"({"format":"pke-beat-battle-full-save","version":1,"localStorage":{"pke-beat-battle-halloween-v1":"{\"candy\":9999,\"claimedRewardIds\":[\"online|old\"],\"historyByYear\":{\"2025\":{\"onlineWins\":12}}}","pke-beat-battle-halloween-dev-v1":"{\"eventOverride\":\"force-off\"}"}})";
+    Write(root/"legacy-full-save-v1.json",backup);pke::SaveService saves(root);const auto loaded=saves.LoadPlayer();
+    PKE_REQUIRE(loaded.status==pke::SaveLoadStatus::Loaded);PKE_REQUIRE(loaded.player.halloweenCandy==player.halloweenCandy);
+    PKE_REQUIRE(loaded.player.progress.rp==player.progress.rp);PKE_REQUIRE(loaded.player.halloweenHistory.at("2025").onlineWins==12);
+    PKE_REQUIRE(loaded.player.claimedRewardIds==std::vector<std::string>{"online|old"});
+    PKE_REQUIRE(loaded.player.halloweenDev.eventOverride=="force-off");
+    PKE_REQUIRE(Read(root/"native-save-v1.json")==old);PKE_REQUIRE(Read(root/"legacy-full-save-v1.json")==backup);
+}
 PKE_TEST("Rejected but parseable Native destinations survive default-state writes") {
     const auto root=Temp("future-version");pke::SaveService saves(root);
     const std::string player=R"({"format":"pke-native-save","version":2,"player":{"rp":3845}})";

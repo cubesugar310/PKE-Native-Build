@@ -6,6 +6,7 @@
 #include <cmath>
 #include <fstream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #ifdef PKE_NATIVE_USE_NLOHMANN
@@ -137,6 +138,15 @@ std::shared_ptr<const AssetCatalog> AssetService::Refresh(){
             selectedCharacterFiles[id]=fileIndex;
         }catch(const std::exception& e){next->issues.push_back({file,e.what()});}
     }
+    // Original buildDetectedBFSkinId / registerDetectedBFSkin identities are
+    // directory-derived and distinct from chart JSON character basenames.
+    std::set<std::string> sourceSkinIds;
+    for(auto& character:next->characters){auto slug=Lower(Utf8(character.jsonPath.parent_path().filename()));
+        for(const auto* extension:{".png",".xml",".json"})if(slug.ends_with(extension)){slug.resize(slug.size()-std::char_traits<char>::length(extension));break;}
+        if(slug.empty())slug=character.id;const auto base="sparrow:"+slug;auto candidate=base;int number=2;
+        while(sourceSkinIds.contains(candidate))candidate=base+"-"+std::to_string(number++);
+        character.sourceSkinId=std::move(candidate);sourceSkinIds.insert(character.sourceSkinId);
+    }
     const auto songFiles=Files(impl_->songsRoot,next->issues);
     std::map<std::filesystem::path,std::vector<std::filesystem::path>> grouped;
     for(const auto& file:songFiles){const auto relative=file.lexically_relative(impl_->songsRoot);
@@ -203,6 +213,12 @@ std::vector<std::size_t> AssetService::FilterSongs(std::string_view query,Side s
     const auto result=impl_->Call("pkeCatalogSearch","{\"query\":"+Quote(query)+",\"side\":"+
         Quote(side==Side::Opponent?"opponent":"player")+",\"stars\":"+std::to_string(stars)+'}');
     std::vector<std::size_t> indices;for(const auto& index:Array(result))indices.push_back(Index(index,impl_->catalog->songs.size()));return indices;
+}
+const CharacterAsset* FindCharacterAsset(const AssetCatalog& catalog,std::string_view id){
+    for(const auto& c:catalog.characters)if(!c.sourceSkinId.empty()&&c.sourceSkinId==id)return &c;
+    if(id.starts_with("sparrow:")||id.starts_with("vslice:"))return nullptr;
+    const auto colon=id.find_last_of(':');if(colon!=std::string_view::npos)id=id.substr(colon+1);
+    for(const auto& c:catalog.characters)if(c.id==id)return &c;return nullptr;
 }
 std::string AssetService::PopulationCatalogJson() const{
     std::string result="{\"songs\":[";

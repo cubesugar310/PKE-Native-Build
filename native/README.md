@@ -58,7 +58,9 @@ The master rhythm clock is the mixed audio output frame cursor. Dropped render f
 
 Practice does not change Online RP, average accuracy, or W/L/D. The real population worker continues through every scene. Name and selected skin changes are saved on Home. Close the window to flush the population checkpoint and exit.
 
-This branch is a playable-route milestone. Halloween/shop, strict reference visual comparison and the remaining Home destinations are still pending. Configure asset roots in `pke-native.json`; folder-picker buttons are not connected in this milestone.
+This build is checked against the supplied V1.14 extracted source. Home → Practice → Gameplay → Result remains playable. Settings now applies master volume, up/down scroll and center/corner judgements and saves them atomically. The Halloween entry appears during Oct 15–Oct 31 JST; Shop and History retain Candy, purchases, claimed rewards and yearly history. Purchases update memory only after a successful durable save. The 5,000-Candy title and four configurable skin slots follow the source; empty/missing/duplicate slots do not appear. Original Full Save developer configuration is imported. Developer authentication enables Auto / Force On / Force Off; slot and Boss-song editing remains pending.
+
+Strict reference visual comparison, Online/Boss modes and the remaining Home destinations are still pending. Configure asset roots in `pke-native.json`; folder-picker buttons are not connected in this milestone. A real Windows-device playthrough is still required.
 
 Character compatibility accepts both common PKE/Psych animation schemas: `anim` + atlas `name`, and `name` + atlas `prefix`. If a character JSON points at an image basename different from the JSON filename, the sibling Sparrow XML/PNG/WebP is resolved from the JSON `image` field.
 
@@ -75,7 +77,7 @@ V1.14's `PKE_BEAT_BATTLE_PLAYER_PROGRESS_CHECKPOINT_V1` is the primary progressi
 
 ## Phase 1 exclusions
 
-Prototype 0.1 intentionally does not yet implement Online Battle, Ranked RP/leaderboard persistence, Boss/Halloween systems, spectator/replay, Discord Rich Presence, GF rendering, or full menu parity.
+This milestone does not yet implement player Online Battle, Boss gameplay, spectator/replay playback, Discord Rich Presence, GF rendering or full menu parity. Practice replay export and the Halloween Shop/History shell are implemented. Practice does not award Online/Boss Candy.
 
 ## Windows acceptance checklist
 
@@ -114,7 +116,7 @@ Only the `qjs` library is linked. The standalone CLI and std/os libc helpers are
 
 The offline-core mode still avoids fetching GUI/audio dependencies; it uses the already initialized pinned QuickJS submodule. A separate `quickjs_runtime` CTest entry covers the wrapper. The runtime is a Block 1 foundation; population and scene parity are separate implementation tasks.
 
-The `compat/` directory contains the selected V1.12 calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. See `compat/README.md` for the exact import scope and adaptations. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player are retained in these tests. This component is not yet connected to the prototype's scenes; the dedicated worker is implemented and V1.14 Home/Practice scene integration remains a later Block 1 task.
+The `compat/` directory contains the selected original calculations and Native JSON boundary, with source provenance and fixed-clock reference fixtures. V1.14 comparison confirms all 174 imported named function declarations are structurally unchanged; see `compat/v114-reference-verification.json` and `compat/README.md`. `population_compat` tests startup, one minute, CPU record fingerprints, RNG order, rest/sleep transitions, authored LIVE note completions, restore, difficulty, titles and Halloween boundaries. The full 14,999 CPUs and local player run on the dedicated worker through every Native scene.
 
 Release packages include the seven runtime compatibility scripts and QuickJS license. Test-only reference code and fixtures are excluded.
 

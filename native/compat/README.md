@@ -137,3 +137,14 @@ hyphen splitting and all-terms matching, with no file reads or chart parsing.
 Frozen original functions and async-difficulty fixtures independently verify
 section/absolute ownership, harmless versus damage-only heads, rapid boundaries,
 sustains, speed/BPM values, width/kana/Greek/accent search and BF/DAD filters.
+# V1.14 authority check
+
+The supplied V1.14 extracted-source archive was inspected directly (SHA-256
+`7524ef2060505615167d90003617a58d83f0447f3174cbc14b11915644e9bbaa`).
+`v114-reference-verification.json` records the comparison: index/styles and
+ten helper modules are byte-identical; all 174 imported named function
+declarations are structurally unchanged. Three changed functions and two
+new helpers concern the browser Online-result lifecycle; none is an imported
+Native calculation. Existing V1.12 extraction provenance remains intact.
+Native event state/shop transactions and gameplay preferences use the V1.14
+rules directly. The original browser host is not included in this Native build.

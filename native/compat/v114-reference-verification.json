@@ -1,0 +1,71 @@
+{
+  "referenceZipSha256": "7524ef2060505615167d90003617a58d83f0447f3174cbc14b11915644e9bbaa",
+  "v114AppSha256": "a0e8e0fe90321e8be2da5d43d90f88c992deab47c425b25920734c53047880cd",
+  "modifiedFunctionDeclarations": [
+    "loop",
+    "playSongAudio",
+    "recordBeatBattlePopulationMatchResult"
+  ],
+  "addedFunctionDeclarations": [
+    "finishBeatBattleOnlineNaturalEnd",
+    "saveBeatBattleRankedResultDurably"
+  ],
+  "removedFunctionDeclarations": [],
+  "unchangedImportedFunctionDeclarations": 174,
+  "affectedImportedFunctionDeclarations": [],
+  "files": {
+    "index.html": {
+      "v114Sha256": "9491b95482a14ed29924dcbe33f04ec54596f9b3bb15aff433e999d9a74e72d3",
+      "byteIdenticalToV112": true
+    },
+    "styles.css": {
+      "v114Sha256": "bc9c0dd62996c1b45893c82360238b6621b6fe1c860328f581581244a21b1722",
+      "byteIdenticalToV112": true
+    },
+    "js/boss-battle.js": {
+      "v114Sha256": "2c48bb4b0f6a8022db6ab4be8c088b1c21be88f471983c4eeae97126574974c6",
+      "byteIdenticalToV112": true
+    },
+    "js/character-utils.js": {
+      "v114Sha256": "a5c185f7add91b6184f23cbf630cfd0147a2e0a38c372a3968bab231e8bd6178",
+      "byteIdenticalToV112": true
+    },
+    "js/chart-utils.js": {
+      "v114Sha256": "ed7d78753ba62e8f572379f3c394e30c6980fdaf9ea84ddd241bd9b552284e0e",
+      "byteIdenticalToV112": true
+    },
+    "js/cpu-timing.js": {
+      "v114Sha256": "cf852617cc0179c03d6de1a9d0acc45a75dca76097607d9ea55a6b6a68a65c1a",
+      "byteIdenticalToV112": true
+    },
+    "js/discord-presence.js": {
+      "v114Sha256": "7c4bd5d4159e57e63d9318d9fb805fe64f81495f8a9ad024a111383f3c8ff20e",
+      "byteIdenticalToV112": true
+    },
+    "js/friends-private-match.js": {
+      "v114Sha256": "3fb1510d58038e1c678c4a556f863363927c85d5027dc748adae138035abb943",
+      "byteIdenticalToV112": true
+    },
+    "js/full-save.js": {
+      "v114Sha256": "361a32838df51c37adc0980134e367b5775b48f8f99492871344475de5960c16",
+      "byteIdenticalToV112": false
+    },
+    "js/note-sprites.js": {
+      "v114Sha256": "311aadb60ac7265c32479e3344d9e6b6f6cfbee77b15d0779849dbf4594639b2",
+      "byteIdenticalToV112": true
+    },
+    "js/population-social-sessions.js": {
+      "v114Sha256": "223b800a20b125c139e517a9eb5a2f540446844936ecfee9ce882d3354d1554e",
+      "byteIdenticalToV112": true
+    },
+    "js/song-difficulty.js": {
+      "v114Sha256": "75b8edfb1a6536aeef3925c698aeab0660389fa1f18e347403a666a90a5871f8",
+      "byteIdenticalToV112": true
+    },
+    "js/title-system.js": {
+      "v114Sha256": "61f5c96c1f76d840643605346a480d495f38b2d28e8e5777c60d683847003748",
+      "byteIdenticalToV112": true
+    }
+  },
+  "nativeChanges": "Native Halloween state/shop/history and persisted gameplay preferences are transcribed from V1.14. Online durable-result/browser host code is outside this milestone."
+}

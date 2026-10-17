@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+#include <array>
+#include <map>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -28,7 +30,23 @@ struct ImportedPlayerProgress {
     std::string lastOpponentId;
 };
 
-struct LegacyFullSaveData {
+struct HalloweenHistory {
+    std::uint64_t candyEarned{},onlineCompleted{},onlineWins{},halloweenBossWins{};
+    std::vector<std::string> purchases;
+};
+struct HalloweenSkinSlot {std::string skinId;int price{3000};};
+struct HalloweenDevConfig {
+    std::array<HalloweenSkinSlot,4> skinSlots;
+    std::array<std::string,3> bossSongRefs;
+    std::string eventOverride{"auto"};
+};
+struct HalloweenData {
+    std::uint64_t halloweenCandy{};
+    std::vector<std::string> purchasedSkinIds,unlockedTitleIds,claimedRewardIds;
+    std::map<std::string,HalloweenHistory> halloweenHistory;
+    HalloweenDevConfig halloweenDev;
+};
+struct LegacyFullSaveData : HalloweenData {
     bool valid{false};
     std::filesystem::path sourcePath;
     std::string exportedAt;
@@ -39,13 +57,10 @@ struct LegacyFullSaveData {
     double masterVolume{1.0};
     std::string scrollDirection{"up"};
     std::string judgementPosition{"center"};
-    int halloweenCandy{0};
-    std::vector<std::string> purchasedSkinIds;
-    std::vector<std::string> unlockedTitleIds;
     std::vector<std::string> earnedTitleIds;
 };
 
-struct NativeSaveSummary {
+struct NativeSaveSummary : HalloweenData {
     bool valid{false};
     int version{1};
     std::string importedAt;
@@ -59,9 +74,6 @@ struct NativeSaveSummary {
     double masterVolume{1.0};
     std::string scrollDirection{"up"};
     std::string judgementPosition{"center"};
-    int halloweenCandy{0};
-    std::vector<std::string> purchasedSkinIds;
-    std::vector<std::string> unlockedTitleIds;
     std::vector<std::string> earnedTitleIds;
 };
 
