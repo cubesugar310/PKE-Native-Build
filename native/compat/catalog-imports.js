@@ -577,5 +577,21 @@
     return prettifyDetectedBFSkinName(fallbackBaseName || "Character", "sparrow");
   }
 
-globalThis.PKENativeCatalog=Object.freeze({getFreeplayChartCandidates,chooseFreeplayAudioFile,getFreeplaySongDisplayName,getFreeplayChartReferenceSpeed,isBeatBattleDifficultyRegularNoteType,buildBeatBattleLightweightChartData,getFreeplayOpponentCharacterId,findFreeplayOpponentIconFile,getFileExtension,getBeatBattleChartBaseBpm,normalizeBeatBattlePracticeSearch,cleanAssetBaseName,fileBaseName,getFileRelativePath,clampPopulationNumber,findFolderFileInDirectory,findFolderFile,getSparrowSourcePriority,preferSparrowDefinition,getFileDirectoryPath,prettifyDetectedBFSkinName,getDetectedCharacterDisplayNameFromJson,icon(song,characters){selectedFolderFiles=characters;return findFreeplayOpponentIconFile(song);},characterFile(directory,base,extensions,files){selectedFolderFiles=files;return findFolderFileInDirectory(directory,base,extensions)||findFolderFile(base,extensions);}});
+// Direct V1.14 character-utils.js import; see source-port-provenance.json.
+function getLastPathSegment(path) {
+    const normalized = String(path || "").replace(/\\/g, "/").replace(/\/+$/, "");
+    if (!normalized) return "";
+    const parts = normalized.split("/").filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : "";
+  }
+
+function buildDetectedBFSkinId(type, directory, baseName = "") {
+    const folderSlug = cleanAssetBaseName(getLastPathSegment(directory));
+    const baseSlug = cleanAssetBaseName(baseName);
+    const slug = (folderSlug || baseSlug || "skin").toLowerCase();
+    const prefix = type === "vslice" ? "vslice" : "sparrow";
+    return prefix + ":" + slug;
+  }
+
+globalThis.PKENativeCatalog=Object.freeze({getLastPathSegment,buildDetectedBFSkinId,getFreeplayChartCandidates,chooseFreeplayAudioFile,getFreeplaySongDisplayName,getFreeplayChartReferenceSpeed,isBeatBattleDifficultyRegularNoteType,buildBeatBattleLightweightChartData,getFreeplayOpponentCharacterId,findFreeplayOpponentIconFile,getFileExtension,getBeatBattleChartBaseBpm,normalizeBeatBattlePracticeSearch,cleanAssetBaseName,fileBaseName,getFileRelativePath,clampPopulationNumber,findFolderFileInDirectory,findFolderFile,getSparrowSourcePriority,preferSparrowDefinition,getFileDirectoryPath,prettifyDetectedBFSkinName,getDetectedCharacterDisplayNameFromJson,icon(song,characters){selectedFolderFiles=characters;return findFreeplayOpponentIconFile(song);},characterFile(directory,base,extensions,files){selectedFolderFiles=files;return findFolderFileInDirectory(directory,base,extensions)||findFolderFile(base,extensions);}});
 })();

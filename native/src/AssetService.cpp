@@ -133,17 +133,15 @@ std::shared_ptr<const AssetCatalog> AssetService::Refresh(){
                 const auto prefer=impl_->Call("pkeCatalogPreferCharacter","{\"candidate\":"+std::to_string(fileIndex)+
                     ",\"current\":"+std::to_string(selectedCharacterFiles.at(id))+'}');
                 if(Dump(prefer)!="true")continue;
-                *existing={id,Text(At(plan,"displayName")),file,std::move(definition)};
-            }else next->characters.push_back({id,Text(At(plan,"displayName")),file,std::move(definition)});
+                *existing={id,Text(At(plan,"displayName")),file,std::move(definition),Text(At(plan,"sourceSkinId"))};
+            }else next->characters.push_back({id,Text(At(plan,"displayName")),file,std::move(definition),Text(At(plan,"sourceSkinId"))});
             selectedCharacterFiles[id]=fileIndex;
         }catch(const std::exception& e){next->issues.push_back({file,e.what()});}
     }
     // Original buildDetectedBFSkinId / registerDetectedBFSkin identities are
     // directory-derived and distinct from chart JSON character basenames.
     std::set<std::string> sourceSkinIds;
-    for(auto& character:next->characters){auto slug=Lower(Utf8(character.jsonPath.parent_path().filename()));
-        for(const auto* extension:{".png",".xml",".json"})if(slug.ends_with(extension)){slug.resize(slug.size()-std::char_traits<char>::length(extension));break;}
-        if(slug.empty())slug=character.id;const auto base="sparrow:"+slug;auto candidate=base;int number=2;
+    for(auto& character:next->characters){const auto base=character.sourceSkinId;auto candidate=base;int number=2;
         while(sourceSkinIds.contains(candidate))candidate=base+"-"+std::to_string(number++);
         character.sourceSkinId=std::move(candidate);sourceSkinIds.insert(character.sourceSkinId);
     }

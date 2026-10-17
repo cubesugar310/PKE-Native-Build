@@ -1,0 +1,26 @@
+{
+  "referenceZipSha256": "7524ef2060505615167d90003617a58d83f0447f3174cbc14b11915644e9bbaa",
+  "sourceFile": "web/js/character-utils.js",
+  "sourceFileSha256": "a5c185f7add91b6184f23cbf630cfd0147a2e0a38c372a3968bab231e8bd6178",
+  "declarations": [
+    {
+      "name": "getLastPathSegment",
+      "lines": [
+        157,
+        162
+      ],
+      "sha256": "109e2255e90bb47686e7cea5a8127dfc2c620d33cb713992b34366a26ffdf50c",
+      "adapted": false
+    },
+    {
+      "name": "buildDetectedBFSkinId",
+      "lines": [
+        186,
+        192
+      ],
+      "sha256": "958f53fdec0e5856b45c532271dbf90f942b98d5d2f0f2bba4da15eae75e348d",
+      "adapted": false
+    }
+  ],
+  "nativeBoundary": "pkeCatalogCharacterPlan returns the original directory-derived ID; Native owns installed-definition selection and the global collision set."
+}
