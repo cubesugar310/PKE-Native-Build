@@ -6,6 +6,7 @@
 #include <fstream>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -82,7 +83,10 @@ CharacterDefinition LoadCharacter(const CharacterAssetPaths& paths){
         if(j.contains("animations")) for(const auto& a:j["animations"]){ AnimationDef d; const bool hasAnim=a.contains("anim"); d.anim=hasAnim?a.value("anim",""):a.value("name",""); d.prefix=hasAnim?a.value("name",a.value("prefix","")):a.value("prefix",d.anim); d.fps=a.value("fps",24.0); d.loop=a.value("loop",false); if(a.contains("offsets")&&a["offsets"].size()>=2)d.offset={a["offsets"][0].get<double>(),a["offsets"][1].get<double>()}; if(a.contains("indices")) for(auto& v:a["indices"]) d.indices.push_back(v.get<int>()); if(!out.animations.contains(d.anim))out.animationOrder.push_back(d.anim);out.animations[d.anim]=std::move(d); }
         if(resolved.xml.empty()) throw std::runtime_error("cannot locate character xml from image field '"+image+"'");
         tinyxml2::XMLDocument doc;
-        if(doc.LoadFile(resolved.xml.string().c_str())!=tinyxml2::XML_SUCCESS) throw std::runtime_error("cannot parse character xml: "+resolved.xml.string());
+        std::ifstream xmlInput(resolved.xml,std::ios::binary);
+        if(!xmlInput)throw std::runtime_error("cannot open character xml");
+        std::ostringstream xmlBytes;xmlBytes<<xmlInput.rdbuf();const auto xmlText=xmlBytes.str();
+        if(doc.Parse(xmlText.data(),xmlText.size())!=tinyxml2::XML_SUCCESS) throw std::runtime_error("cannot parse character xml");
         auto* root=doc.FirstChildElement("TextureAtlas");
         if(!root) throw std::runtime_error("TextureAtlas missing");
         for(auto* e=root->FirstChildElement("SubTexture");e;e=e->NextSiblingElement("SubTexture")){ AtlasFrame f; f.name=e->Attribute("name")?e->Attribute("name"):""; e->QueryIntAttribute("x",&f.source.x); e->QueryIntAttribute("y",&f.source.y); e->QueryIntAttribute("width",&f.source.w); e->QueryIntAttribute("height",&f.source.h); e->QueryDoubleAttribute("frameX",&f.frameX); e->QueryDoubleAttribute("frameY",&f.frameY); e->QueryDoubleAttribute("frameWidth",&f.frameWidth); e->QueryDoubleAttribute("frameHeight",&f.frameHeight); const char* r=e->Attribute("rotated"); f.rotated=r && std::string(r)=="true"; out.atlas.push_back(std::move(f)); }

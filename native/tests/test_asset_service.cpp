@@ -59,7 +59,9 @@ PKE_TEST("Detected skin IDs retain original JavaScript Unicode lowercase behavio
     Write(dir/"bf.json",R"({"image":"bf","animations":[{"anim":"idle","name":"idle"}]})");
     Write(dir/"bf.xml",R"(<TextureAtlas imagePath="bf.png"><SubTexture name="idle0000" x="0" y="0" width="32" height="32"/></TextureAtlas>)");
     Write(dir/"bf.png","image");pke::AssetService service(a.config,a.root,PKE_COMPAT_DIR,"en-US");
-    const auto catalog=service.Refresh();PKE_REQUIRE(catalog->characters.size()==1);
+    const auto catalog=service.Refresh();
+    if(catalog->characters.empty()&&!catalog->issues.empty())throw std::runtime_error(catalog->issues.front().message);
+    PKE_REQUIRE(catalog->characters.size()==1);
     PKE_REQUIRE(catalog->characters[0].sourceSkinId=="sparrow:i\xCC\x87" "d");
 }
 
